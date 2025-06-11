@@ -78,7 +78,6 @@ function solanawp_process_solana_address( $address ) {
         'security' => solanawp_fetch_security_data( $address ),
         'rugpull' => solanawp_fetch_rugpull_data( $address ),
         'social' => solanawp_fetch_social_data( $address ),
-        // 'community' => solanawp_fetch_community_data( $address ), // DEACTIVATED
         'timestamp' => current_time( 'mysql' )
     );
 
@@ -567,38 +566,38 @@ function solanawp_fetch_security_data( $address ) {
 /**
  * Assess rug pull risk using combined data sources
  */
-function solanawp_fetch_rugpull_data( $address ) {
+function solanawp_fetch_rugpull_data($address) {
     try {
-        $balance_data = solanawp_fetch_balance_data( $address );
-        $transaction_data = solanawp_fetch_transaction_data( $address );
-        $account_data = solanawp_fetch_account_data( $address );
+        $balance_data = solanawp_fetch_balance_data($address);
+        $transaction_data = solanawp_fetch_transaction_data($address);
+        $account_data = solanawp_fetch_account_data($address);
 
         $risk_percentage = 25; // Start with low risk
         $warning_signs = array();
         $safe_indicators = array();
 
-        // Token holding analysis
-        if ( isset( $balance_data['tokens'] ) && count( $balance_data['tokens'] ) > 0 ) {
+        // Token holding analysis (REAL DATA)
+        if (isset($balance_data['tokens']) && count($balance_data['tokens']) > 0) {
             $suspicious_tokens = 0;
             $high_value_tokens = 0;
 
-            foreach ( $balance_data['tokens'] as $token ) {
+            foreach ($balance_data['tokens'] as $token) {
                 // Check for extremely high token amounts (potential honeypot)
-                if ( $token['amount'] > 1000000 ) {
+                if ($token['amount'] > 1000000) {
                     $suspicious_tokens++;
                 }
 
-                if ( $token['amount'] > 100 ) {
+                if ($token['amount'] > 100) {
                     $high_value_tokens++;
                 }
             }
 
-            if ( $suspicious_tokens > 0 ) {
+            if ($suspicious_tokens > 0) {
                 $risk_percentage += 20;
                 $warning_signs[] = 'Holds tokens with extremely high supply amounts';
             }
 
-            if ( $high_value_tokens > 5 ) {
+            if ($high_value_tokens > 5) {
                 $risk_percentage += 10;
                 $warning_signs[] = 'Holds many high-value token positions';
             } else {
@@ -606,12 +605,12 @@ function solanawp_fetch_rugpull_data( $address ) {
             }
         }
 
-        // Account age factor
-        if ( isset( $transaction_data['account_age_days'] ) ) {
-            if ( $transaction_data['account_age_days'] < 7 ) {
+        // Account age factor (REAL DATA)
+        if (isset($transaction_data['account_age_days'])) {
+            if ($transaction_data['account_age_days'] < 7) {
                 $risk_percentage += 30;
                 $warning_signs[] = 'Very new account (less than 1 week old)';
-            } elseif ( $transaction_data['account_age_days'] < 30 ) {
+            } elseif ($transaction_data['account_age_days'] < 30) {
                 $risk_percentage += 15;
                 $warning_signs[] = 'New account (less than 1 month old)';
             } else {
@@ -620,76 +619,111 @@ function solanawp_fetch_rugpull_data( $address ) {
             }
         }
 
-        // Transaction pattern analysis
-        if ( isset( $transaction_data['total_transactions'] ) ) {
-            if ( $transaction_data['total_transactions'] < 5 ) {
+        // Transaction pattern analysis (REAL DATA)
+        if (isset($transaction_data['total_transactions'])) {
+            if ($transaction_data['total_transactions'] < 5) {
                 $risk_percentage += 15;
                 $warning_signs[] = 'Very few transactions (possible bot/fake account)';
-            } elseif ( $transaction_data['total_transactions'] > 100 ) {
+            } elseif ($transaction_data['total_transactions'] > 100) {
                 $risk_percentage -= 15;
                 $safe_indicators[] = 'Active transaction history';
             }
         }
 
         // Cap risk percentage
-        $risk_percentage = max( 0, min( 100, $risk_percentage ) );
+        $risk_percentage = max(0, min(100, $risk_percentage));
 
         // Determine risk level
         $risk_level = 'Medium';
-        if ( $risk_percentage <= 30 ) {
+        if ($risk_percentage <= 30) {
             $risk_level = 'Low';
-        } elseif ( $risk_percentage >= 70 ) {
+        } elseif ($risk_percentage >= 70) {
             $risk_level = 'High';
         }
 
-        // Mock additional data for complete display
-        $mock_data = array(
-            'overall_score' => 100 - $risk_percentage,
-            'volume_24h' => '$' . number_format( rand( 1000, 50000 ), 0 ),
-            'liquidity_locked' => array(
-                'text' => rand( 0, 1 ) ? 'Yes' : 'No',
-                'color' => rand( 0, 1 ) ? '#059669' : '#dc2626'
-            ),
-            'ownership_renounced' => array(
-                'text' => rand( 0, 1 ) ? 'Yes' : 'No',
-                'color' => rand( 0, 1 ) ? '#059669' : '#dc2626'
-            ),
-            'mint_authority' => array(
-                'text' => rand( 0, 1 ) ? 'Disabled' : 'Active',
-                'color' => rand( 0, 1 ) ? '#059669' : '#dc2626'
-            ),
-            'freeze_authority' => array(
-                'text' => rand( 0, 1 ) ? 'Disabled' : 'Active',
-                'color' => rand( 0, 1 ) ? '#059669' : '#dc2626'
-            )
-        );
+        // REAL TOKEN DATA (no more random values)
+        $token_data = solanawp_analyze_token_properties($address);
 
         return array(
             'risk_level' => $risk_level,
             'risk_percentage' => $risk_percentage,
             'warning_signs' => $warning_signs,
             'safe_indicators' => $safe_indicators,
-            'overall_score' => $mock_data['overall_score'],
-            'volume_24h' => $mock_data['volume_24h'],
-            'liquidity_locked' => $mock_data['liquidity_locked'],
-            'ownership_renounced' => $mock_data['ownership_renounced'],
-            'mint_authority' => $mock_data['mint_authority'],
-            'freeze_authority' => $mock_data['freeze_authority'],
-            'token_distribution' => array(
-                array( 'label' => 'Top 10 Holders', 'percentage' => 45, 'color' => '#ef4444' ),
-                array( 'label' => 'Community', 'percentage' => 35, 'color' => '#f59e0b' ),
-                array( 'label' => 'Liquidity Pools', 'percentage' => 20, 'color' => '#10b981' )
-            )
+            'overall_score' => 100 - $risk_percentage,
+
+            // REAL or "Not Available" instead of mock data
+            'volume_24h' => $token_data['volume_24h'] ?? 'Not Available',
+            'liquidity_locked' => $token_data['liquidity_locked'] ?? array(
+                    'text' => 'Unknown',
+                    'color' => '#6b7280'
+                ),
+            'ownership_renounced' => $token_data['ownership_renounced'] ?? array(
+                    'text' => 'Unknown',
+                    'color' => '#6b7280'
+                ),
+            'mint_authority' => $token_data['mint_authority'] ?? array(
+                    'text' => 'Unknown',
+                    'color' => '#6b7280'
+                ),
+            'freeze_authority' => $token_data['freeze_authority'] ?? array(
+                    'text' => 'Unknown',
+                    'color' => '#6b7280'
+                ),
+            'token_distribution' => $token_data['distribution'] ?? array(
+                    array('label' => 'Data Not Available', 'percentage' => 100, 'color' => '#6b7280')
+                )
         );
 
-    } catch ( Exception $e ) {
+    } catch (Exception $e) {
         return array(
             'risk_level' => 'Unknown',
             'risk_percentage' => 50,
-            'warning_signs' => array(),
+            'warning_signs' => array('Analysis error: ' . $e->getMessage()),
             'safe_indicators' => array(),
             'error' => $e->getMessage()
         );
+    }
+}
+
+/**
+ * Analyze real token properties (replace with actual token analysis)
+ */
+function solanawp_analyze_token_properties($address) {
+    try {
+        $helius_key = get_option('solanawp_helius_api_key');
+
+        if (empty($helius_key)) {
+            return array(); // Return empty if no API key
+        }
+
+        // This would implement real token analysis using Helius APIs
+        // For now, return "Not Available" instead of mock data
+
+        return array(
+            'volume_24h' => null, // Would get from real DEX data
+            'liquidity_locked' => array(
+                'text' => 'Analysis Not Available',
+                'color' => '#6b7280'
+            ),
+            'ownership_renounced' => array(
+                'text' => 'Analysis Not Available',
+                'color' => '#6b7280'
+            ),
+            'mint_authority' => array(
+                'text' => 'Check Required',
+                'color' => '#6b7280'
+            ),
+            'freeze_authority' => array(
+                'text' => 'Check Required',
+                'color' => '#6b7280'
+            ),
+            'distribution' => array(
+                array('label' => 'Analysis Required', 'percentage' => 100, 'color' => '#6b7280')
+            )
+        );
+
+    } catch (Exception $e) {
+        return array();
     }
 }
 
@@ -700,84 +734,76 @@ function solanawp_fetch_rugpull_data( $address ) {
 /**
  * Fetch website and social media data
  */
-function solanawp_fetch_social_data( $address ) {
+function solanawp_fetch_social_data($address) {
     try {
-        $helius_key = get_option( 'solanawp_helius_api_key' );
-        $social_data = array();
+        $helius_key = get_option('solanawp_helius_api_key');
 
-        // Try Helius token metadata API
-        if ( ! empty( $helius_key ) ) {
+        $result = array(
+            'websiteUrl' => null,
+            'domainAge' => null,
+            'sslSecured' => false,
+            'whoisInfo' => null,
+            'twitterInfo' => null,
+            'telegramInfo' => null,
+            'enhanced' => !empty($helius_key)
+        );
+
+        // Try to get real metadata from Helius
+        if (!empty($helius_key)) {
             try {
-                $helius_url = "https://api.helius.xyz/v0/addresses/{$address}/metadata?api-key={$helius_key}";
-                $metadata_response = solanawp_make_request( $helius_url );
+                // Get token metadata
+                $metadata = solanawp_fetch_token_metadata($address, $helius_key);
 
-                if ( isset( $metadata_response['metadata'] ) ) {
-                    $metadata = $metadata_response['metadata'];
+                if ($metadata && isset($metadata['uri'])) {
+                    $result['websiteUrl'] = $metadata['uri'];
 
-                    // Extract website
-                    if ( isset( $metadata['uri'] ) ) {
-                        $social_data['website'] = $metadata['uri'];
-                    }
-
-                    // Look for social links in metadata
-                    if ( isset( $metadata['external_url'] ) ) {
-                        $social_data['website'] = $metadata['external_url'];
+                    // Get real WHOIS data for the domain
+                    $domain_info = solanawp_get_real_whois_data($metadata['uri']);
+                    if ($domain_info) {
+                        $result['whoisInfo'] = $domain_info;
+                        $result['domainAge'] = $domain_info['age'] ?? null;
+                        $result['sslSecured'] = $domain_info['ssl'] ?? false;
                     }
                 }
-            } catch ( Exception $e ) {
-                // Continue without metadata
+
+                // Extract social links from metadata description
+                if (isset($metadata['description'])) {
+                    $social_links = solanawp_extract_social_links($metadata['description']);
+
+                    if (isset($social_links['twitter'])) {
+                        $result['twitterInfo'] = array(
+                            'handle' => $social_links['twitter'],
+                            'followers' => null, // Would need Twitter API for real data
+                            'verified' => null,
+                            'created' => null,
+                            'lastActive' => null,
+                            'engagementRate' => null
+                        );
+                    }
+
+                    if (isset($social_links['telegram'])) {
+                        $result['telegramInfo'] = array(
+                            'handle' => $social_links['telegram'],
+                            'members' => null, // Would need Telegram API for real data
+                            'onlineMembers' => null,
+                            'created' => null,
+                            'description' => null,
+                            'isPremium' => null
+                        );
+                    }
+                }
+
+            } catch (Exception $e) {
+                error_log('Metadata fetch error: ' . $e->getMessage());
             }
         }
 
-        // Mock data for complete display (in production, parse from metadata)
-        $domain = 'example-token.com';
-        $twitter_handle = '@ExampleToken';
-        $telegram_handle = '@example_token';
+        return $result;
 
-        // Mock WHOIS data
-        $whois_data = array(
-            'registrar' => 'GoDaddy.com, LLC',
-            'createdDate' => date( 'Y-m-d', strtotime( '-6 months' ) ),
-            'expiryDate' => date( 'Y-m-d', strtotime( '+6 months' ) ),
-            'status' => 'Active',
-            'nameServers' => array( 'ns1.example.com', 'ns2.example.com' ),
-            'dnssec' => 'unsigned'
-        );
-
-        // Twitter data
-        $twitter_data = array(
-            'handle' => $twitter_handle,
-            'followers' => '12.5K',
-            'verified' => false,
-            'created' => date( 'Y-m-d', strtotime( '-1 year' ) ),
-            'lastActive' => date( 'Y-m-d', strtotime( '-2 days' ) ),
-            'engagementRate' => '3.2%'
-        );
-
-        // Telegram data
-        $telegram_data = array(
-            'handle' => $telegram_handle,
-            'members' => '8.2K',
-            'onlineMembers' => '1.5K',
-            'created' => date( 'Y-m-d', strtotime( '-8 months' ) ),
-            'description' => 'Official Example Token Community',
-            'isPremium' => true
-        );
-
-        return array(
-            'websiteUrl' => isset( $social_data['website'] ) ? $social_data['website'] : 'https://' . $domain,
-            'domainAge' => '6 months',
-            'sslSecured' => true,
-            'whoisInfo' => $whois_data,
-            'twitterInfo' => $twitter_data,
-            'telegramInfo' => $telegram_data,
-            'enhanced' => ! empty( $helius_key )
-        );
-
-    } catch ( Exception $e ) {
+    } catch (Exception $e) {
         return array(
             'websiteUrl' => null,
-            'domainAge' => 'Unknown',
+            'domainAge' => null,
             'sslSecured' => false,
             'whoisInfo' => null,
             'twitterInfo' => null,
@@ -787,34 +813,88 @@ function solanawp_fetch_social_data( $address ) {
     }
 }
 
-/* DEACTIVATED: Community function - Keep for future updates
-function solanawp_fetch_community_data( $address ) {
-    return array(
-        'size' => '12.5K',
-        'sizeLabel' => 'Active Members',
-        'engagement' => 'High',
-        'engagementLabel' => 'Daily Activity',
-        'growth' => '+15%',
-        'growthLabel' => 'Monthly Growth',
-        'sentiment' => 'Positive',
-        'sentimentLabel' => 'Overall Mood',
-        'likes' => '2.1K',
-        'comments' => '856',
-        'shares' => '432',
-        'sentimentBreakdown' => array(
-            array( 'label' => 'Positive', 'percentage' => 65, 'color' => '#10b981' ),
-            array( 'label' => 'Neutral', 'percentage' => 25, 'color' => '#f59e0b' ),
-            array( 'label' => 'Negative', 'percentage' => 10, 'color' => '#ef4444' )
-        ),
-        'recentMentions' => array(
-            'Great project with solid fundamentals',
-            'Love the community support here',
-            'Exciting developments coming soon'
-        ),
-        'trendingKeywords' => array( 'bullish', 'hodl', 'community', 'development' )
-    );
+/**
+ * Get real token metadata from Helius
+ */
+function solanawp_fetch_token_metadata($address, $helius_key) {
+    try {
+        $url = "https://api.helius.xyz/v0/addresses/{$address}/metadata?api-key={$helius_key}";
+        $response = solanawp_make_request($url);
+
+        return $response['metadata'] ?? null;
+    } catch (Exception $e) {
+        return null;
+    }
 }
-*/
+
+/**
+ * Get real WHOIS data using free API
+ */
+function solanawp_get_real_whois_data($url) {
+    $domain = parse_url($url, PHP_URL_HOST);
+    if (!$domain) {
+        return null;
+    }
+
+    try {
+        // Use free WHOIS API (who-dat.as93.net)
+        $whois_url = "https://who-dat.as93.net/{$domain}";
+        $response = solanawp_make_request($whois_url, array('timeout' => 10));
+
+        if ($response && isset($response['domain'])) {
+            $domain_data = $response['domain'];
+
+            $creation_date = $domain_data['creation_date'] ?? null;
+            $age = null;
+            if ($creation_date) {
+                $age = floor((time() - strtotime($creation_date)) / (365.25 * 24 * 3600));
+                $age = $age . ' years';
+            }
+
+            return array(
+                'registrar' => $domain_data['registrar'] ?? 'Unknown',
+                'createdDate' => $creation_date,
+                'expiryDate' => $domain_data['expiry_date'] ?? null,
+                'status' => $domain_data['status'] ?? 'Unknown',
+                'age' => $age,
+                'ssl' => solanawp_check_ssl($url)
+            );
+        }
+    } catch (Exception $e) {
+        error_log('WHOIS lookup error: ' . $e->getMessage());
+    }
+
+    return null;
+}
+
+/**
+ * Extract social media links from text
+ */
+function solanawp_extract_social_links($text) {
+    $links = array();
+
+    // Extract Twitter handle
+    if (preg_match('/twitter\.com\/([a-zA-Z0-9_]+)/', $text, $matches)) {
+        $links['twitter'] = '@' . $matches[1];
+    } elseif (preg_match('/@([a-zA-Z0-9_]+)/', $text, $matches)) {
+        $links['twitter'] = '@' . $matches[1];
+    }
+
+    // Extract Telegram
+    if (preg_match('/t\.me\/([a-zA-Z0-9_]+)/', $text, $matches)) {
+        $links['telegram'] = '@' . $matches[1];
+    }
+
+    return $links;
+}
+
+/**
+ * Check if website has SSL certificate
+ */
+function solanawp_check_ssl($url) {
+    return strpos($url, 'https://') === 0;
+}
+
 
 // =============================================================================
 // 📊 FINAL SCORE CALCULATION
@@ -823,51 +903,58 @@ function solanawp_fetch_community_data( $address ) {
 /**
  * Calculate comprehensive scores based on all data
  */
-function solanawp_calculate_final_scores( $data ) {
+function solanawp_calculate_final_scores($data) {
     $scores = array(
         'overall_score' => 0,
         'trust_score' => 0,
         'activity_score' => 0,
         'security_score' => 0,
-        'recommendation' => 'Proceed with caution'
+        'recommendation' => 'Analysis based on real blockchain data'
     );
 
-    // Calculate individual scores
-    $security_score = 100 - ( $data['security']['risk_score'] ?? 50 );
-    $activity_score = min( 100, ( $data['transactions']['total_transactions'] ?? 0 ) * 2 );
-    $trust_score = 100 - ( $data['rugpull']['risk_percentage'] ?? 50 );
+    // Calculate individual scores from REAL data
+    $security_score = 100 - ($data['security']['risk_score'] ?? 50);
+    $activity_score = 0;
+    $trust_score = 100 - ($data['rugpull']['risk_percentage'] ?? 50);
 
-    // Account age bonus
-    if ( isset( $data['transactions']['account_age_days'] ) && $data['transactions']['account_age_days'] > 90 ) {
+    // Activity score based on real transaction count
+    if (isset($data['transactions']['total_transactions'])) {
+        $tx_count = intval($data['transactions']['total_transactions']);
+        $activity_score = min(100, $tx_count * 2); // 2 points per transaction, max 100
+    }
+
+    // Account age bonus (REAL DATA)
+    if (isset($data['transactions']['account_age_days']) && $data['transactions']['account_age_days'] > 90) {
         $trust_score += 10;
     }
 
-    // Social media presence bonus
-    if ( isset( $data['social']['twitterInfo']['handle'] ) && ! empty( $data['social']['twitterInfo']['handle'] ) ) {
+    // Real balance bonus
+    if (isset($data['balance']['sol_balance']) && $data['balance']['sol_balance'] > 0) {
         $trust_score += 5;
     }
 
     // Normalize scores
-    $scores['security_score'] = max( 0, min( 100, $security_score ) );
-    $scores['activity_score'] = max( 0, min( 100, $activity_score ) );
-    $scores['trust_score'] = max( 0, min( 100, $trust_score ) );
+    $scores['security_score'] = max(0, min(100, $security_score));
+    $scores['activity_score'] = max(0, min(100, $activity_score));
+    $scores['trust_score'] = max(0, min(100, $trust_score));
 
     // Calculate overall score
     $scores['overall_score'] = round(
-        ( $scores['security_score'] + $scores['activity_score'] + $scores['trust_score'] ) / 3
+        ($scores['security_score'] + $scores['activity_score'] + $scores['trust_score']) / 3
     );
 
-    // Generate recommendation
-    if ( $scores['overall_score'] >= 70 ) {
-        $scores['recommendation'] = 'Low risk - Appears to be a legitimate and active address';
-    } elseif ( $scores['overall_score'] >= 40 ) {
-        $scores['recommendation'] = 'Medium risk - Exercise caution and do additional research';
+    // Generate recommendation based on REAL analysis
+    if ($scores['overall_score'] >= 70) {
+        $scores['recommendation'] = 'Low risk - Address shows positive indicators based on blockchain activity';
+    } elseif ($scores['overall_score'] >= 40) {
+        $scores['recommendation'] = 'Medium risk - Mixed indicators, exercise normal caution';
     } else {
-        $scores['recommendation'] = 'High risk - Multiple red flags detected, proceed with extreme caution';
+        $scores['recommendation'] = 'High risk - Multiple risk factors detected in blockchain analysis';
     }
 
     return $scores;
 }
+
 
 // =============================================================================
 // 🛠️ HELPER FUNCTIONS
@@ -989,7 +1076,29 @@ function solanawp_set_cache( $key, $data, $expiration = 300 ) {
  * Get current SOL price (mock implementation)
  */
 function solanawp_get_sol_price() {
-    // In production, this would fetch from a price API like CoinGecko
-    // For now, return a mock price
-    return 100; // $100 per SOL
+    // Check cache first
+    $cache_key = 'sol_price_usd';
+    $cached_price = solanawp_get_cache($cache_key);
+
+    if ($cached_price !== false) {
+        return $cached_price;
+    }
+
+    try {
+        // Use free CoinGecko API
+        $url = 'https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd';
+        $response = solanawp_make_request($url);
+
+        if (isset($response['solana']['usd'])) {
+            $price = floatval($response['solana']['usd']);
+            // Cache for 5 minutes
+            solanawp_set_cache($cache_key, $price, 300);
+            return $price;
+        }
+    } catch (Exception $e) {
+        error_log('SOL price fetch error: ' . $e->getMessage());
+    }
+
+    // Return null instead of mock price if API fails
+    return null;
 }
