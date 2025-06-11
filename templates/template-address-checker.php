@@ -1,10 +1,14 @@
 <?php
 /**
- * UPDATED templates/template-address-checker.php
- * Replace the existing template-address-checker.php with this version
- * Includes the new Website & Social Accounts section repositioned
- * Version 4: Moved Website & Social Accounts between Rug Pull and Community sections
- * File location: templates/template-address-checker.php
+ * Template Name: Address Checker
+ *
+ * This is the template for the Solana Address Checker.
+ * It can be used on any page.
+ *
+ * @link https://developer.wordpress.org/themes/template-files-section/page-template-files/
+ *
+ * @package SolanaWP
+ * @since SolanaWP 1.0.0
  */
 
 // Exit if accessed directly.
@@ -15,14 +19,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 get_header(); // Includes header.php
 ?>
     <div class="main-container">
-        <?php get_sidebar(); // This will display the left sidebar (dynamically rendered from Customizer) ?>
+        <?php get_sidebar(); // Includes sidebar.php ?>
 
         <div id="primary" class="content-area address-checker-content">
             <main id="main" class="site-main solanawp-checker-main" role="main">
                 <?php
-                // Page content (like from the WordPress editor for this page)
-                // is intentionally not displayed for the checker template by default
-                // to keep the focus on the checker tool.
+                // Loop through WordPress content if needed
+                while ( have_posts() ) :
+                    the_post();
+                    // You can include content-page.php here if you want to show page content
+                    // get_template_part( 'template-parts/content', 'page' );
+                endwhile;
                 ?>
 
                 <?php // --- Input Section for the address checker --- ?>
@@ -41,7 +48,9 @@ get_header(); // Includes header.php
 
                     <?php get_template_part( 'template-parts/checker/results-rugpull' ); ?>
                     <?php get_template_part( 'template-parts/checker/results-website-social' ); ?>
-                    <?php get_template_part( 'template-parts/checker/results-community' ); ?>
+                    <?php /* DEACTIVATED: Community section - Keep for future updates
+                    get_template_part( 'template-parts/checker/results-community' );
+                    */ ?>
                     <?php get_template_part( 'template-parts/checker/results-affiliate' ); ?>
 
                     <?php

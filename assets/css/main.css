@@ -596,6 +596,23 @@ a:hover,
 .keyword-tags-wrapper {display: flex;flex-wrap: wrap;gap: 4px;}
 .keyword-tag {background: #f3f4f6;color: #374151;padding: 4px 8px;border-radius: 4px;font-size: 12px;}
 
+/* =============================================================================
+   DEACTIVATED: Community Section - Keep for future updates
+   ============================================================================= */
+
+#communityInteractionCard {
+    display: none !important;
+}
+
+/* Optional: Hide community-related elements if they exist elsewhere */
+.community-section,
+.community-stats,
+.community-interactions,
+.sentiment-breakdown,
+.recent-mentions {
+    display: none !important;
+}
+
 .affiliate-section {background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);border-radius: 12px;padding: 20px;margin: 20px 0 0 0;border: 1px solid #0ea5e9;}
 .affiliate-section:last-child { margin-bottom: 0 !important;}
 .affiliate-title {color: #0c4a6e;font-weight: bold;margin-bottom: 12px;font-size: 1.1em;}
