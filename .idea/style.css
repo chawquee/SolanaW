@@ -1,0 +1,131 @@
+/*
+Theme Name: SolanaWP
+Theme URI: https://www.worldgpl.com/solanawp-theme/
+Author: WORLDGPL
+Author URI: https://www.worldgpl.com/
+Description: A WordPress theme for the Hannisol Solana Address Checker, designed to replicate the hannisolsvelte.html design. Features comprehensive validation and analysis for Solana addresses. "Hannisol's Insight, Navigating Crypto Like Hannibal Crossed the Alps."
+Version: 1.0.0
+License: GNU General Public License v2 or later
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: solanawp
+Domain Path: /languages
+Tags: custom-logo, custom-menu, widgets, responsive-layout, one-column, right-sidebar, accessibility-ready, translation-ready, block-styles, editor-style, featured-images, full-width-template
+
+This theme is based on the Hannisol Solana Address Checker design.
+The brand name "HANNISOL" uses "Times", "Georgia", serif with 3px letter spacing.
+Logo Colors: Golden circle, black "H", teal/turquoise, purple, orange accents.
+*/
+
+/* Basic Reset / Normalizations (from hannisolsvelte.html)
+-------------------------------------------------------------- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; /* From hannisolsvelte.html */
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); /* From hannisolsvelte.html */
+    min-height: 100vh; /* From hannisolsvelte.html */
+    color: #374151; /* From hannisolsvelte.html */
+    line-height: 1.6; /* Added for general readability */
+}
+
+/* Basic Link Styling (can be overridden by more specific styles in main.css) */
+a {
+    color: #7c3aed; /* Example link color, derived from .check-btn:focus in hannisolsvelte.html */
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+a:hover {
+    text-decoration: underline;
+    color: #a855f7; /* Example hover color from .check-btn:hover in hannisolsvelte.html */
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+    display: block; /* Prevents bottom space under images */
+}
+
+/* WordPress Core CSS Classes (minimal styling here, more in assets/css/main.css)
+------------------------------------------------------------------------------- */
+.alignright {
+    float: right;
+    margin: 0 0 1em 1.5em; /* Standard WP spacing */
+}
+
+.alignleft {
+    float: left;
+    margin: 0 1.5em 1em 0; /* Standard WP spacing */
+}
+
+.aligncenter {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 1em; /* Standard WP spacing */
+}
+
+/* Accessibility focused class */
+.screen-reader-text {
+    border: 0;
+    clip: rect(1px, 1px, 1px, 1px);
+    clip-path: inset(50%);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute !important; /* Ensure it's truly hidden but accessible */
+    width: 1px;
+    word-wrap: normal !important; /* Prevents breaking of hyphenated words */
+}
+
+.screen-reader-text:focus {
+    background-color: #f1f1f1;
+    border-radius: 3px;
+    box-shadow: 0 0 2px 2px rgba(0, 0, 0, 0.6);
+    clip: auto !important;
+    clip-path: none;
+    color: #21759b; /* WordPress admin link color */
+    display: block;
+    font-size: 14px;
+    font-weight: bold;
+    height: auto;
+    left: 5px;
+    line-height: normal;
+    padding: 15px 23px 14px;
+    text-decoration: none;
+    top: 5px;
+    width: auto;
+    z-index: 100000; /* Ensure it's above other elements, including WP Admin Bar */
+}
+
+/* Clearing floats */
+.clear:before,
+.clear:after,
+.entry-content:before,
+.entry-content:after,
+.comment-content:before,
+.comment-content:after,
+.site-header:before,
+.site-header:after,
+.site-content:before,
+.site-content:after,
+.site-footer:before,
+.site-footer:after {
+    content: "";
+    display: table;
+    table-layout: fixed;
+}
+
+.clear:after,
+.entry-content:after,
+.comment-content:after,
+.site-header:after,
+.site-content:after,
+.site-footer:after {
+    clear: both;
+}

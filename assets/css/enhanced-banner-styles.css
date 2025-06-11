@@ -1,0 +1,477 @@
+/*
+SolanaWP Enhanced CSS with Advanced Banner Support
+Version 6: Complete rewrite with advanced banner customization
+*/
+
+/* === ADVANCED BANNER BASE STYLES === */
+.solanawp-advanced-banner {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.solanawp-advanced-banner.banner-clickable {
+    cursor: pointer;
+}
+
+.solanawp-advanced-banner .banner-link-overlay {
+    display: block;
+    width: 100%;
+    height: 100%;
+    text-decoration: none;
+    color: inherit;
+    position: relative;
+    z-index: 1;
+}
+
+.solanawp-advanced-banner .banner-content-wrapper {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.solanawp-advanced-banner .banner-text-content {
+    position: relative;
+    z-index: 3;
+}
+
+.solanawp-advanced-banner .banner-text-content.text-align-left {
+    text-align: left;
+}
+
+.solanawp-advanced-banner .banner-text-content.text-align-center {
+    text-align: center;
+}
+
+.solanawp-advanced-banner .banner-text-content.text-align-right {
+    text-align: right;
+}
+
+.solanawp-advanced-banner .banner-main-text {
+    margin: 0 0 0.5em 0;
+    line-height: 1.2;
+}
+
+.solanawp-advanced-banner .banner-sub-text {
+    margin: 0;
+    line-height: 1.4;
+}
+
+.solanawp-advanced-banner .banner-image-content img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+.solanawp-advanced-banner .banner-html-content,
+.solanawp-advanced-banner .banner-slider-content {
+    width: 100%;
+}
+
+/* === ENHANCED HEADER BANNERS === */
+.hero-sub-banner.solanawp-advanced-banner {
+    padding: 20px 24px;
+    text-align: center;
+    margin-bottom: 20px;
+    min-height: 80px;
+}
+
+.solana-coins-analyzer-section.solanawp-advanced-banner {
+    padding: 30px 24px;
+    text-align: center;
+    border-bottom: 1px solid #e5e7eb;
+    overflow: hidden;
+    min-height: 120px;
+}
+
+/* === ENHANCED SIDEBAR AD BANNERS === */
+.sidebar-ad-wrapper {
+    margin-bottom: 16px;
+}
+
+.sidebar-ad-wrapper:last-child {
+    margin-bottom: 0;
+}
+
+.sidebar-ad-banner.solanawp-advanced-banner {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 2px solid #e5e7eb;
+    border-radius: 16px;
+    height: 140px; /* Fixed height maintained */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #374151;
+    font-weight: 600;
+    text-align: center;
+    transition: all 0.3s ease;
+    padding: 10px;
+    margin: 0;
+    width: 100%;
+    box-sizing: border-box;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+.sidebar-ad-banner.solanawp-advanced-banner.small {
+    height: 90px; /* Small variant maintained */
+    padding: 8px;
+}
+
+.sidebar-ad-banner.solanawp-advanced-banner:hover {
+    border-color: var(--solanawp-primary-accent-color, #3b82f6);
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px var(--solanawp-primary-accent-color-rgba-015, rgba(59, 130, 246, 0.15));
+}
+
+.sidebar-ad-banner .banner-content-wrapper {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+}
+
+.sidebar-ad-banner .banner-text-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+}
+
+/* === ENHANCED CONTENT AREA BANNER === */
+.content-area-banner.solanawp-advanced-banner {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    margin: 113px auto; /* 3cm spacing from analyzer frame and footer */
+    border: 2px solid #e5e7eb;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+    overflow: hidden;
+    min-height: 100px;
+    display: block;
+    clear: both;
+}
+
+.content-area-banner.solanawp-advanced-banner:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border-color: var(--solanawp-primary-accent-color, #3b82f6);
+}
+
+.content-area-banner .banner-link-overlay {
+    display: block;
+    width: 100%;
+    height: 100%;
+    text-decoration: none;
+    color: inherit;
+}
+
+.content-area-banner .banner-content-wrapper {
+    padding: 20px;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* === RESPONSIVE ADJUSTMENTS === */
+@media (max-width: 1024px) {
+    .content-area-banner.solanawp-advanced-banner {
+        margin: 80px 16px; /* Reduced spacing on tablets */
+    }
+
+    .hero-sub-banner.solanawp-advanced-banner,
+    .solana-coins-analyzer-section.solanawp-advanced-banner {
+        padding: 20px 16px;
+    }
+}
+
+@media (max-width: 768px) {
+    .content-area-banner.solanawp-advanced-banner {
+        margin: 60px 12px; /* Further reduced spacing on mobile */
+    }
+
+    .content-area-banner .banner-content-wrapper {
+        padding: 15px;
+    }
+
+    .hero-sub-banner.solanawp-advanced-banner,
+    .solana-coins-analyzer-section.solanawp-advanced-banner {
+        padding: 15px 12px;
+    }
+
+    .sidebar-ad-banner.solanawp-advanced-banner {
+        height: 120px !important; /* Force consistent height on mobile */
+    }
+
+    .sidebar-ad-banner.solanawp-advanced-banner.small {
+        height: 80px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .content-area-banner.solanawp-advanced-banner {
+        margin: 40px 8px; /* Minimal spacing on very small screens */
+        border-radius: 12px;
+    }
+
+    .content-area-banner .banner-content-wrapper {
+        padding: 12px;
+    }
+}
+
+/* === ENHANCED LAYOUT FOR CONTENT BANNER POSITIONING === */
+.site {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.site-content {
+    flex-grow: 1;
+    position: relative;
+}
+
+.main-container {
+    position: relative;
+    z-index: 1;
+}
+
+/* Ensure content banner appears outside main container */
+.content-area-banner.solanawp-advanced-banner {
+    position: relative;
+    z-index: 2;
+    /* Width matches analyzer frame */
+    width: calc(100% - 48px); /* Accounting for main-container padding */
+    max-width: 1400px; /* Same as main-container max-width */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* === ANIMATION KEYFRAMES === */
+@keyframes solanawp-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes solanawp-slide-up {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes solanawp-slide-down {
+    from { opacity: 0; transform: translateY(-30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes solanawp-slide-left {
+    from { opacity: 0; transform: translateX(30px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes solanawp-slide-right {
+    from { opacity: 0; transform: translateX(-30px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes solanawp-zoom-in {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes solanawp-bounce {
+    0%, 20%, 53%, 80%, 100% { transform: translateY(0); }
+    40%, 43% { transform: translateY(-15px); }
+    70% { transform: translateY(-7px); }
+}
+
+@keyframes solanawp-pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* === BANNER ANIMATION CLASSES === */
+.banner-animate-fade-in {
+    animation: solanawp-fade-in 1s ease-in-out;
+}
+
+.banner-animate-slide-up {
+    animation: solanawp-slide-up 1s ease-in-out;
+}
+
+.banner-animate-slide-down {
+    animation: solanawp-slide-down 1s ease-in-out;
+}
+
+.banner-animate-slide-left {
+    animation: solanawp-slide-left 1s ease-in-out;
+}
+
+.banner-animate-slide-right {
+    animation: solanawp-slide-right 1s ease-in-out;
+}
+
+.banner-animate-zoom-in {
+    animation: solanawp-zoom-in 1s ease-in-out;
+}
+
+.banner-animate-bounce {
+    animation: solanawp-bounce 1s ease-in-out;
+}
+
+.banner-animate-pulse {
+    animation: solanawp-pulse 2s ease-in-out infinite;
+}
+
+/* === ENHANCED ADMIN CONFIGURATION LINKS === */
+.admin-configure-banner-link {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    background: rgba(0,0,0,0.6);
+    color: white;
+    padding: 3px 6px;
+    font-size: 10px;
+    border-radius: 3px;
+    line-height: 1;
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.solanawp-advanced-banner:hover .admin-configure-banner-link {
+    opacity: 1;
+}
+
+.admin-configure-banner-link a {
+    color: white !important;
+    text-decoration: none !important;
+    font-weight: normal !important;
+}
+
+.admin-configure-banner-link a:hover {
+    color: #ccc !important;
+}
+
+/* === PLACEHOLDER AD STYLES === */
+.placeholder-ad {
+    border: 2px dashed #3b82f6 !important;
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important;
+}
+
+.placeholder-ad:hover {
+    border-color: #1d4ed8 !important;
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%) !important;
+}
+
+/* === ENHANCED SIDEBAR LAYOUT === */
+.sidebar,
+.sidebar-right {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    box-sizing: border-box;
+    position: relative;
+    margin-bottom: 0 !important;
+}
+
+/* === CONTENT BANNER WIDTH MATCHING === */
+@media (min-width: 1400px) {
+    .content-area-banner.solanawp-advanced-banner {
+        width: calc(1400px - 48px); /* Match exact analyzer frame width */
+    }
+}
+
+@media (max-width: 1399px) {
+    .content-area-banner.solanawp-advanced-banner {
+        width: calc(100vw - 48px); /* Match viewport-based analyzer frame width */
+        max-width: calc(1400px - 48px);
+    }
+}
+
+/* === ENHANCED ACCESSIBILITY === */
+.solanawp-advanced-banner:focus-within {
+    outline: 2px solid var(--solanawp-primary-accent-color, #3b82f6);
+    outline-offset: 2px;
+}
+
+.banner-link-overlay:focus {
+    outline: none; /* Remove duplicate outline since parent handles it */
+}
+
+/* === PRINT STYLES === */
+@media print {
+    .solanawp-advanced-banner .admin-configure-banner-link,
+    .placeholder-ad {
+        display: none !important;
+    }
+
+    .solanawp-advanced-banner {
+        box-shadow: none !important;
+        border: 1px solid #000 !important;
+        background: #fff !important;
+        color: #000 !important;
+    }
+}
+
+/* === HIGH CONTRAST MODE SUPPORT === */
+@media (prefers-contrast: high) {
+    .solanawp-advanced-banner {
+        border: 2px solid #000 !important;
+        background: #fff !important;
+        color: #000 !important;
+    }
+
+    .sidebar-ad-banner.solanawp-advanced-banner:hover {
+        background: #f0f0f0 !important;
+        border-color: #000 !important;
+    }
+}
+
+/* === REDUCED MOTION SUPPORT === */
+@media (prefers-reduced-motion: reduce) {
+    .solanawp-advanced-banner,
+    .sidebar-ad-banner.solanawp-advanced-banner,
+    .content-area-banner.solanawp-advanced-banner {
+        transition: none !important;
+        animation: none !important;
+    }
+
+    .banner-animate-fade-in,
+    .banner-animate-slide-up,
+    .banner-animate-slide-down,
+    .banner-animate-slide-left,
+    .banner-animate-slide-right,
+    .banner-animate-zoom-in,
+    .banner-animate-bounce,
+    .banner-animate-pulse {
+        animation: none !important;
+    }
+}frames solanawp-fade-in {
+     from { opacity: 0; }
+     to { opacity: 1; }
+ }
+
+@key

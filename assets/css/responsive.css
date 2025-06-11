@@ -1,0 +1,165 @@
+/*
+SolanaWP Responsive Stylesheet
+---------------------------------------------------------------------
+This file contains the responsive styles (@media queries)
+adapted from hannisolsvelte.html.
+It should be enqueued after main.css.
+*/
+
+/* Responsive Styles (from @media queries in hannisolsvelte.html [cite: hannisolsvelte.html]) */
+@media (max-width: 1024px) {
+    .main-container {
+        grid-template-columns: 1fr; /* Stack content and sidebar */
+        padding: 16px; /* Adjust padding for smaller screens */
+    }
+    .sidebar {
+        order: -1; /* Move sidebar to the top on smaller screens if desired, or remove if stacking below */
+        /* If stacking below, remove order: -1; */
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Allow ad banners to flow */
+        gap: 16px;
+    }
+    .ad-banner { /* Covers general and specific ad-banner adjustments for this breakpoint */
+        height: 120px !important; /* Force height for consistency, from hannisolsvelte.html [cite: hannisolsvelte.html] */
+    }
+    /* .ad-banner.small would already be 120px, this standardizes them */
+
+    .site-header .main-title {
+        font-size: 38px; /* Adjust main title size */
+    }
+    .site-header .subtitle {
+        font-size: 16px; /* Adjust subtitle size */
+    }
+}
+
+@media (max-width: 768px) {
+    .site-header .header {
+        padding: 24px; /* Reduce header padding */
+    }
+    .site-header .main-title {
+        font-size: 32px; /* Further adjust main title size from hannisolsvelte.html [cite: hannisolsvelte.html] */
+    }
+    .input-container { /* From hannisolsvelte.html [cite: hannisolsvelte.html] */
+        flex-direction: column;
+        gap: 12px; /* Reduce gap for stacked items */
+    }
+    .address-input { /* From hannisolsvelte.html [cite: hannisolsvelte.html] */
+        width: 100%;
+    }
+    .check-btn {
+        width: 100%; /* Make button full width */
+        padding: 14px 24px; /* Adjust button padding */
+    }
+    .sidebar {
+        grid-template-columns: 1fr; /* Ensure single column for ads */
+    }
+    .results-section {
+        padding: 24px; /* Reduce results section padding */
+    }
+    .card-header {
+        padding: 16px 20px; /* Reduce card header padding */
+    }
+    .card-title {
+        font-size: 18px; /* Adjust card title size */
+    }
+    .card-content {
+        padding: 20px; /* Reduce card content padding */
+    }
+    .metrics-grid {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* Adjust metrics grid */
+        gap: 16px;
+    }
+    .metric-value {
+        font-size: 28px; /* Adjust metric value size */
+    }
+    /* Adjust grid for Account Details & Security Analysis Cards */
+    #accountAndSecurityOuterGrid {
+        grid-template-columns: 1fr; /* Stack on smaller screens */
+    }
+    /* Adjust grid for Rug Pull Factors */
+    .rug-pull-factors-grid {
+        grid-template-columns: 1fr; /* Stack on smaller screens */
+    }
+    .final-scores-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Adjust final scores grid */
+    }
+    .score-value {
+        font-size: 36px; /* Adjust score value size */
+    }
+    .affiliate-grid {
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); /* Adjust affiliate grid */
+    }
+    .primary-menu {
+        flex-direction: column; /* Stack menu items */
+        align-items: center;
+    }
+    .primary-menu li a {
+        width: 100%;
+        text-align: center;
+    }
+    .comment-list .children { /* Reduce indentation for nested comments */
+        padding-left: 1em;
+        margin-left: 0.5em;
+    }
+}
+
+@media (max-width: 480px) {
+    .site-header .header {
+        padding: 16px;
+    }
+    .site-header .main-title {
+        font-size: 26px;
+    }
+    .site-header .subtitle {
+        font-size: 14px;
+    }
+    .site-header .slogan {
+        font-size: 13px;
+    }
+    .logo-container {
+        margin-bottom: 12px;
+    }
+    .site-header .logo, .custom-logo-link img {
+        width: 90px;
+        height: 90px;
+    }
+    .site-header .logo-h {
+        font-size: 36px;
+    }
+    .site-header .logo-h::before {
+        width: 18px;
+        height: 6px;
+    }
+    .input-section, .results-section {
+        padding: 16px;
+    }
+    .card-header, .card-content {
+        padding: 16px;
+    }
+    .check-btn {
+        padding: 12px 20px;
+        font-size: 15px;
+    }
+    .address-input {
+        padding: 12px 15px;
+        font-size: 15px;
+    }
+    .metric-value {
+        font-size: 24px;
+    }
+    .score-value {
+        font-size: 32px;
+    }
+    .score-icon-wrapper {
+        width: 50px;
+        height: 50px;
+    }
+    .score-icon-wrapper svg {
+        width: 24px;
+        height: 24px;
+    }
+    .form-submit .submit {
+        width: 100%;
+        padding: 12px;
+    }
+}
