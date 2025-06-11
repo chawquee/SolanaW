@@ -48,9 +48,6 @@ get_header(); // Includes header.php
 
                     <?php get_template_part( 'template-parts/checker/results-rugpull' ); ?>
                     <?php get_template_part( 'template-parts/checker/results-website-social' ); ?>
-                    <?php /* DEACTIVATED: Community section - Keep for future updates
-                    get_template_part( 'template-parts/checker/results-community' );
-                    */ ?>
                     <?php get_template_part( 'template-parts/checker/results-affiliate' ); ?>
 
                     <?php
