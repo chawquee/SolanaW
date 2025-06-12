@@ -74,6 +74,48 @@
         }
 
         /**
+         * Update progress bar
+         */
+        function updateProgressBar(barId, value) {
+            const $bar = $('#' + barId);
+            if ($bar.length) {
+                $bar.css('width', value + '%');
+
+                // Update color based on value
+                if (value >= 70) {
+                    $bar.removeClass('medium low').addClass('high');
+                } else if (value >= 40) {
+                    $bar.removeClass('high low').addClass('medium');
+                } else {
+                    $bar.removeClass('high medium').addClass('low');
+                }
+            }
+        }
+
+        /**
+         * Update token distribution chart
+         */
+        function updateTokenDistributionChart(data) {
+            if (!window.tokenDistributionChart || !Array.isArray(data)) {
+                console.log('Chart not available or invalid data');
+                return;
+            }
+
+            console.log('Updating token distribution chart with:', data);
+
+            try {
+                window.tokenDistributionChart.data.labels = data.map(d => d.label || 'Unknown');
+                window.tokenDistributionChart.data.datasets[0].data = data.map(d => d.percentage || 0);
+                window.tokenDistributionChart.data.datasets[0].backgroundColor = data.map(d => d.color || '#6b7280');
+                window.tokenDistributionChart.update();
+
+                console.log('Token distribution chart updated successfully');
+            } catch (error) {
+                console.error('Error updating token distribution chart:', error);
+            }
+        }
+
+        /**
          * Update the results UI with fetched data
          * This function takes real API data and populates all the result cards
          */
@@ -171,7 +213,6 @@
                 accountSecurityVisible = true;
             }
 
-
             // Security Analysis
             if (data.security) {
                 const sa = data.security;
@@ -258,22 +299,19 @@
                     const $distList = $('#rugTokenDistribution').empty();
                     rp.token_distribution.forEach(item => {
                         $distList.append(`
-                <div class="distribution-item">
-                    <span class="dist-color" style="background-color: ${item.color}"></span>
-                    <span class="dist-label">${item.label}</span>
-                    <span class="dist-percentage">${item.percentage}%</span>
-                </div>
-            `);
+                            <div class="distribution-item">
+                                <span class="dist-color" style="background-color: ${item.color}"></span>
+                                <span class="dist-label">${item.label}</span>
+                                <span class="dist-percentage">${item.percentage}%</span>
+                            </div>
+                        `);
                     });
                 }
 
                 $('#rugPullRiskCard').show();
             }
 
-
-            // 6. WEBSITE & SOCIAL ACCOUNTS CARD
-            // Updated Website & Social Accounts section handling
-            // Updated Website & Social Accounts section handling
+            // 6. WEBSITE & SOCIAL ACCOUNTS CARD - UPDATED with Discord and GitHub
             if (data.social) {
                 const ws = data.social;
 
@@ -322,29 +360,72 @@
 
                 $('#websiteSocialCard').show();
             }
-        /**
-         * Update token distribution chart
-         */
-        function updateTokenDistributionChart(data) {
-            if (!window.tokenDistributionChart || !Array.isArray(data)) {
-                console.log('Chart not available or invalid data');
-                return;
+
+            // RECOMMENDED SECURITY TOOLS SECTION - RESTORED ORIGINAL LOGIC
+            if ($('#affiliateSection').children().length > 0) {
+                $('#affiliateSection').show();
             }
 
-            console.log('Updating token distribution chart with:', data);
+            // 7. FINAL RESULTS CARD - RESTORED FROM ORIGINAL
+            if (data.scores) {
+                const scores = data.scores;
+                $('#finalTrustScore').text((scores.trust_score || 0) + '/100');
+                $('#finalReliabilityScore').text((scores.activity_score || 0) + '/100');
+                $('#finalOverallRating').text((scores.overall_score || 0) + '/100');
+                $('#finalSummary').text(scores.recommendation || 'Analysis completed.');
 
-            try {
-                window.tokenDistributionChart.data.labels = data.map(d => d.label || 'Unknown');
-                window.tokenDistributionChart.data.datasets[0].data = data.map(d => d.percentage || 0);
-                window.tokenDistributionChart.data.datasets[0].backgroundColor = data.map(d => d.color || '#6b7280');
-                window.tokenDistributionChart.update();
+                // Update progress bars
+                updateProgressBar('trustScoreBar', scores.trust_score || 0);
+                updateProgressBar('reliabilityScoreBar', scores.activity_score || 0);
+                updateProgressBar('overallRatingBar', scores.overall_score || 0);
 
-                console.log('Token distribution chart updated successfully');
-            } catch (error) {
-                console.error('Error updating token distribution chart:', error);
+                $('#finalResultsCard').show();
             }
+
+            // Scroll to results smoothly
+            $('html, body').animate({
+                scrollTop: $('#resultsSection').offset().top - 100
+            }, 500);
         }
 
+        /**
+         * Initialize charts
+         */
+        function initializeCharts() {
+            // Initialize token distribution chart if canvas exists
+            const tokenDistCanvas = document.getElementById('tokenDistributionChart');
+            if (tokenDistCanvas) {
+                const ctx = tokenDistCanvas.getContext('2d');
+                window.tokenDistributionChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            data: [],
+                            backgroundColor: [],
+                            borderWidth: 2,
+                            borderColor: '#1f2937'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    color: '#9ca3af',
+                                    padding: 10,
+                                    font: {
+                                        size: 12
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
 
         // ===================================================================
         // EVENT LISTENER FOR THE CHECK BUTTON - REAL API IMPLEMENTATION
@@ -465,45 +546,6 @@
 
         // Initialize any charts that might be needed
         initializeCharts();
-
-        /**
-         * Initialize charts
-         */
-        function initializeCharts() {
-            // Initialize token distribution chart if canvas exists
-            const tokenDistCanvas = document.getElementById('tokenDistributionChart');
-            if (tokenDistCanvas) {
-                const ctx = tokenDistCanvas.getContext('2d');
-                window.tokenDistributionChart = new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: [],
-                        datasets: [{
-                            data: [],
-                            backgroundColor: [],
-                            borderWidth: 2,
-                            borderColor: '#1f2937'
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    color: '#9ca3af',
-                                    padding: 10,
-                                    font: {
-                                        size: 12
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-        }
 
         // Add keyboard support for better accessibility
         $solanaAddressInput.on('keypress', function(e) {
