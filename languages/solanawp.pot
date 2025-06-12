@@ -659,3 +659,28 @@ msgstr ""
 #: template-parts/checker/results-website-social.php:64
 msgid "Verified"
 msgstr ""
+# Add these new strings to your languages/solanawp.pot file:
+
+#: template-parts/checker/results-website-social.php:XX
+msgid "Discord Information"
+msgstr ""
+
+#: template-parts/checker/results-website-social.php:XX
+msgid "Server Invite"
+msgstr ""
+
+#: template-parts/checker/results-website-social.php:XX
+msgid "Server Name"
+msgstr ""
+
+#: template-parts/checker/results-website-social.php:XX
+msgid "GitHub Information"
+msgstr ""
+
+#: template-parts/checker/results-website-social.php:XX
+msgid "Repository"
+msgstr ""
+
+#: template-parts/checker/results-website-social.php:XX
+msgid "Organization"
+msgstr ""

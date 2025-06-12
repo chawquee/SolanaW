@@ -998,6 +998,9 @@ function solanawp_get_token_metadata($address) {
 /**
  * Fetch website and social media data
  */
+/**
+ * Fetch website and social media data - UPDATED: Added Discord & GitHub, removed followers/members
+ */
 function solanawp_fetch_social_data($address) {
     try {
         $helius_key = get_option('solanawp_helius_api_key');
@@ -1009,6 +1012,8 @@ function solanawp_fetch_social_data($address) {
             'whoisInfo' => null,
             'twitterInfo' => null,
             'telegramInfo' => null,
+            'discordInfo' => null,    // NEW
+            'githubInfo' => null,     // NEW
             'enhanced' => !empty($helius_key)
         );
 
@@ -1034,25 +1039,34 @@ function solanawp_fetch_social_data($address) {
                 if (isset($metadata['description'])) {
                     $social_links = solanawp_extract_social_links($metadata['description']);
 
+                    // Twitter info - UPDATED: Removed followers
                     if (isset($social_links['twitter'])) {
                         $result['twitterInfo'] = array(
                             'handle' => $social_links['twitter'],
-                            'followers' => null, // Would need Twitter API for real data
-                            'verified' => null,
-                            'created' => null,
-                            'lastActive' => null,
-                            'engagementRate' => null
+                            'verified' => null // Would need Twitter API for real data
                         );
                     }
 
+                    // Telegram info - UPDATED: Removed members
                     if (isset($social_links['telegram'])) {
                         $result['telegramInfo'] = array(
-                            'handle' => $social_links['telegram'],
-                            'members' => null, // Would need Telegram API for real data
-                            'onlineMembers' => null,
-                            'created' => null,
-                            'description' => null,
-                            'isPremium' => null
+                            'handle' => $social_links['telegram']
+                        );
+                    }
+
+                    // NEW: Discord info
+                    if (isset($social_links['discord'])) {
+                        $result['discordInfo'] = array(
+                            'invite' => $social_links['discord'],
+                            'serverName' => null // Would need Discord API for real data
+                        );
+                    }
+
+                    // NEW: GitHub info
+                    if (isset($social_links['github'])) {
+                        $result['githubInfo'] = array(
+                            'repository' => $social_links['github'],
+                            'organization' => solanawp_extract_github_org($social_links['github'])
                         );
                     }
                 }
@@ -1062,21 +1076,57 @@ function solanawp_fetch_social_data($address) {
             }
         }
 
-        return $result;
+        // Return formatted data structure for frontend
+        return array(
+            'webInfo' => array(
+                'website' => $result['websiteUrl'],
+                'registrationDate' => $result['whoisInfo']['createdDate'] ?? null,
+                'registrationCountry' => $result['whoisInfo']['country'] ?? null
+            ),
+            'telegramInfo' => array(
+                'channel' => $result['telegramInfo']['handle'] ?? null
+            ),
+            'twitterInfo' => array(
+                'handle' => $result['twitterInfo']['handle'] ?? null,
+                'verified' => $result['twitterInfo']['verified'] ?? null
+            ),
+            'discordInfo' => array(
+                'invite' => $result['discordInfo']['invite'] ?? null,
+                'serverName' => $result['discordInfo']['serverName'] ?? null
+            ),
+            'githubInfo' => array(
+                'repository' => $result['githubInfo']['repository'] ?? null,
+                'organization' => $result['githubInfo']['organization'] ?? null
+            ),
+            'enhanced' => $result['enhanced']
+        );
 
     } catch (Exception $e) {
         return array(
-            'websiteUrl' => null,
-            'domainAge' => null,
-            'sslSecured' => false,
-            'whoisInfo' => null,
-            'twitterInfo' => null,
-            'telegramInfo' => null,
+            'webInfo' => array(
+                'website' => null,
+                'registrationDate' => null,
+                'registrationCountry' => null
+            ),
+            'telegramInfo' => array(
+                'channel' => null
+            ),
+            'twitterInfo' => array(
+                'handle' => null,
+                'verified' => null
+            ),
+            'discordInfo' => array(
+                'invite' => null,
+                'serverName' => null
+            ),
+            'githubInfo' => array(
+                'repository' => null,
+                'organization' => null
+            ),
             'error' => $e->getMessage()
         );
     }
 }
-
 /**
  * Get real token metadata from Helius
  */
@@ -1200,11 +1250,16 @@ function solanawp_get_real_whois_data($url) {
 /**
  * Extract social media links from text
  */
+/**
+ * Extract social media links from text - UPDATED: Added Discord and GitHub
+ */
 function solanawp_extract_social_links($text) {
     $links = array();
 
     // Extract Twitter handle
     if (preg_match('/twitter\.com\/([a-zA-Z0-9_]+)/', $text, $matches)) {
+        $links['twitter'] = '@' . $matches[1];
+    } elseif (preg_match('/x\.com\/([a-zA-Z0-9_]+)/', $text, $matches)) {
         $links['twitter'] = '@' . $matches[1];
     } elseif (preg_match('/@([a-zA-Z0-9_]+)/', $text, $matches)) {
         $links['twitter'] = '@' . $matches[1];
@@ -1213,9 +1268,35 @@ function solanawp_extract_social_links($text) {
     // Extract Telegram
     if (preg_match('/t\.me\/([a-zA-Z0-9_]+)/', $text, $matches)) {
         $links['telegram'] = '@' . $matches[1];
+    } elseif (preg_match('/telegram\.me\/([a-zA-Z0-9_]+)/', $text, $matches)) {
+        $links['telegram'] = '@' . $matches[1];
+    }
+
+    // NEW: Extract Discord
+    if (preg_match('/discord\.gg\/([a-zA-Z0-9]+)/', $text, $matches)) {
+        $links['discord'] = 'discord.gg/' . $matches[1];
+    } elseif (preg_match('/discord\.com\/invite\/([a-zA-Z0-9]+)/', $text, $matches)) {
+        $links['discord'] = 'discord.gg/' . $matches[1];
+    }
+
+    // NEW: Extract GitHub
+    if (preg_match('/github\.com\/([a-zA-Z0-9_\-\.]+\/[a-zA-Z0-9_\-\.]+)/', $text, $matches)) {
+        $links['github'] = 'github.com/' . $matches[1];
+    } elseif (preg_match('/github\.com\/([a-zA-Z0-9_\-\.]+)/', $text, $matches)) {
+        $links['github'] = 'github.com/' . $matches[1];
     }
 
     return $links;
+}
+
+/**
+ * NEW: Extract GitHub organization from repository URL
+ */
+function solanawp_extract_github_org($github_url) {
+    if (preg_match('/github\.com\/([a-zA-Z0-9_\-\.]+)\//', $github_url, $matches)) {
+        return $matches[1];
+    }
+    return null;
 }
 
 /**

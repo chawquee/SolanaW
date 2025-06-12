@@ -697,14 +697,49 @@ a:hover,
 .clear:before, .clear:after, .entry-content:before, .entry-content:after, .comment-content:before, .comment-content:after, .site-header:before, .site-header:after, .site-content:before, .site-content:after, .site-footer:before, .site-footer:after { content: ""; display: table; table-layout: fixed; }
 .clear:after, .entry-content:after, .comment-content:after, .site-header:after, .site-content:after, .site-footer:after { clear: both; }
 
-/* === WEBSITE & SOCIAL ACCOUNTS SECTION STYLES === */
+//* === WEBSITE & SOCIAL ACCOUNTS SECTION STYLES === */
 .website-social-section {margin-bottom: 24px;}
 .website-social-section:last-child {margin-bottom: 0;}
-.web-info-grid, .telegram-info-grid, .twitter-info-grid {display: grid;grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));gap: 16px;margin-bottom: 0;}
-.web-info-item, .telegram-info-item, .twitter-info-item {background: #f9fafb;border-radius: 8px;padding: 16px;border: 1px solid #e5e7eb;transition: all 0.3s ease;}
-.web-info-item:hover, .telegram-info-item:hover, .twitter-info-item:hover {background: #f3f4f6;transform: translateY(-1px);box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);}
-.web-info-label, .telegram-info-label, .twitter-info-label {font-size: 14px;color: #6b7280;margin-bottom: 8px;font-weight: 500;}
-.web-info-value, .telegram-info-value, .twitter-info-value {font-size: 16px;color: #374151;font-weight: 600;word-break: break-all;}
+
+/* UPDATED: Added discord-info-grid and github-info-grid */
+.web-info-grid, .telegram-info-grid, .twitter-info-grid, .discord-info-grid, .github-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 0;
+}
+
+/* UPDATED: Added discord-info-item and github-info-item */
+.web-info-item, .telegram-info-item, .twitter-info-item, .discord-info-item, .github-info-item {
+    background: #f9fafb;
+    border-radius: 8px;
+    padding: 16px;
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+}
+
+/* UPDATED: Added discord and github hover effects */
+.web-info-item:hover, .telegram-info-item:hover, .twitter-info-item:hover, .discord-info-item:hover, .github-info-item:hover {
+    background: #f3f4f6;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* UPDATED: Added discord-info-label and github-info-label */
+.web-info-label, .telegram-info-label, .twitter-info-label, .discord-info-label, .github-info-label {
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+/* UPDATED: Added discord-info-value and github-info-value */
+.web-info-value, .telegram-info-value, .twitter-info-value, .discord-info-value, .github-info-value {
+    font-size: 16px;
+    color: #374151;
+    font-weight: 600;
+    word-break: break-all;
+}
 
 /* === RESPONSIVE DESIGN BREAKPOINTS === */
 @media (max-width: 1200px) {
@@ -771,8 +806,8 @@ a:hover,
         justify-content: center;
     }
 
-    /* Website & Social responsive adjustments */
-    .web-info-grid, .telegram-info-grid, .twitter-info-grid {
+    /* UPDATED: Website & Social responsive adjustments - Added discord and github grids */
+    .web-info-grid, .telegram-info-grid, .twitter-info-grid, .discord-info-grid, .github-info-grid {
         grid-template-columns: 1fr;
         gap: 12px;
     }

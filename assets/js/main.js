@@ -272,90 +272,56 @@
 
 
             // 6. WEBSITE & SOCIAL ACCOUNTS CARD
+            // Updated Website & Social Accounts section handling
+            // Updated Website & Social Accounts section handling
             if (data.social) {
                 const ws = data.social;
 
-                // Website info
-                if (ws.websiteUrl) {
-                    $('#websiteUrl').attr('href', ws.websiteUrl).text(ws.websiteUrl);
-                    $('#domainAge').text(ws.domainAge || 'Unknown');
-                    $('#sslSecured').text(ws.sslSecured ? 'Yes' : 'No')
-                        .css('color', ws.sslSecured ? '#10b981' : '#ef4444');
-                } else {
-                    $('#websiteUrl').text('No website found');
+                // Web info
+                if (ws.webInfo) {
+                    const web = ws.webInfo;
+                    $('#webInfoAddress').text(web.website || 'Not found');
+                    $('#webInfoRegDate').text(web.registrationDate || 'Unknown');
+                    $('#webInfoRegCountry').text(web.registrationCountry || 'Unknown');
                 }
 
-                // WHOIS info
-                if (ws.whoisInfo) {
-                    const whois = ws.whoisInfo;
-                    $('#whoisRegistrar').text(whois.registrar || 'Unknown');
-                    $('#whoisCreated').text(whois.createdDate || 'Unknown');
-                    $('#whoisExpiry').text(whois.expiryDate || 'Unknown');
-                    $('#whoisStatus').text(whois.status || 'Unknown');
-                }
-
-                // Twitter info
+                // Twitter info - UPDATED: Removed followers, kept verified
                 if (ws.twitterInfo) {
                     const twitter = ws.twitterInfo;
                     $('#twitterHandle').text(twitter.handle || 'Not found');
-                    $('#twitterFollowers').text(twitter.followers || '0');
-                    $('#twitterVerified').text(twitter.verified ? 'Yes' : 'No')
+                    $('#twitterVerified')
+                        .text(twitter.verified ? 'Yes' : 'No')
                         .css('color', twitter.verified ? '#10b981' : '#ef4444');
-                    $('#twitterCreated').text(twitter.created || 'Unknown');
-                    $('#twitterEngagement').text(twitter.engagementRate || '0%');
                 }
 
-                // Telegram info
+                // Telegram info - UPDATED: Removed members
                 if (ws.telegramInfo) {
                     const telegram = ws.telegramInfo;
-                    $('#telegramHandle').text(telegram.handle || 'Not found');
-                    $('#telegramMembers').text(telegram.members || '0');
-                    $('#telegramOnline').text(telegram.onlineMembers || '0');
-                    $('#telegramCreated').text(telegram.created || 'Unknown');
+                    $('#telegramChannel').text(telegram.channel || 'Not found');
+                }
+
+                // NEW: Discord info
+                if (ws.discordInfo) {
+                    const discord = ws.discordInfo;
+                    $('#discordServer').text(discord.invite || 'Not found');
+                    $('#discordName').text(discord.serverName || 'Unknown');
+                } else {
+                    $('#discordServer').text('Not found');
+                    $('#discordName').text('Unknown');
+                }
+
+                // NEW: GitHub info
+                if (ws.githubInfo) {
+                    const github = ws.githubInfo;
+                    $('#githubRepo').text(github.repository || 'Not found');
+                    $('#githubOrg').text(github.organization || 'Unknown');
+                } else {
+                    $('#githubRepo').text('Not found');
+                    $('#githubOrg').text('Unknown');
                 }
 
                 $('#websiteSocialCard').show();
             }
-
-            // 7. FINAL RESULTS CARD
-            if (data.scores) {
-                const scores = data.scores;
-                $('#finalTrustScore').text((scores.trust_score || 0) + '/100');
-                $('#finalReliabilityScore').text((scores.activity_score || 0) + '/100');
-                $('#finalOverallRating').text((scores.overall_score || 0) + '/100');
-                $('#finalSummary').text(scores.recommendation || 'Analysis completed.');
-
-                // Update progress bars
-                updateProgressBar('trustScoreBar', scores.trust_score || 0);
-                updateProgressBar('reliabilityScoreBar', scores.activity_score || 0);
-                updateProgressBar('overallRatingBar', scores.overall_score || 0);
-
-                $('#finalResultsCard').show();
-            }
-
-            // Scroll to results smoothly
-            $('html, body').animate({
-                scrollTop: $('#resultsSection').offset().top - 100
-            }, 500);
-        }
-
-
-        function updateProgressBar(barId, value) {
-            const $bar = $('#' + barId);
-            if ($bar.length) {
-                $bar.css('width', Math.max(0, Math.min(100, value)) + '%');
-
-                // Update color based on value with smooth transitions
-                $bar.removeClass('high medium low');
-                if (value >= 70) {
-                    $bar.addClass('high');
-                } else if (value >= 40) {
-                    $bar.addClass('medium');
-                } else {
-                    $bar.addClass('low');
-                }
-            }
-        }
         /**
          * Update token distribution chart
          */

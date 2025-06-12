@@ -42,7 +42,7 @@ if ( ! defined( 'ABSPATH' ) ) {
             </div>
         </div>
 
-        <?php // Telegram Information Section ?>
+        <?php // Telegram Information Section - UPDATED: Removed Members ?>
         <div class="website-social-section">
             <h4><?php esc_html_e( 'Telegram Information', 'solanawp' ); ?></h4>
             <div class="telegram-info-grid"> <?php // Grid for telegram information ?>
@@ -50,14 +50,10 @@ if ( ! defined( 'ABSPATH' ) ) {
                     <div class="telegram-info-label"><?php esc_html_e( 'Channel/Group', 'solanawp' ); ?></div>
                     <div class="telegram-info-value" id="telegramChannel">-</div> <?php // Placeholder for JS ?>
                 </div>
-                <div class="telegram-info-item">
-                    <div class="telegram-info-label"><?php esc_html_e( 'Members', 'solanawp' ); ?></div>
-                    <div class="telegram-info-value text-blue" id="telegramMembers">-</div> <?php // Placeholder for JS ?>
-                </div>
             </div>
         </div>
 
-        <?php // X (Twitter) Information Section ?>
+        <?php // X (Twitter) Information Section - UPDATED: Removed Followers, kept Verified ?>
         <div class="website-social-section">
             <h4><?php esc_html_e( 'X (Twitter) Information', 'solanawp' ); ?></h4>
             <div class="twitter-info-grid"> <?php // Grid for twitter information ?>
@@ -66,12 +62,38 @@ if ( ! defined( 'ABSPATH' ) ) {
                     <div class="twitter-info-value" id="twitterHandle">-</div> <?php // Placeholder for JS ?>
                 </div>
                 <div class="twitter-info-item">
-                    <div class="twitter-info-label"><?php esc_html_e( 'Followers', 'solanawp' ); ?></div>
-                    <div class="twitter-info-value" id="twitterFollowers">-</div> <?php // Placeholder for JS ?>
-                </div>
-                <div class="twitter-info-item">
                     <div class="twitter-info-label"><?php esc_html_e( 'Verified', 'solanawp' ); ?></div>
                     <div class="twitter-info-value" id="twitterVerified">-</div> <?php // Placeholder for JS, color will be set by JS ?>
+                </div>
+            </div>
+        </div>
+
+        <?php // NEW: Discord Information Section ?>
+        <div class="website-social-section">
+            <h4><?php esc_html_e( 'Discord Information', 'solanawp' ); ?></h4>
+            <div class="discord-info-grid"> <?php // Grid for discord information ?>
+                <div class="discord-info-item">
+                    <div class="discord-info-label"><?php esc_html_e( 'Server Invite', 'solanawp' ); ?></div>
+                    <div class="discord-info-value" id="discordServer">-</div> <?php // Placeholder for JS ?>
+                </div>
+                <div class="discord-info-item">
+                    <div class="discord-info-label"><?php esc_html_e( 'Server Name', 'solanawp' ); ?></div>
+                    <div class="discord-info-value" id="discordName">-</div> <?php // Placeholder for JS ?>
+                </div>
+            </div>
+        </div>
+
+        <?php // NEW: GitHub Information Section ?>
+        <div class="website-social-section">
+            <h4><?php esc_html_e( 'GitHub Information', 'solanawp' ); ?></h4>
+            <div class="github-info-grid"> <?php // Grid for github information ?>
+                <div class="github-info-item">
+                    <div class="github-info-label"><?php esc_html_e( 'Repository', 'solanawp' ); ?></div>
+                    <div class="github-info-value" id="githubRepo">-</div> <?php // Placeholder for JS ?>
+                </div>
+                <div class="github-info-item">
+                    <div class="github-info-label"><?php esc_html_e( 'Organization', 'solanawp' ); ?></div>
+                    <div class="github-info-value" id="githubOrg">-</div> <?php // Placeholder for JS ?>
                 </div>
             </div>
         </div>
