@@ -1094,33 +1094,100 @@ function solanawp_fetch_token_metadata($address, $helius_key) {
 /**
  * Get real WHOIS data using free API
  */
+/**
+ * Get real WHOIS data using your custom WHOIS service
+ */
 function solanawp_get_real_whois_data($url) {
     $domain = parse_url($url, PHP_URL_HOST);
     if (!$domain) {
         return null;
     }
 
+    // Remove www. if present
+    $domain = preg_replace('/^www\./', '', $domain);
+
     try {
-        // Use free WHOIS API
-        $whois_url = "https://who-dat.as93.net/{$domain}";
+        // Use your custom WHOIS API
+        $whois_url = "https://hannisolwhois.vercel.app/{$domain}";
         $response = solanawp_make_request($whois_url, array('timeout' => 10));
 
         if ($response && isset($response['domain'])) {
             $domain_data = $response['domain'];
 
-            $creation_date = $domain_data['creation_date'] ?? null;
+            // Parse creation date from your API response
+            $creation_date = $domain_data['created_date'] ?? null;
             $age = null;
             if ($creation_date) {
                 $age = floor((time() - strtotime($creation_date)) / (365.25 * 24 * 3600));
                 $age = $age . ' years';
             }
 
+            // Extract country from registrar information
+            $country = 'Unknown';
+            if (isset($response['registrar']['name'])) {
+                $registrar_name = $response['registrar']['name'];
+
+                // Common registrar to country mappings
+                $registrar_countries = array(
+                    'HOSTINGER operations, UAB' => 'Lithuania',
+                    'GoDaddy.com, LLC' => 'United States',
+                    'GoDaddy' => 'United States',
+                    'Namecheap, Inc.' => 'United States',
+                    'Namecheap' => 'United States',
+                    'Google LLC' => 'United States',
+                    'Amazon Registrar, Inc.' => 'United States',
+                    'Cloudflare, Inc.' => 'United States',
+                    'Network Solutions, LLC' => 'United States',
+                    'Tucows Domains Inc.' => 'Canada',
+                    'eNom, LLC' => 'United States',
+                    'OVH sas' => 'France',
+                    'Gandi SAS' => 'France',
+                    '1&1 IONOS SE' => 'Germany',
+                    'PSI-USA, Inc.' => 'United States'
+                );
+
+                // Try exact match first
+                if (isset($registrar_countries[$registrar_name])) {
+                    $country = $registrar_countries[$registrar_name];
+                } else {
+                    // Try partial match
+                    foreach ($registrar_countries as $registrar => $reg_country) {
+                        if (stripos($registrar_name, $registrar) !== false) {
+                            $country = $reg_country;
+                            break;
+                        }
+                    }
+
+                    // If no match found, show registrar info
+                    if ($country === 'Unknown') {
+                        $country = 'Registrar: ' . $registrar_name;
+                    }
+                }
+            }
+
+            // Additional fallback: try to extract country from phone number
+            if ($country === 'Unknown' && isset($response['registrar']['phone'])) {
+                $phone = $response['registrar']['phone'];
+                if (strpos($phone, '+370') === 0) {
+                    $country = 'Lithuania';
+                } elseif (strpos($phone, '+1') === 0) {
+                    $country = 'United States/Canada';
+                } elseif (strpos($phone, '+33') === 0) {
+                    $country = 'France';
+                } elseif (strpos($phone, '+49') === 0) {
+                    $country = 'Germany';
+                } elseif (strpos($phone, '+44') === 0) {
+                    $country = 'United Kingdom';
+                }
+            }
+
             return array(
-                'registrar' => $domain_data['registrar'] ?? 'Unknown',
+                'registrar' => $response['registrar']['name'] ?? 'Unknown',
                 'createdDate' => $creation_date,
-                'expiryDate' => $domain_data['expiry_date'] ?? null,
-                'status' => $domain_data['status'] ?? 'Unknown',
+                'expiryDate' => $domain_data['expiration_date'] ?? null,
+                'status' => implode(', ', $domain_data['status'] ?? array('Unknown')),
                 'age' => $age,
+                'country' => $country,
                 'ssl' => solanawp_check_ssl($url)
             );
         }
@@ -1130,7 +1197,6 @@ function solanawp_get_real_whois_data($url) {
 
     return null;
 }
-
 /**
  * Extract social media links from text
  */
