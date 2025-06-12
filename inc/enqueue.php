@@ -46,7 +46,7 @@ if ( ! function_exists( 'solanawp_scripts_styles' ) ) :
             array( 'solanawp-main-styles' ), // Depends on main-styles to override or add to them.
             SOLANAWP_VERSION
         );
-
+        wp_enqueue_style( 'solanawp-analyzer', get_template_directory_uri() . '/assets/css/solana-analyzer.css', array('solanawp-main'), '1.0.0' );
         // 4. Google Fonts (as imported in hannisolsvelte.html and new Montserrat)
         // The font "Times" is specified for branding in solanacheckerplan.txt.
         // Added "Montserrat" for the new "Solana Coins Analyzer" section.
@@ -117,8 +117,6 @@ if ( ! function_exists( 'solanawp_admin_scripts_styles' ) ) :
         // }
     }
 endif;
+wp_enqueue_style( 'solanawp-analyzer', get_template_directory_uri() . '/assets/css/solana-analyzer.css', array('solanawp-main'), '1.0.0' );
 
-// The action hooks:
-// `add_action( 'wp_enqueue_scripts', 'solanawp_scripts_styles' );`
-// `add_action( 'admin_enqueue_scripts', 'solanawp_admin_scripts_styles' );`
-// will be called from the main SolanaWP/functions.php file.
+

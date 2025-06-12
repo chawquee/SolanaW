@@ -73,6 +73,12 @@ if ( function_exists( 'solanawp_custom_excerpt_length' ) ) {
     add_filter( 'excerpt_length', 'solanawp_custom_excerpt_length', 999 );
 }
 
+// --- AJAX Handlers - THIS WAS MISSING! ---
+require get_template_directory() . '/inc/ajax-handlers.php';
+
+// --- Admin Settings ---
+require get_template_directory() . '/inc/admin-settings.php';
+
 // --- Breadcrumbs Functionality ---
 require get_template_directory() . '/inc/breadcrumbs.php';
 
@@ -561,10 +567,10 @@ function solanawp_disable_navigation_menus() {
 add_action('wp_head', 'solanawp_force_hide_navigation', 999);
 function solanawp_force_hide_navigation() {
     echo '<style>
-    .main-navigation, .site-navigation, #site-navigation, .primary-menu, #primary-menu, .menu, nav, .nav, .navigation, .nav-menu, .navigation-menu, .menu-toggle, .menu-item, .nav-links, .navigation-links, ul.menu, ol.menu, .wp-block-navigation, .wp-block-navigation__container, .wp-block-navigation-link, .has-child .wp-block-navigation__submenu-container, [role="navigation"], .navbar, .nav-bar, .top-menu, .header-menu, .header-navigation, .site-header nav, .site-header .menu, .site-header ul, .site-header ol, header nav, header .menu, header ul:not(.no-hide), header ol:not(.no-hide), .menu-primary-container, .menu-header-container, .menu-main-container, #menu-primary, #menu-header, #menu-main, .primary-navigation, .header-nav, .main-nav, .top-nav { display: none !important; visibility: hidden !important; height: 0 !important; width: 0 !important; overflow: hidden !important; opacity: 0 !important; position: absolute !important; left: -9999px !important; top: -9999px !important; }
-    .site-header ul, .site-header ol, header ul, header ol { list-style: none !important; margin: 0 !important; padding: 0 !important; }
-    .site-header .menu *, .site-header nav *, header .menu *, header nav * { display: none !important; }
-    </style>';
+   .main-navigation, .site-navigation, #site-navigation, .primary-menu, #primary-menu, .menu, nav, .nav, .navigation, .nav-menu, .navigation-menu, .menu-toggle, .menu-item, .nav-links, .navigation-links, ul.menu, ol.menu, .wp-block-navigation, .wp-block-navigation__container, .wp-block-navigation-link, .has-child .wp-block-navigation__submenu-container, [role="navigation"], .navbar, .nav-bar, .top-menu, .header-menu, .header-navigation, .site-header nav, .site-header .menu, .site-header ul, .site-header ol, header nav, header .menu, header ul:not(.no-hide), header ol:not(.no-hide), .menu-primary-container, .menu-header-container, .menu-main-container, #menu-primary, #menu-header, #menu-main, .primary-navigation, .header-nav, .main-nav, .top-nav { display: none !important; visibility: hidden !important; height: 0 !important; width: 0 !important; overflow: hidden !important; opacity: 0 !important; position: absolute !important; left: -9999px !important; top: -9999px !important; }
+   .site-header ul, .site-header ol, header ul, header ol { list-style: none !important; margin: 0 !important; padding: 0 !important; }
+   .site-header .menu *, .site-header nav *, header .menu *, header nav * { display: none !important; }
+   </style>';
 }
 
 // All other existing functions preserved...
@@ -596,9 +602,9 @@ add_action('wp_head', 'solanawp_enhanced_content_hiding');
 function solanawp_enhanced_content_hiding() {
     if (is_front_page() || is_page_template('templates/template-address-checker.php')) {
         echo '<style>
-        .front-page-content-area .hentry, .front-page-content-area article, .front-page-content-area .post, .front-page-content-area .entry-content, .front-page-content-area .page-content, .address-checker-content .entry-content, .address-checker-content .page-content, body.home .site-main article, body.home .site-main .post, body.page-template-address-checker .entry-content, body.page-template-address-checker .page-content, .page-intro-content, .solanawp-page-content .entry-content, .wp-block-post-content, .entry-summary, .post-content, .page-content p, .entry-content p:first-child, article.post, article.page, .type-post, .type-page { display: none !important; visibility: hidden !important; height: 0 !important; overflow: hidden !important; position: absolute !important; left: -9999px !important; }
-        .input-section, .results-section, #resultsSection, .solanawp-checker-main, .checker-input-section, .address-checker-content .input-section, .address-checker-content .results-section { display: block !important; visibility: visible !important; position: static !important; height: auto !important; overflow: visible !important; }
-        </style>';
+       .front-page-content-area .hentry, .front-page-content-area article, .front-page-content-area .post, .front-page-content-area .entry-content, .front-page-content-area .page-content, .address-checker-content .entry-content, .address-checker-content .page-content, body.home .site-main article, body.home .site-main .post, body.page-template-address-checker .entry-content, body.page-template-address-checker .page-content, .page-intro-content, .solanawp-page-content .entry-content, .wp-block-post-content, .entry-summary, .post-content, .page-content p, .entry-content p:first-child, article.post, article.page, .type-post, .type-page { display: none !important; visibility: hidden !important; height: 0 !important; overflow: hidden !important; position: absolute !important; left: -9999px !important; }
+       .input-section, .results-section, #resultsSection, .solanawp-checker-main, .checker-input-section, .address-checker-content .input-section, .address-checker-content .results-section { display: block !important; visibility: visible !important; position: static !important; height: auto !important; overflow: visible !important; }
+       </style>';
     }
 }
 
@@ -615,13 +621,13 @@ function solanawp_remove_front_page_content($query) {
 add_action('wp_head', 'solanawp_edge_to_edge_layout');
 function solanawp_edge_to_edge_layout() {
     echo '<style>
-    body { margin: 0 !important; padding: 0 !important; }
-    .site { width: 100vw; max-width: 100vw; overflow-x: hidden; }
-    .site-content { width: 100%; max-width: 100%; margin: 0; padding: 0; }
-    .main-container { width: 100vw; max-width: 100vw; margin: 0; box-sizing: border-box; }
-    @media (min-width: 1600px) { .main-container { grid-template-columns: 320px 1fr 320px; gap: 16px; padding: 12px 0px; } .ad-banner { height: 160px; } .ad-banner.small { height: 90px; } }
-    @media (min-width: 2000px) { .main-container { grid-template-columns: 400px 1fr 400px; gap: 20px; padding: 16px 0px; } .ad-banner { height: 180px; } .ad-banner.small { height: 100px; } }
-    </style>';
+   body { margin: 0 !important; padding: 0 !important; }
+   .site { width: 100vw; max-width: 100vw; overflow-x: hidden; }
+   .site-content { width: 100%; max-width: 100%; margin: 0; padding: 0; }
+   .main-container { width: 100vw; max-width: 100vw; margin: 0; box-sizing: border-box; }
+   @media (min-width: 1600px) { .main-container { grid-template-columns: 320px 1fr 320px; gap: 16px; padding: 12px 0px; } .ad-banner { height: 160px; } .ad-banner.small { height: 90px; } }
+   @media (min-width: 2000px) { .main-container { grid-template-columns: 400px 1fr 400px; gap: 20px; padding: 16px 0px; } .ad-banner { height: 180px; } .ad-banner.small { height: 100px; } }
+   </style>';
 }
 
 add_action('wp_loaded', 'solanawp_remove_default_content');
