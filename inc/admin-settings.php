@@ -2,6 +2,7 @@
 /**
  * Admin Settings Page for SolanaWP
  * Enhanced interface with pre-configured API keys and status monitoring
+ * Updated with DexScreener integration and new WHOIS service
  *
  * @package SolanaWP
  * @since SolanaWP 1.0.0
@@ -53,6 +54,14 @@ function solanawp_admin_page() {
     <div class="wrap">
         <h1><span class="dashicons dashicons-admin-settings" style="color: #3b82f6;"></span> <?php _e( 'SolanaWP API Settings', 'solanawp' ); ?></h1>
 
+        <!-- 🚀 NEW: DexScreener Integration Notice -->
+        <div class="notice notice-success" style="margin: 20px 0;">
+            <h3 style="margin: 10px 0;">🔥 Enhanced with DexScreener Integration</h3>
+            <p><strong>Primary Data Source:</strong> DexScreener API for comprehensive token analysis, trading data, and social links</p>
+            <p><strong>WHOIS Service:</strong> Updated to use hannisolwhois.vercel.app for reliable domain analysis</p>
+            <p><strong>Fallback APIs:</strong> QuickNode RPC and Helius API for additional blockchain data</p>
+        </div>
+
         <!-- Status Dashboard -->
         <div class="solanawp-dashboard" style="margin: 20px 0;">
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px;">
@@ -60,6 +69,14 @@ function solanawp_admin_page() {
                 <!-- API Status Card -->
                 <div class="postbox" style="padding: 20px;">
                     <h3 style="margin: 0 0 15px 0; color: #1e40af;">🔗 API Status</h3>
+                    <div style="margin-bottom: 10px;">
+                        <strong>DexScreener API:</strong>
+                        <span style="color: #10b981;">✅ Active (Primary Source)</span>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <strong>WHOIS Service:</strong>
+                        <span style="color: #10b981;">✅ hannisolwhois.vercel.app</span>
+                    </div>
                     <div style="margin-bottom: 10px;">
                         <strong>QuickNode RPC:</strong>
                         <span style="color: <?php echo !empty($solana_rpc_url) ? '#10b981' : '#ef4444'; ?>;">
@@ -72,33 +89,19 @@ function solanawp_admin_page() {
                             <?php echo !empty($helius_api_key) ? '✅ Connected' : '❌ Not configured'; ?>
                         </span>
                     </div>
-                    <div>
-                        <strong>Overall Status:</strong>
-                        <span style="color: <?php echo (!empty($solana_rpc_url) && !empty($helius_api_key)) ? '#10b981' : '#f59e0b'; ?>;">
-                            <?php
-                            if (!empty($solana_rpc_url) && !empty($helius_api_key)) {
-                                echo '🟢 Fully Operational';
-                            } elseif (!empty($solana_rpc_url) || !empty($helius_api_key)) {
-                                echo '🟡 Partially Configured';
-                            } else {
-                                echo '🔴 Needs Configuration';
-                            }
-                            ?>
-                        </span>
-                    </div>
                 </div>
 
                 <!-- Usage Statistics Card -->
                 <div class="postbox" style="padding: 20px;">
                     <h3 style="margin: 0 0 15px 0; color: #1e40af;">📊 Usage Statistics</h3>
                     <div style="margin-bottom: 10px;">
-                        <strong>Total Requests:</strong> <?php echo number_format($total_requests); ?>
+                        <strong>Total Requests:</strong> <?php echo $total_requests; ?>
                     </div>
                     <div style="margin-bottom: 10px;">
-                        <strong>Successful:</strong> <span style="color: #10b981;"><?php echo number_format($successful_requests); ?></span>
+                        <strong>Successful:</strong> <span style="color: #10b981;"><?php echo $successful_requests; ?></span>
                     </div>
                     <div style="margin-bottom: 10px;">
-                        <strong>Errors:</strong> <span style="color: #ef4444;"><?php echo number_format($error_requests); ?></span>
+                        <strong>Errors:</strong> <span style="color: #ef4444;"><?php echo $error_requests; ?></span>
                     </div>
                     <div>
                         <strong>Success Rate:</strong> <span style="color: <?php echo $success_rate >= 90 ? '#10b981' : ($success_rate >= 70 ? '#f59e0b' : '#ef4444'); ?>;"><?php echo $success_rate; ?>%</span>
@@ -127,35 +130,44 @@ function solanawp_admin_page() {
                         </span>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- Quick Actions -->
-        <div style="margin: 20px 0; padding: 15px; background: #f8fafc; border-left: 4px solid #3b82f6; border-radius: 4px;">
-            <h3 style="margin: 0 0 10px 0;">🚀 Quick Actions</h3>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                <a href="<?php echo home_url(); ?>" class="button button-primary" target="_blank">
-                    📋 Test Address Checker
-                </a>
-                <button type="button" class="button" onclick="solanawpTestConnection()">
-                    🔍 Test API Connection
-                </button>
-                <button type="button" class="button" onclick="solanawpClearCache()">
-                    🗑️ Clear Cache
-                </button>
-                <button type="button" class="button" onclick="solanawpClearLogs()">
-                    📝 Clear Logs
-                </button>
+                <!-- Data Sources Card -->
+                <div class="postbox" style="padding: 20px;">
+                    <h3 style="margin: 0 0 15px 0; color: #1e40af;">🎯 Data Priority</h3>
+                    <div style="margin-bottom: 8px;">
+                        <strong>1st:</strong> <span style="color: #3b82f6;">DexScreener API</span>
+                    </div>
+                    <div style="margin-bottom: 8px;">
+                        <strong>2nd:</strong> <span style="color: #6b7280;">QuickNode RPC</span>
+                    </div>
+                    <div style="margin-bottom: 8px;">
+                        <strong>3rd:</strong> <span style="color: #6b7280;">Helius Enhanced</span>
+                    </div>
+                    <div>
+                        <strong>WHOIS:</strong> <span style="color: #059669;">hannisolwhois.vercel.app</span>
+                    </div>
+                </div>
+
             </div>
         </div>
 
         <!-- Settings Form -->
-        <form method="post" action="options.php" id="solanawp-settings-form">
-            <?php settings_fields( 'solanawp_api_settings' ); ?>
+        <form method="post" action="" id="solanawp-api-settings-form">
+            <?php wp_nonce_field( 'solanawp_api_settings_nonce' ); ?>
 
-            <table class="form-table" role="presentation">
-                <tbody>
-                <!-- QuickNode RPC Settings -->
+            <table class="form-table">
+
+                <!-- API Configuration Section -->
+                <tr>
+                    <th scope="row" colspan="2">
+                        <h2 style="margin: 0; color: #1e40af;">🔧 API Configuration</h2>
+                        <p style="margin: 5px 0 20px 0; color: #6b7280; font-weight: normal;">
+                            Configure your fallback APIs. DexScreener integration is automatic and requires no API key.
+                        </p>
+                    </th>
+                </tr>
+
+                <!-- QuickNode RPC URL -->
                 <tr>
                     <th scope="row">
                         <label for="solana_rpc_url"><?php _e( 'QuickNode RPC URL', 'solanawp' ); ?></label>
@@ -166,11 +178,11 @@ function solanawp_admin_page() {
                             type="url"
                             id="solana_rpc_url"
                             value="<?php echo esc_attr( $solana_rpc_url ); ?>"
-                            class="regular-text code"
-                            placeholder="https://your-quicknode-endpoint.quiknode.pro/..."
+                            class="regular-text"
+                            placeholder="https://your-endpoint.quiknode.pro/your-key/"
                         />
                         <p class="description">
-                            <?php _e( 'Your QuickNode RPC endpoint URL for high-performance Solana data access.', 'solanawp' ); ?>
+                            <?php _e( 'Your QuickNode Solana mainnet RPC endpoint for blockchain data', 'solanawp' ); ?>
                             <?php if ( !empty($solana_rpc_url) ): ?>
                                 <span style="color: #10b981;">✅ <?php _e( 'Currently configured with your provided QuickNode endpoint', 'solanawp' ); ?></span>
                             <?php endif; ?>
@@ -178,25 +190,22 @@ function solanawp_admin_page() {
                     </td>
                 </tr>
 
-                <!-- Helius API Settings -->
+                <!-- Helius API Key -->
                 <tr>
                     <th scope="row">
                         <label for="helius_api_key"><?php _e( 'Helius API Key', 'solanawp' ); ?></label>
                     </th>
                     <td>
-                        <div style="position: relative;">
-                            <input
-                                name="helius_api_key"
-                                type="password"
-                                id="helius_api_key"
-                                value="<?php echo esc_attr( $helius_api_key ); ?>"
-                                class="regular-text code"
-                                placeholder="Enter your Helius API key"
-                            />
-                            <button type="button" onclick="solanawpTogglePassword('helius_api_key')" style="position: absolute; right: 5px; top: 2px; background: none; border: none; cursor: pointer;">👁️</button>
-                        </div>
+                        <input
+                            name="helius_api_key"
+                            type="text"
+                            id="helius_api_key"
+                            value="<?php echo esc_attr( $helius_api_key ); ?>"
+                            class="regular-text"
+                            placeholder="your-helius-api-key"
+                        />
                         <p class="description">
-                            <?php _e( 'Helius API key for enhanced Solana analytics, security analysis, and transaction parsing.', 'solanawp' ); ?>
+                            <?php _e( 'Your Helius API key for enhanced transaction and NFT data', 'solanawp' ); ?>
                             <?php if ( !empty($helius_api_key) ): ?>
                                 <span style="color: #10b981;">✅ <?php _e( 'Currently configured with your provided Helius API key', 'solanawp' ); ?></span>
                             <?php endif; ?>
@@ -204,9 +213,19 @@ function solanawp_admin_page() {
                     </td>
                 </tr>
 
-                <!-- Performance Settings -->
+                <!-- Performance Settings Section -->
                 <tr>
-                    <th scope="row"><?php _e( 'Performance Settings', 'solanawp' ); ?></th>
+                    <th scope="row" colspan="2">
+                        <h2 style="margin: 30px 0 0 0; color: #1e40af;">⚡ Performance Settings</h2>
+                        <p style="margin: 5px 0 20px 0; color: #6b7280; font-weight: normal;">
+                            Optimize response times and manage API usage limits.
+                        </p>
+                    </th>
+                </tr>
+
+                <!-- Caching Settings -->
+                <tr>
+                    <th scope="row"><?php _e( 'Caching', 'solanawp' ); ?></th>
                     <td>
                         <fieldset>
                             <label>
@@ -259,279 +278,158 @@ function solanawp_admin_page() {
 
                 <!-- Logging Settings -->
                 <tr>
-                    <th scope="row"><?php _e( 'Logging & Monitoring', 'solanawp' ); ?></th>
+                    <th scope="row"><?php _e( 'Logging', 'solanawp' ); ?></th>
                     <td>
-                        <fieldset>
-                            <label>
-                                <input
-                                    name="enable_logging"
-                                    type="checkbox"
-                                    value="1"
-                                    <?php checked( $enable_logging ); ?>
-                                />
-                                <?php _e( 'Enable request logging', 'solanawp' ); ?>
-                            </label>
-                            <p class="description"><?php _e( 'Log API requests for monitoring and debugging. Recommended for production sites.', 'solanawp' ); ?></p>
-                        </fieldset>
+                        <label>
+                            <input
+                                name="enable_logging"
+                                type="checkbox"
+                                value="1"
+                                <?php checked( $enable_logging ); ?>
+                            />
+                            <?php _e( 'Enable request logging', 'solanawp' ); ?>
+                        </label>
+                        <p class="description"><?php _e( 'Log address checks for monitoring and debugging. Logs are stored in WordPress error log.', 'solanawp' ); ?></p>
                     </td>
                 </tr>
-                </tbody>
+
             </table>
 
-            <input type="hidden" name="nonce" value="<?php echo wp_create_nonce( 'solanawp_admin_nonce' ); ?>" />
+            <!-- Data Sources Information Section -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin: 30px 0;">
+                <h3 style="margin: 0 0 15px 0; color: #1e40af;">📊 Integrated Data Sources</h3>
 
-            <?php submit_button( __( 'Save Settings', 'solanawp' ), 'primary', 'submit', true, array( 'style' => 'font-size: 14px; padding: 8px 24px;' ) ); ?>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+
+                    <!-- DexScreener -->
+                    <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #3b82f6;">
+                        <h4 style="margin: 0 0 10px 0; color: #3b82f6;">🥇 DexScreener API (Primary)</h4>
+                        <ul style="margin: 0; padding-left: 20px; color: #4b5563;">
+                            <li>Token prices and market data</li>
+                            <li>Trading volume and liquidity</li>
+                            <li>Social links and websites</li>
+                            <li>DEX diversity analysis</li>
+                            <li>Price volatility metrics</li>
+                        </ul>
+                    </div>
+
+                    <!-- QuickNode -->
+                    <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #6b7280;">
+                        <h4 style="margin: 0 0 10px 0; color: #6b7280;">🥈 QuickNode RPC (Secondary)</h4>
+                        <ul style="margin: 0; padding-left: 20px; color: #4b5563;">
+                            <li>SOL balance verification</li>
+                            <li>Account existence validation</li>
+                            <li>On-chain account details</li>
+                            <li>Blockchain data integrity</li>
+                        </ul>
+                    </div>
+
+                    <!-- Helius -->
+                    <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #6b7280;">
+                        <h4 style="margin: 0 0 10px 0; color: #6b7280;">🥉 Helius API (Secondary)</h4>
+                        <ul style="margin: 0; padding-left: 20px; color: #4b5563;">
+                            <li>Token and NFT metadata</li>
+                            <li>Detailed transaction history</li>
+                            <li>Enhanced balance information</li>
+                            <li>Social link extraction</li>
+                        </ul>
+                    </div>
+
+                    <!-- WHOIS Service -->
+                    <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #059669;">
+                        <h4 style="margin: 0 0 10px 0; color: #059669;">🌐 WHOIS Service (Specialized)</h4>
+                        <ul style="margin: 0; padding-left: 20px; color: #4b5563;">
+                            <li>Domain registration data</li>
+                            <li>Domain age analysis</li>
+                            <li>Registrar information</li>
+                            <li>SSL certificate detection</li>
+                        </ul>
+                        <p style="margin: 10px 0 0 0; font-size: 12px; color: #6b7280;">
+                            <strong>Service:</strong> hannisolwhois.vercel.app
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Advanced Information -->
+            <div style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 15px; margin: 20px 0;">
+                <h4 style="margin: 0 0 10px 0; color: #92400e;">⚠️ Important Notes</h4>
+                <ul style="margin: 0; padding-left: 20px; color: #92400e;">
+                    <li><strong>DexScreener Integration:</strong> Primary data source, no API key required</li>
+                    <li><strong>WHOIS Service:</strong> Updated to use hannisolwhois.vercel.app for improved reliability</li>
+                    <li><strong>Fallback Strategy:</strong> APIs are used as secondary sources when DexScreener data is unavailable</li>
+                    <li><strong>Performance:</strong> Enable caching to reduce API calls and improve response times</li>
+                    <li><strong>Rate Limiting:</strong> Prevents abuse and protects your API quotas</li>
+                </ul>
+            </div>
+
+            <!-- Submit Button -->
+            <p class="submit">
+                <input type="submit" name="submit" id="submit" class="button-primary" value="<?php _e( 'Save Settings', 'solanawp' ); ?>" />
+                <span id="solanawp-save-status" style="margin-left: 10px;"></span>
+            </p>
         </form>
 
-        <!-- Help Section -->
-        <div style="margin: 30px 0; padding: 20px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
-            <h3 style="margin: 0 0 15px 0; color: #1e40af;">❓ Help & Information</h3>
-
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
-                <div>
-                    <h4 style="color: #374151; margin: 0 0 10px 0;">🔧 Getting Started</h4>
-                    <ul style="margin: 0; color: #6b7280;">
-                        <li>Your QuickNode and Helius API keys are already configured</li>
-                        <li>Test the address checker on your homepage</li>
-                        <li>Monitor usage statistics in the dashboard above</li>
-                        <li>Enable caching for better performance</li>
-                    </ul>
-                </div>
-
-                <div>
-                    <h4 style="color: #374151; margin: 0 0 10px 0;">🚀 API Benefits</h4>
-                    <ul style="margin: 0; color: #6b7280;">
-                        <li><strong>QuickNode:</strong> High-performance RPC with 99.9% uptime</li>
-                        <li><strong>Helius:</strong> Enhanced analytics and security analysis</li>
-                        <li><strong>Caching:</strong> Reduces API calls and improves speed</li>
-                        <li><strong>Rate Limiting:</strong> Protects against API abuse</li>
-                    </ul>
-                </div>
-
-                <div>
-                    <h4 style="color: #374151; margin: 0 0 10px 0;">📊 Monitoring</h4>
-                    <ul style="margin: 0; color: #6b7280;">
-                        <li>View real-time API connection status</li>
-                        <li>Track success rates and error patterns</li>
-                        <li>Monitor performance metrics</li>
-                        <li>Clear cache and logs when needed</li>
-                    </ul>
-                </div>
-            </div>
-
-            <div style="margin: 20px 0 0 0; padding: 15px; background: #dbeafe; border-radius: 6px; border-left: 4px solid #3b82f6;">
-                <strong style="color: #1e40af;">💡 Optimization Tips:</strong>
-                <span style="color: #1e40af;">Enable caching to reduce API calls • Set appropriate rate limits • Monitor logs for issues • Test regularly</span>
-            </div>
-        </div>
-
-        <!-- Recent Activity Log -->
-        <?php if ( $enable_logging && !empty($logs) ): ?>
-            <div style="margin: 30px 0;">
-                <h3><?php _e( 'Recent Activity', 'solanawp' ); ?> <small style="color: #6b7280;">(Last 10 requests)</small></h3>
-                <table class="widefat fixed striped" style="margin-top: 10px;">
-                    <thead>
-                    <tr>
-                        <th style="width: 15%;"><?php _e( 'Time', 'solanawp' ); ?></th>
-                        <th style="width: 35%;"><?php _e( 'Address', 'solanawp' ); ?></th>
-                        <th style="width: 12%;"><?php _e( 'Status', 'solanawp' ); ?></th>
-                        <th style="width: 15%;"><?php _e( 'IP', 'solanawp' ); ?></th>
-                        <th style="width: 23%;"><?php _e( 'Error', 'solanawp' ); ?></th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <?php
-                    $recent_logs = array_slice( array_reverse($logs), 0, 10 );
-                    foreach ( $recent_logs as $log ):
-                        $status_color = $log['status'] === 'success' ? '#10b981' : '#ef4444';
-                        $status_icon = $log['status'] === 'success' ? '✅' : '❌';
-                        ?>
-                        <tr>
-                            <td><?php echo esc_html( date( 'M j, H:i', strtotime($log['timestamp']) ) ); ?></td>
-                            <td style="font-family: monospace; font-size: 11px;"><?php echo esc_html( substr($log['address'], 0, 20) . '...' ); ?></td>
-                            <td style="color: <?php echo $status_color; ?>;"><?php echo $status_icon . ' ' . ucfirst($log['status']); ?></td>
-                            <td style="font-family: monospace; font-size: 11px;"><?php echo esc_html( $log['ip'] ); ?></td>
-                            <td style="color: #ef4444; font-size: 11px;"><?php echo $log['error'] ? esc_html( substr($log['error'], 0, 50) . '...' ) : '-'; ?></td>
-                        </tr>
-                    <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        <?php endif; ?>
     </div>
 
-    <style>
-        .solanawp-dashboard .postbox {
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            background: white;
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-        }
+    <!-- AJAX Script for Settings -->
+    <script type="text/javascript">
+        jQuery(document).ready(function($) {
+            $('#solanawp-api-settings-form').on('submit', function(e) {
+                e.preventDefault();
 
-        .solanawp-dashboard h3 {
-            font-size: 16px;
-            font-weight: 600;
-        }
+                var $form = $(this);
+                var $submitButton = $form.find('#submit');
+                var $status = $('#solanawp-save-status');
 
-        #solanawp-settings-form input[type="url"],
-        #solanawp-settings-form input[type="password"],
-        #solanawp-settings-form input[type="number"] {
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-        }
+                // Show loading state
+                $submitButton.prop('disabled', true).val('<?php _e( 'Saving...', 'solanawp' ); ?>');
+                $status.html('<span style="color: #f59e0b;">💾 Saving settings...</span>');
 
-        .form-table th {
-            font-weight: 600;
-            color: #374151;
-        }
-    </style>
+                // Prepare form data
+                var formData = {
+                    action: 'solanawp_save_api_settings',
+                    nonce: '<?php echo wp_create_nonce( 'solanawp_api_settings_nonce' ); ?>',
+                    solana_rpc_url: $form.find('#solana_rpc_url').val(),
+                    helius_api_key: $form.find('#helius_api_key').val(),
+                    rate_limit: $form.find('#rate_limit').val(),
+                    enable_logging: $form.find('input[name="enable_logging"]').is(':checked') ? 1 : 0,
+                    enable_caching: $form.find('input[name="enable_caching"]').is(':checked') ? 1 : 0,
+                    cache_duration: $form.find('#cache_duration').val()
+                };
 
-    <script>
-        // Toggle password visibility
-        function solanawpTogglePassword(fieldId) {
-            const field = document.getElementById(fieldId);
-            field.type = field.type === 'password' ? 'text' : 'password';
-        }
-
-        // Save settings via AJAX
-        document.getElementById('solanawp-settings-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            const formData = new FormData(this);
-            formData.append('action', 'solanawp_save_api_settings');
-
-            const submitBtn = this.querySelector('[type="submit"]');
-            const originalText = submitBtn.textContent;
-            submitBtn.textContent = '<?php _e( 'Saving...', 'solanawp' ); ?>';
-            submitBtn.disabled = true;
-
-            fetch(ajaxurl, {
-                method: 'POST',
-                body: formData
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('<?php _e( 'Settings saved successfully!', 'solanawp' ); ?>');
-                        setTimeout(() => window.location.reload(), 1000);
+                // Save settings via AJAX
+                $.post(ajaxurl, formData, function(response) {
+                    if (response.success) {
+                        $status.html('<span style="color: #10b981;">✅ ' + response.data.message + '</span>');
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1500);
                     } else {
-                        alert('<?php _e( 'Error: ', 'solanawp' ); ?>' + (data.data ? data.data.message : 'Unknown error'));
+                        $status.html('<span style="color: #ef4444;">❌ ' + response.data.message + '</span>');
                     }
-                })
-                .catch(error => {
-                    console.error('Settings save error:', error);
-                    alert('<?php _e( 'Network error. Please try again.', 'solanawp' ); ?>');
-                })
-                .finally(() => {
-                    submitBtn.textContent = originalText;
-                    submitBtn.disabled = false;
+                }).fail(function() {
+                    $status.html('<span style="color: #ef4444;">❌ <?php _e( 'Error saving settings. Please try again.', 'solanawp' ); ?></span>');
+                }).always(function() {
+                    $submitButton.prop('disabled', false).val('<?php _e( 'Save Settings', 'solanawp' ); ?>');
                 });
+            });
         });
-
-        // Test API connection
-        function solanawpTestConnection() {
-            const rpcUrl = document.getElementById('solana_rpc_url').value;
-            const heliusKey = document.getElementById('helius_api_key').value;
-
-            if (!rpcUrl && !heliusKey) {
-                alert('<?php _e( 'Please configure at least one API endpoint first.', 'solanawp' ); ?>');
-                return;
-            }
-
-            // Test with a known Solana address
-            const testAddress = '11111111111111111111111111111111';
-            const testData = new FormData();
-            testData.append('action', 'solanawp_check_address');
-            testData.append('address', testAddress);
-            testData.append('nonce', '<?php echo wp_create_nonce( 'solanawp_solana_checker_nonce' ); ?>');
-
-            fetch(ajaxurl, {
-                method: 'POST',
-                body: testData
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('✅ API connection test successful!\n\nResponse received for test address.');
-                    } else {
-                        alert('❌ API connection test failed:\n\n' + (data.data ? data.data.message : 'Unknown error'));
-                    }
-                })
-                .catch(error => {
-                    console.error('Connection test error:', error);
-                    alert('❌ Network error during connection test.');
-                });
-        }
-
-        // Clear cache
-        function solanawpClearCache() {
-            if (confirm('<?php _e( 'Are you sure you want to clear all cached data?', 'solanawp' ); ?>')) {
-                const formData = new FormData();
-                formData.append('action', 'solanawp_clear_cache');
-                formData.append('nonce', '<?php echo wp_create_nonce( 'solanawp_admin_nonce' ); ?>');
-
-                fetch(ajaxurl, {
-                    method: 'POST',
-                    body: formData
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            alert('✅ Cache cleared successfully!');
-                        } else {
-                            alert('❌ Error clearing cache: ' + (data.data ? data.data.message : 'Unknown error'));
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Clear cache error:', error);
-                        alert('❌ Network error while clearing cache.');
-                    });
-            }
-        }
-
-        // Clear logs
-        function solanawpClearLogs() {
-            if (confirm('<?php _e( 'Are you sure you want to clear all request logs?', 'solanawp' ); ?>')) {
-                const formData = new FormData();
-                formData.append('action', 'solanawp_clear_logs');
-                formData.append('nonce', '<?php echo wp_create_nonce( 'solanawp_admin_nonce' ); ?>');
-
-                fetch(ajaxurl, {
-                    method: 'POST',
-                    body: formData
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            alert('✅ Logs cleared successfully!');
-                            setTimeout(() => window.location.reload(), 1000);
-                        } else {
-                            alert('❌ Error clearing logs: ' + (data.data ? data.data.message : 'Unknown error'));
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Clear logs error:', error);
-                        alert('❌ Network error while clearing logs.');
-                    });
-            }
-        }
     </script>
+
     <?php
 }
 
 /**
- * AJAX handler to clear logs
+ * Register settings for WordPress Settings API (backup method)
  */
-add_action( 'wp_ajax_solanawp_clear_logs', 'solanawp_handle_clear_logs' );
-
-function solanawp_handle_clear_logs() {
-    if ( ! current_user_can( 'manage_options' ) ) {
-        wp_send_json_error( array( 'message' => __( 'Unauthorized access.', 'solanawp' ) ) );
-    }
-
-    if ( ! wp_verify_nonce( $_POST['nonce'], 'solanawp_admin_nonce' ) ) {
-        wp_send_json_error( array( 'message' => __( 'Security check failed.', 'solanawp' ) ) );
-    }
-
-    delete_option( 'solanawp_request_logs' );
-    wp_send_json_success( array( 'message' => __( 'Logs cleared successfully.', 'solanawp' ) ) );
+add_action( 'admin_init', 'solanawp_register_settings' );
+function solanawp_register_settings() {
+    register_setting( 'solanawp_api_settings', 'solanawp_solana_rpc_url' );
+    register_setting( 'solanawp_api_settings', 'solanawp_helius_api_key' );
+    register_setting( 'solanawp_api_settings', 'solanawp_rate_limit' );
+    register_setting( 'solanawp_api_settings', 'solanawp_enable_logging' );
+    register_setting( 'solanawp_api_settings', 'solanawp_enable_caching' );
+    register_setting( 'solanawp_api_settings', 'solanawp_cache_duration' );
 }
