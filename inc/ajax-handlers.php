@@ -1,6 +1,6 @@
 <?php
 /**
- * AJAX Handlers for SolanaWP Theme - ENHANCED WITH TOKEN ANALYTICS
+ * AJAX Handlers for SolanaWP Theme - DEXSCREENER PRIMARY INTEGRATION
  * DexScreener as PRIMARY source, QuickNode/Helius as SECONDARY fallback
  *
  * @package SolanaWP
@@ -117,7 +117,7 @@ function solanawp_handle_save_api_settings() {
 }
 
 /**
- * 🚀 MAIN PROCESSING FUNCTION - ENHANCED WITH TOKEN ANALYTICS
+ * 🚀 MAIN PROCESSING FUNCTION - DEXSCREENER PRIORITIZATION
  */
 function solanawp_process_solana_address( $address ) {
     // 💾 Check cache first
@@ -133,7 +133,6 @@ function solanawp_process_solana_address( $address ) {
 
     // 📊 Aggregate all data with DexScreener prioritization
     $validation_data = solanawp_fetch_validation_data( $address );
-    $token_analytics_data = solanawp_fetch_token_analytics_data( $address, $dexscreener_data );
     $balance_data = solanawp_fetch_balance_data( $address, $dexscreener_data );
     $transaction_data = solanawp_fetch_transaction_data( $address, $dexscreener_data );
     $account_data = solanawp_fetch_account_data( $address );
@@ -154,7 +153,6 @@ function solanawp_process_solana_address( $address ) {
     $result = array(
         'address' => $address,
         'validation' => $validation_data,
-        'token_analytics' => $token_analytics_data,
         'balance' => $balance_data,
         'transactions' => $transaction_data,
         'account' => $account_data,
@@ -189,87 +187,6 @@ function solanawp_fetch_dexscreener_data( $address ) {
         error_log( 'DexScreener API Error: ' . $e->getMessage() );
         return null;
     }
-}
-
-/**
- * 🔥 NEW: Token Analytics Data Fetching
- */
-function solanawp_fetch_token_analytics_data( $address, $dexscreener_data = null ) {
-    $analytics = array(
-        'price_usd' => 'N/A',
-        'price_native' => 'N/A',
-        'liquidity_usd' => 'N/A',
-        'market_cap' => 'N/A',
-        'volume_24h' => 'N/A',
-        'volume_6h' => 'N/A',
-        'volume_1h' => 'N/A',
-        'transactions_24h' => array( 'buys' => 'N/A', 'sells' => 'N/A' ),
-        'transactions_6h' => array( 'buys' => 'N/A', 'sells' => 'N/A' ),
-        'transactions_1h' => array( 'buys' => 'N/A', 'sells' => 'N/A' ),
-        'price_change_5m' => 'N/A',
-        'price_change_1h' => 'N/A',
-        'price_change_6h' => 'N/A',
-        'price_change_24h' => 'N/A'
-    );
-
-    // Extract data from DexScreener if available
-    if ( $dexscreener_data ) {
-        $analytics['price_usd'] = $dexscreener_data['priceUsd'] ?? 'N/A';
-        $analytics['price_native'] = $dexscreener_data['priceNative'] ?? 'N/A';
-
-        if ( isset( $dexscreener_data['liquidity']['usd'] ) ) {
-            $analytics['liquidity_usd'] = '$' . number_format( $dexscreener_data['liquidity']['usd'], 2 );
-        }
-
-        if ( isset( $dexscreener_data['fdv'] ) ) {
-            $analytics['market_cap'] = '$' . solanawp_format_large_number( $dexscreener_data['fdv'] );
-        }
-
-        // Volume data
-        if ( isset( $dexscreener_data['volume'] ) ) {
-            $volume = $dexscreener_data['volume'];
-            $analytics['volume_24h'] = isset( $volume['h24'] ) ? '$' . solanawp_format_large_number( $volume['h24'] ) : 'N/A';
-            $analytics['volume_6h'] = isset( $volume['h6'] ) ? '$' . solanawp_format_large_number( $volume['h6'] ) : 'N/A';
-            $analytics['volume_1h'] = isset( $volume['h1'] ) ? '$' . solanawp_format_large_number( $volume['h1'] ) : 'N/A';
-        }
-
-        // Transaction data
-        if ( isset( $dexscreener_data['txns'] ) ) {
-            $txns = $dexscreener_data['txns'];
-
-            if ( isset( $txns['h24'] ) ) {
-                $analytics['transactions_24h'] = array(
-                    'buys' => $txns['h24']['buys'] ?? 'N/A',
-                    'sells' => $txns['h24']['sells'] ?? 'N/A'
-                );
-            }
-
-            if ( isset( $txns['h6'] ) ) {
-                $analytics['transactions_6h'] = array(
-                    'buys' => $txns['h6']['buys'] ?? 'N/A',
-                    'sells' => $txns['h6']['sells'] ?? 'N/A'
-                );
-            }
-
-            if ( isset( $txns['h1'] ) ) {
-                $analytics['transactions_1h'] = array(
-                    'buys' => $txns['h1']['buys'] ?? 'N/A',
-                    'sells' => $txns['h1']['sells'] ?? 'N/A'
-                );
-            }
-        }
-
-        // Price change data
-        if ( isset( $dexscreener_data['priceChange'] ) ) {
-            $priceChange = $dexscreener_data['priceChange'];
-            $analytics['price_change_5m'] = isset( $priceChange['m5'] ) ? $priceChange['m5'] . '%' : 'N/A';
-            $analytics['price_change_1h'] = isset( $priceChange['h1'] ) ? $priceChange['h1'] . '%' : 'N/A';
-            $analytics['price_change_6h'] = isset( $priceChange['h6'] ) ? $priceChange['h6'] . '%' : 'N/A';
-            $analytics['price_change_24h'] = isset( $priceChange['h24'] ) ? $priceChange['h24'] . '%' : 'N/A';
-        }
-    }
-
-    return $analytics;
 }
 
 /**
@@ -510,12 +427,6 @@ function solanawp_fetch_transaction_data( $address, $dexscreener_data = null ) {
             $transaction_data['volume_24h'] = number_format( $volume_24h, 2 );
             $transaction_data['buys_5m'] = $dexscreener_data['txns']['m5']['buys'] ?? 0;
             $transaction_data['sells_5m'] = $dexscreener_data['txns']['m5']['sells'] ?? 0;
-
-            // Enhanced date fix using DexScreener pairCreatedAt
-            if ( isset( $dexscreener_data['pairCreatedAt'] ) ) {
-                $created_timestamp = $dexscreener_data['pairCreatedAt'] / 1000; // Convert from milliseconds
-                $transaction_data['first_transaction'] = date( 'F j, Y', $created_timestamp );
-            }
         }
 
         // 🥈 SECONDARY: Helius for detailed transaction history
@@ -542,18 +453,15 @@ function solanawp_fetch_transaction_data( $address, $dexscreener_data = null ) {
                 }
                 $transaction_data['recent_transactions'] = $recent_txs;
 
-                // Set first and last activity (only if not already set by DexScreener)
+                // Set first and last activity
                 if ( !empty( $helius_response ) ) {
                     $latest_tx = $helius_response[0];
                     $oldest_tx = end( $helius_response );
 
                     $transaction_data['last_transaction'] = isset( $latest_tx['timestamp'] ) ?
                         date( 'M j, Y', $latest_tx['timestamp'] ) : 'Unknown';
-
-                    // Only set first_transaction if not already set by DexScreener
-                    if ( $transaction_data['first_transaction'] === 'Unknown' && isset( $oldest_tx['timestamp'] ) ) {
-                        $transaction_data['first_transaction'] = date( 'M j, Y', $oldest_tx['timestamp'] );
-                    }
+                    $transaction_data['first_transaction'] = isset( $oldest_tx['timestamp'] ) ?
+                        date( 'M j, Y', $oldest_tx['timestamp'] ) : 'Unknown';
                 }
             }
         }
@@ -844,7 +752,7 @@ function solanawp_fetch_rugpull_data( $address, $dexscreener_data = null ) {
 }
 
 /**
- * 7️⃣ Website & Social (Enhanced with DexScreener data and improved WHOIS)
+ * 7️⃣ Website & Social (Fixed field names for frontend compatibility)
  */
 function solanawp_fetch_social_data( $address, $dexscreener_data = null ) {
     $social_data = array(
@@ -879,24 +787,13 @@ function solanawp_fetch_social_data( $address, $dexscreener_data = null ) {
                 if ( is_string( $primary_website ) ) {
                     $social_data['webInfo']['website'] = $primary_website;
 
-                    // Enhanced WHOIS data with new priority order
+                    // Get WHOIS data for domain
                     $domain = solanawp_extract_domain( $primary_website );
                     if ( $domain ) {
                         $whois_data = solanawp_get_real_whois_data( $domain );
                         if ( !isset( $whois_data['error'] ) ) {
                             $social_data['webInfo']['registrationDate'] = $whois_data['creation_date'] ?? 'Unknown';
-
-                            // New priority order: registrant.country → registrar.country → "unavailable"
-                            $country = 'unavailable';
-                            if ( isset( $whois_data['registrant']['country'] ) && ! empty( $whois_data['registrant']['country'] ) ) {
-                                $country = $whois_data['registrant']['country'];
-                            } elseif ( isset( $whois_data['registrar']['country'] ) && ! empty( $whois_data['registrar']['country'] ) ) {
-                                $country = $whois_data['registrar']['country'];
-                            } elseif ( isset( $whois_data['country'] ) && ! empty( $whois_data['country'] ) ) {
-                                $country = $whois_data['country'];
-                            }
-
-                            $social_data['webInfo']['registrationCountry'] = $country;
+                            $social_data['webInfo']['registrationCountry'] = $whois_data['country'] ?? 'Unknown';
                         }
                     }
                 }
@@ -1127,7 +1024,7 @@ function solanawp_extract_discord_invite( $url ) {
 }
 
 /**
- * Enhanced WHOIS service with new priority order
+ * 🔄 NEW WHOIS SERVICE: Updated to use hannisolwhois.vercel.app
  */
 function solanawp_get_real_whois_data( $domain ) {
     try {
@@ -1145,13 +1042,7 @@ function solanawp_get_real_whois_data( $domain ) {
             'domain' => $domain,
             'creation_date' => $response['creation_date'] ?? null,
             'expiration_date' => $response['expiration_date'] ?? null,
-            'registrar' => array(
-                'name' => $response['registrar']['name'] ?? 'Unknown',
-                'country' => solanawp_get_country_from_registrar( $response['registrar']['name'] ?? '' )
-            ),
-            'registrant' => array(
-                'country' => $response['registrant']['country'] ?? null
-            ),
+            'registrar' => $response['registrar']['name'] ?? 'Unknown',
             'country' => solanawp_get_country_from_registrar( $response['registrar']['name'] ?? '' ),
             'age' => solanawp_calculate_domain_age( $response['creation_date'] ?? null ),
             'ssl_enabled' => solanawp_check_ssl( "https://{$domain}" ),
@@ -1163,8 +1054,7 @@ function solanawp_get_real_whois_data( $domain ) {
             'domain' => $domain,
             'error' => $e->getMessage(),
             'creation_date' => null,
-            'registrar' => array( 'name' => 'Unknown', 'country' => 'Unknown' ),
-            'registrant' => array( 'country' => null ),
+            'registrar' => 'Unknown',
             'country' => 'Unknown'
         );
     }
@@ -1393,21 +1283,6 @@ function solanawp_log_request( $address, $user_ip, $status, $error = null ) {
  */
 function solanawp_lamports_to_sol( $lamports ) {
     return $lamports / 1000000000;
-}
-
-/**
- * Format large numbers with K, M, B suffixes
- */
-function solanawp_format_large_number( $number ) {
-    if ( $number >= 1000000000 ) {
-        return number_format( $number / 1000000000, 2 ) . 'B';
-    } elseif ( $number >= 1000000 ) {
-        return number_format( $number / 1000000, 2 ) . 'M';
-    } elseif ( $number >= 1000 ) {
-        return number_format( $number / 1000, 2 ) . 'K';
-    } else {
-        return number_format( $number, 2 );
-    }
 }
 
 /**

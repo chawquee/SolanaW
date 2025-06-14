@@ -1,10 +1,8 @@
 <?php
 /**
- * Template Name: Solana Address Checker - ENHANCED WITH TOKEN ANALYTICS
+ * Template Name: Address Checker
  *
- * Enhanced template for the Solana Address Checker page with Token Analytics section
- * positioned AFTER Address Validation and BEFORE Balance & Holdings.
- *
+ * This is the template for the Solana Address Checker.
  * It can be used on any page.
  *
  * @link https://developer.wordpress.org/themes/template-files-section/page-template-files/
@@ -40,10 +38,6 @@ get_header(); // Includes header.php
                 <?php // --- Results Section container --- ?>
                 <div class="results-section" id="resultsSection">
                     <?php get_template_part( 'template-parts/checker/results-validation' ); ?>
-
-                    <?php // ENHANCED: Token Analytics section positioned AFTER Address Validation and BEFORE Balance & Holdings ?>
-                    <?php get_template_part( 'template-parts/checker/results-token-analytics' ); ?>
-
                     <?php get_template_part( 'template-parts/checker/results-balance' ); ?>
                     <?php get_template_part( 'template-parts/checker/results-transactions' ); ?>
 
@@ -75,19 +69,19 @@ get_header(); // Includes header.php
 
         <?php
         // Ensure the function exists before calling it.
+        // This function is defined in functions.php and renders ads from the Customizer
+        // for the right sidebar, mirroring the left sidebar's functionality.
         if ( function_exists( 'solanawp_get_right_sidebar' ) ) {
             echo solanawp_get_right_sidebar();
+        } else {
+            // Fallback if the function is somehow not available
+            // You could output a placeholder or an error message here.
+            // For example, a simple placeholder:
+            echo '<aside id="secondary-right" class="widget-area sidebar-right" role="complementary">';
+            echo '<p>Right sidebar content is unavailable.</p>';
+            echo '</aside>';
         }
         ?>
     </div>
-
-<?php
-// --- Advanced Content Area Banner (Independent, Below Main Container) ---
-if ( function_exists( 'solanawp_render_content_area_banner' ) ) {
-    solanawp_render_content_area_banner();
-}
-?>
-
 <?php
 get_footer(); // Includes footer.php
-?>

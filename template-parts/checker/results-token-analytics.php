@@ -22,7 +22,6 @@ if ( ! defined( 'ABSPATH' ) ) {
         <h2 class="card-title"><?php esc_html_e( 'Token Analytics', 'solanawp' ); ?></h2>
     </div>
     <div class="card-content">
-        <!-- Price Information Section -->
         <div class="token-analytics-section">
             <h4><?php esc_html_e( 'Price Information', 'solanawp' ); ?></h4>
             <div class="token-analytics-grid">
@@ -45,7 +44,6 @@ if ( ! defined( 'ABSPATH' ) ) {
             </div>
         </div>
 
-        <!-- Volume Information Section -->
         <div class="token-analytics-section">
             <h4><?php esc_html_e( 'Volume Information', 'solanawp' ); ?></h4>
             <div class="token-analytics-grid">
@@ -68,7 +66,6 @@ if ( ! defined( 'ABSPATH' ) ) {
             </div>
         </div>
 
-        <!-- Price Changes Section -->
         <div class="token-analytics-section">
             <h4><?php esc_html_e( 'Price Changes', 'solanawp' ); ?></h4>
             <div class="token-analytics-grid">
@@ -91,7 +88,6 @@ if ( ! defined( 'ABSPATH' ) ) {
             </div>
         </div>
 
-        <!-- Trading Activity Section -->
         <div class="token-analytics-section">
             <h4><?php esc_html_e( 'Trading Activity', 'solanawp' ); ?></h4>
             <div class="trading-activity-grid">
