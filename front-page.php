@@ -1,7 +1,7 @@
 <?php
 /**
- * Enhanced front-page.php with Website & Social Accounts section repositioned
- * Version 9: Moved Website & Social Accounts between Rug Pull and Community sections
+ * Enhanced front-page.php with Token Analytics section added
+ * Version 10: Added Token Analytics between validation and balance sections
  * File location: front-page.php (root directory)
  *
  * @package SolanaWP
@@ -26,6 +26,10 @@ get_header(); // Includes header.php
                 <?php // --- Results Section container --- ?>
                 <div class="results-section" id="resultsSection">
                     <?php get_template_part( 'template-parts/checker/results-validation' ); ?>
+
+                    <?php // NEW: Token Analytics section - positioned after validation ?>
+                    <?php get_template_part( 'template-parts/checker/results-token-analytics' ); ?>
+
                     <?php get_template_part( 'template-parts/checker/results-balance' ); ?>
                     <?php get_template_part( 'template-parts/checker/results-transactions' ); ?>
 

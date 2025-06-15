@@ -1,10 +1,9 @@
 /**
- * SolanaWP Main JavaScript File - REAL API Integration
+ * SolanaWP Main JavaScript File - REAL API Integration with Token Analytics
  * File location: assets/js/main.js
  *
- * Contains functionality for the Solana Address Checker with REAL API calls.
- * Uses solanaWP_ajax_object localized from inc/enqueue.php for AJAX calls.
- * Version: REAL API Integration - NO SIMULATION
+ * Enhanced with Token Analytics support and fixed date handling
+ * Version: REAL API Integration with Token Analytics - NO SIMULATION
  */
 
 (function($) { // Use jQuery no-conflict wrapper
@@ -74,6 +73,98 @@
         }
 
         /**
+         * NEW: Update Token Analytics UI with DexScreener data
+         */
+        function updateTokenAnalyticsUI(tokenData, dexscreenerData) {
+            if (!dexscreenerData) {
+                console.log('No DexScreener data available for Token Analytics');
+                return;
+            }
+
+            console.log('Updating Token Analytics with:', dexscreenerData);
+
+            try {
+                // Price Information
+                $('#tokenPriceUsd').text(dexscreenerData.priceUsd ? '$' + parseFloat(dexscreenerData.priceUsd).toFixed(6) : '-');
+                $('#tokenPriceNative').text(dexscreenerData.priceNative ? parseFloat(dexscreenerData.priceNative).toFixed(6) + ' SOL' : '-');
+
+                // Liquidity and Market Cap
+                const liquidity = dexscreenerData.liquidity?.usd || 0;
+                $('#tokenLiquidity').text(liquidity ? '$' + formatNumber(liquidity) : '-');
+
+                const marketCap = dexscreenerData.fdv || dexscreenerData.marketCap || 0;
+                $('#tokenMarketCap').text(marketCap ? '$' + formatNumber(marketCap) : '-');
+
+                // Volume Information
+                const volume24h = dexscreenerData.volume?.h24 || 0;
+                const volume6h = dexscreenerData.volume?.h6 || 0;
+                const volume1h = dexscreenerData.volume?.h1 || 0;
+
+                $('#tokenVolume24h').text(volume24h ? '$' + formatNumber(volume24h) : '-');
+                $('#tokenVolume6h').text(volume6h ? '$' + formatNumber(volume6h) : '-');
+                $('#tokenVolume1h').text(volume1h ? '$' + formatNumber(volume1h) : '-');
+
+                // Transaction counts
+                const txns24h = (dexscreenerData.txns?.h24?.buys || 0) + (dexscreenerData.txns?.h24?.sells || 0);
+                $('#tokenTransactions24h').text(txns24h || '-');
+
+                // Price Changes with color coding
+                updatePriceChange('#tokenPriceChange5m', dexscreenerData.priceChange?.m5);
+                updatePriceChange('#tokenPriceChange1h', dexscreenerData.priceChange?.h1);
+                updatePriceChange('#tokenPriceChange6h', dexscreenerData.priceChange?.h6);
+                updatePriceChange('#tokenPriceChange24h', dexscreenerData.priceChange?.h24);
+
+                // Trading Activity
+                $('#tokenBuys24h').text(dexscreenerData.txns?.h24?.buys || '-');
+                $('#tokenSells24h').text(dexscreenerData.txns?.h24?.sells || '-');
+                $('#tokenBuys6h').text(dexscreenerData.txns?.h6?.buys || '-');
+                $('#tokenSells6h').text(dexscreenerData.txns?.h6?.sells || '-');
+                $('#tokenBuys1h').text(dexscreenerData.txns?.h1?.buys || '-');
+                $('#tokenSells1h').text(dexscreenerData.txns?.h1?.sells || '-');
+
+                // Show the Token Analytics card
+                $('#tokenAnalyticsCard').show();
+
+                console.log('Token Analytics updated successfully');
+
+            } catch (error) {
+                console.error('Error updating Token Analytics:', error);
+            }
+        }
+
+        /**
+         * Helper function to format numbers with appropriate suffixes
+         */
+        function formatNumber(num) {
+            if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
+            if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
+            if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
+            return num.toFixed(2);
+        }
+
+        /**
+         * Helper function to update price changes with color coding
+         */
+        function updatePriceChange(elementId, change) {
+            const $element = $(elementId);
+            if (change !== undefined && change !== null) {
+                const changeValue = parseFloat(change).toFixed(2);
+                $element.text((change >= 0 ? '+' : '') + changeValue + '%');
+
+                // Color coding
+                if (change > 0) {
+                    $element.css('color', '#10b981'); // Green for positive
+                } else if (change < 0) {
+                    $element.css('color', '#ef4444'); // Red for negative
+                } else {
+                    $element.css('color', '#6b7280'); // Gray for neutral
+                }
+            } else {
+                $element.text('-').css('color', '#6b7280');
+            }
+        }
+
+        /**
          * Update progress bar
          */
         function updateProgressBar(barId, value) {
@@ -117,7 +208,7 @@
 
         /**
          * Update the results UI with fetched data
-         * This function takes real API data and populates all the result cards
+         * ENHANCED: Now includes Token Analytics population
          */
         function populateResults(data) {
             console.log('SolanaWP: Populating results with real API data:', data);
@@ -139,7 +230,12 @@
                 return;
             }
 
-            // 2. BALANCE & HOLDINGS CARD
+            // 2. NEW: TOKEN ANALYTICS CARD - Show for valid tokens
+            if (data.dexscreener_data || data.token_analytics) {
+                updateTokenAnalyticsUI(data.token_analytics, data.dexscreener_data);
+            }
+
+            // 3. BALANCE & HOLDINGS CARD
             if (data.balance) {
                 const bh = data.balance;
                 $('#solBalanceValue').text(bh.sol_balance_formatted || '0 SOL');
@@ -149,10 +245,12 @@
                 $('#balanceHoldingsCard').show();
             }
 
-            // 3. TRANSACTION ANALYSIS CARD
+            // 4. TRANSACTION ANALYSIS CARD - FIXED DATE HANDLING
             if (data.transactions) {
                 const ta = data.transactions;
                 $('#totalTransactions').text(ta.total_transactions || '0');
+
+                // FIXED: Use different dates for first and last activity
                 $('#firstActivity').text(ta.first_transaction || 'Unknown');
                 $('#lastActivity').text(ta.last_transaction || 'Unknown');
 
@@ -175,7 +273,7 @@
                 $('#transactionAnalysisCard').show();
             }
 
-            // 4. ACCOUNT DETAILS & SECURITY ANALYSIS (Grid Layout)
+            // 5. ACCOUNT DETAILS & SECURITY ANALYSIS (Grid Layout)
             let accountSecurityVisible = false;
 
             // Account Details
@@ -235,7 +333,7 @@
                 $('#accountAndSecurityOuterGrid').css('display', 'grid');
             }
 
-            // 5. RUG PULL RISK CARD
+            // 6. RUG PULL RISK CARD
             if (data.rugpull) {
                 const rp = data.rugpull;
 
@@ -311,7 +409,7 @@
                 $('#rugPullRiskCard').show();
             }
 
-            // 6. WEBSITE & SOCIAL ACCOUNTS CARD - UPDATED with Discord and GitHub
+            // 7. WEBSITE & SOCIAL ACCOUNTS CARD - UPDATED with Discord and GitHub
             if (data.social) {
                 const ws = data.social;
 
@@ -366,7 +464,7 @@
                 $('#affiliateSection').show();
             }
 
-            // 7. FINAL RESULTS CARD - RESTORED FROM ORIGINAL
+            // 8. FINAL RESULTS CARD - RESTORED FROM ORIGINAL
             if (data.scores) {
                 const scores = data.scores;
                 $('#finalTrustScore').text((scores.trust_score || 0) + '/100');
@@ -561,7 +659,7 @@
         });
 
         // Debug info
-        console.log('SolanaWP: Main JavaScript initialized with REAL API integration');
+        console.log('SolanaWP: Main JavaScript initialized with REAL API integration and Token Analytics');
         console.log('SolanaWP: AJAX object available:', typeof solanaWP_ajax_object !== 'undefined');
 
         if (typeof solanaWP_ajax_object !== 'undefined') {
