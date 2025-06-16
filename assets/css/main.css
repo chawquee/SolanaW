@@ -560,12 +560,9 @@ a:hover,
 .account-detail-item span:last-child, .security-detail-item span:last-child, .security-detail-item div[id^="sec"] { font-weight: 600; text-align: right; word-break: break-all; }
 .security-detail-item div[id^="sec"] { display: flex; align-items: center; gap: 8px; }
 
-.risk-factors-list .factor-item {display: flex;justify-content: space-between;align-items: center;padding: 8px 0;}
-.risk-factors-list .factor-item span:last-child {font-weight: 600;}
 #rugTokenDistribution .token-distribution-item > div:first-child {display: flex;justify-content: space-between;margin-bottom: 4px;}
 #rugTokenDistribution .progress-bar-bg {width: 100%;background-color: #e5e7eb;border-radius: 9999px;height: 8px;overflow: hidden;}
 #rugTokenDistribution .dist-bar {height: 8px;border-radius: 9999px;transition: width 0.5s ease-in-out;}
-.risk-level-indicator {background: #fef3c7;color: #92400e;padding: 8px 16px;border-radius: 9999px;font-weight: bold;font-size: 18px;display: inline-block;}
 
 .community-stats-grid {display: grid;grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));gap: 16px;margin-bottom: 24px;}
 .community-stat-item {border-radius: 12px;padding: 16px;text-align: center;}
@@ -697,7 +694,7 @@ a:hover,
 .clear:before, .clear:after, .entry-content:before, .entry-content:after, .comment-content:before, .comment-content:after, .site-header:before, .site-header:after, .site-content:before, .site-content:after, .site-footer:before, .site-footer:after { content: ""; display: table; table-layout: fixed; }
 .clear:after, .entry-content:after, .comment-content:after, .site-header:after, .site-content:after, .site-footer:after { clear: both; }
 
-//* === WEBSITE & SOCIAL ACCOUNTS SECTION STYLES === */
+/* === WEBSITE & SOCIAL ACCOUNTS SECTION STYLES === */
 .website-social-section {margin-bottom: 24px;}
 .website-social-section:last-child {margin-bottom: 0;}
 
@@ -855,50 +852,113 @@ a:hover,
     }
 }
 
-/* Add this CSS rule to the existing main.css file after the .card styles */
-
 /* Larger gap above Final Results section */
 #finalResultsCard {
     margin-top: 48px;
 }
 
 /* =============================================================================
-   Solana Analyzer - Rug Pull Analysis Styling
-   Add this section at the END of your main.css file
-============= */
+   Solana Analyzer - Rug Pull Analysis Styling (FINAL VERSION)
+   ============================================================================= */
 
-/* Rug Pull Risk Analysis Item Styling */
+/* Risk Level Indicators */
+.risk-high {
+    color: #EF4444 !important;
+    background: #FEF2F2 !important;
+    border: 1px solid #FECACA !important;
+}
+
+.risk-medium {
+    color: #F59E0B !important;
+    background: #FFFBEB !important;
+    border: 1px solid #FED7AA !important;
+}
+
+.risk-low {
+    color: #10B981 !important;
+    background: #F0FDF4 !important;
+    border: 1px solid #BBF7D0 !important;
+}
+
+.explanation {
+    font-style: italic;
+    font-size: 0.9em;
+    margin-top: 4px;
+    display: block;
+}
+
+/* Factor Items */
+.factor-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.factor-item:last-child {
+    border-bottom: none;
+}
+
+/* Warning, Safe, and Neutral Items with Icons */
 .warning-item {
     color: #ef4444;
-    font-weight: 500;
-    padding: 2px 0;
+    padding: 4px 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.warning-item:before {
+    content: "⚠️";
+    flex-shrink: 0;
 }
 
 .safe-item {
     color: #10b981;
-    font-weight: 500;
-    padding: 2px 0;
+    padding: 4px 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.safe-item:before {
+    content: "✅";
+    flex-shrink: 0;
 }
 
 .neutral-item {
     color: #6b7280;
-    padding: 2px 0;
+    padding: 4px 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.neutral-item:before {
+    content: "ℹ️";
+    flex-shrink: 0;
 }
 
 /* Token Distribution Styling */
 .distribution-item {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 6px;
-    padding: 4px 0;
+    padding: 6px 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.distribution-item:last-child {
+    border-bottom: none;
 }
 
 .dist-color {
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    flex-shrink: 0;
+    display: inline-block;
+    margin-right: 8px;
 }
 
 .dist-label {
@@ -913,7 +973,7 @@ a:hover,
     color: #374151;
 }
 
-/* Improve risk factor lists */
+/* Enhanced risk factor lists with background highlighting */
 #rugPullWarningsList li,
 #rugPullSafeIndicatorsList li {
     margin-bottom: 4px;
@@ -953,4 +1013,14 @@ a:hover,
 .authority-unknown {
     background-color: rgba(107, 114, 128, 0.1);
     color: #6b7280;
+}
+
+/* Concentration Metrics Animation */
+.concentration-metrics {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }

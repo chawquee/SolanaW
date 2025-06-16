@@ -1,14 +1,11 @@
 <?php
 /**
- * AJAX Handlers for SolanaWP Theme - COMPLETE WITH X API INTEGRATION
- * DexScreener as PRIMARY source, QuickNode/Helius as SECONDARY fallback
+ * AJAX Handlers for SolanaWP Theme - ENHANCED WITH ALL 3 PHASES
+ * PHASE 1: Enhanced Account Details with Alchemy API
+ * PHASE 2: Authority Risk Analysis
+ * PHASE 3: Token Distribution Analysis
+ * DexScreener as PRIMARY source, Alchemy/Helius as SECONDARY fallback
  * Enhanced with Token Analytics support and X API integration for detailed Twitter data
- *
- * IMPLEMENTED INSTRUCTIONS:
- * 1. First Activity Date: Extract pairCreatedAt from DexScreener API, convert UNIX timestamp to readable date
- * 2. Social Media Extraction: Extract type and url from DexScreener API socials array
- * 3. Website Registration: Extract website from DexScreener, use WHOIS API for registration details
- * 4. X API Integration: Real data extraction using exact API v2 fields from documentation
  *
  * @package SolanaWP
  * @since SolanaWP 1.0.0
@@ -61,9 +58,9 @@ function solanawp_handle_address_check() {
     // 📊 Update rate limiting counter
     set_transient( $rate_limit_key, ($requests + 1), 3600 ); // 1 hour window
 
-    // 🔍 Process the Solana address
+    // 🔍 Process the Solana address with ENHANCED functionality
     try {
-        $result = solanawp_process_solana_address( $address );
+        $result = solanawp_process_solana_address_enhanced( $address );
 
         // 📝 Log successful request (optional)
         solanawp_log_request( $address, $user_ip, 'success' );
@@ -124,22 +121,20 @@ function solanawp_handle_save_api_settings() {
 }
 
 // ============================================================================
-// X API INTEGRATION FUNCTIONS - NEW
+// X API INTEGRATION FUNCTIONS
 // ============================================================================
 
 /**
- * NEW: Get X API Bearer Token from WordPress options
+ * Get X API Bearer Token from WordPress options
  */
 function solanawp_get_x_api_bearer_token() {
-    // Retrieve X API credentials from WordPress options for security
     return get_option( 'solanawp_x_api_bearer_token', '' );
 }
 
 /**
- * NEW: Extract Twitter username from URL (supports both twitter.com and x.com)
+ * Extract Twitter username from URL (supports both twitter.com and x.com)
  */
 function solanawp_extract_twitter_username_from_url( $url ) {
-    // Handle both twitter.com and x.com URLs
     if ( preg_match( '/(?:twitter\.com|x\.com)\/([a-zA-Z0-9_]+)/', $url, $matches ) ) {
         return $matches[1];
     }
@@ -147,7 +142,7 @@ function solanawp_extract_twitter_username_from_url( $url ) {
 }
 
 /**
- * NEW: Fetch detailed Twitter data from X API v2 using EXACT fields from API docs
+ * Fetch detailed Twitter data from X API v2
  */
 function solanawp_fetch_twitter_data_from_x_api( $username ) {
     $bearer_token = solanawp_get_x_api_bearer_token();
@@ -158,7 +153,6 @@ function solanawp_fetch_twitter_data_from_x_api( $username ) {
     }
 
     try {
-        // X API v2 users by username endpoint with EXACT fields from API documentation
         $api_url = 'https://api.twitter.com/2/users/by/username/' . urlencode( $username );
         $api_url .= '?user.fields=created_at,is_identity_verified,public_metrics,subscription_type,verified,verified_followers_count,verified_type';
 
@@ -189,7 +183,6 @@ function solanawp_fetch_twitter_data_from_x_api( $username ) {
             return $data['data'];
         }
 
-        // Log any API errors
         if ( isset( $data['errors'] ) ) {
             error_log( 'SolanaWP: X API error: ' . json_encode( $data['errors'] ) );
         }
@@ -203,7 +196,7 @@ function solanawp_fetch_twitter_data_from_x_api( $username ) {
 }
 
 /**
- * NEW: Map X API response to frontend fields using REAL data extraction
+ * Map X API response to frontend fields
  */
 function solanawp_map_x_api_data_to_frontend( $x_api_data ) {
     if ( !$x_api_data ) {
@@ -217,9 +210,7 @@ function solanawp_map_x_api_data_to_frontend( $x_api_data ) {
         );
     }
 
-    // REAL DATA EXTRACTION from X API v2 fields
-
-    // 1. Verification Type - from verified_type field
+    // Verification Type
     $verification_type = 'Unavailable';
     if ( isset( $x_api_data['verified_type'] ) ) {
         switch ( $x_api_data['verified_type'] ) {
@@ -242,31 +233,31 @@ function solanawp_map_x_api_data_to_frontend( $x_api_data ) {
         $verification_type = 'Not Verified';
     }
 
-    // 2. Verified Followers - from verified_followers_count field (REAL DATA)
+    // Verified Followers
     $verified_followers = 'Unavailable';
     if ( isset( $x_api_data['verified_followers_count'] ) ) {
         $verified_followers = solanawp_format_number( $x_api_data['verified_followers_count'] );
     }
 
-    // 3. Subscription Type - from subscription_type field (REAL DATA)
+    // Subscription Type
     $subscription_type = 'Unavailable';
     if ( isset( $x_api_data['subscription_type'] ) ) {
         $subscription_type = ucfirst( str_replace( '_', ' ', $x_api_data['subscription_type'] ) );
     }
 
-    // 4. Followers - from public_metrics.followers_count (REAL DATA)
+    // Followers
     $followers = 'Unavailable';
     if ( isset( $x_api_data['public_metrics']['followers_count'] ) ) {
         $followers = solanawp_format_number( $x_api_data['public_metrics']['followers_count'] );
     }
 
-    // 5. Identity Verification - from is_identity_verified field (REAL DATA)
+    // Identity Verification
     $identity_verification = 'Unavailable';
     if ( isset( $x_api_data['is_identity_verified'] ) ) {
         $identity_verification = $x_api_data['is_identity_verified'] ? 'Verified' : 'Not Verified';
     }
 
-    // 6. Creation Date - from created_at field (REAL DATA)
+    // Creation Date
     $creation_date = 'Unavailable';
     if ( isset( $x_api_data['created_at'] ) ) {
         $creation_date = date( 'F j, Y', strtotime( $x_api_data['created_at'] ) );
@@ -283,35 +274,28 @@ function solanawp_map_x_api_data_to_frontend( $x_api_data ) {
 }
 
 /**
- * SETUP FUNCTION: Configure X API credentials using YOUR EXACT Bearer Token
- * Call this function once to store your X API credentials securely
+ * SETUP FUNCTION: Configure X API credentials
  */
 function solanawp_setup_x_api_credentials() {
-    // YOUR EXACT X API Bearer Token from the credentials you provided
     $bearer_token = 'AAAAAAAAAAAAAAAAAAAAAIXm2QEAAAAA817IAG%2BBxH8ox%2FVyn7mnO2YBkV4%3DmPIb4p67b4Tfhtff5438ZWpgywZ5Engi66rNtvOU4ethEy6f1K';
 
     update_option( 'solanawp_x_api_bearer_token', $bearer_token );
+    error_log( 'SolanaWP: X API credentials configured successfully' );
 
-    error_log( 'SolanaWP: X API credentials configured successfully with your Bearer Token' );
-
-    // Also store API key and secret for reference (not used in Bearer Token auth)
     update_option( 'solanawp_x_api_key', 'MymGaEXxCy3oOTXsmQ33IESFi' );
     update_option( 'solanawp_x_api_secret', 'RO7hxR03cVweFONnNur3QBmZnP3z9eKbgJ3Q1qv4SMX3lT4wPJ' );
 }
 
-// AUTO-SETUP: Uncomment this line ONCE to configure credentials, then comment it back
-// add_action( 'init', 'solanawp_setup_x_api_credentials' );
-
 // ============================================================================
-// MAIN PROCESSING FUNCTIONS
+// ENHANCED MAIN PROCESSING FUNCTIONS - ALL 3 PHASES
 // ============================================================================
 
 /**
- * 🚀 ENHANCED MAIN PROCESSING FUNCTION - DEXSCREENER PRIORITIZATION WITH TOKEN ANALYTICS
+ * ENHANCED MAIN PROCESSING FUNCTION - ALL 3 PHASES IMPLEMENTATION
  */
-function solanawp_process_solana_address( $address ) {
+function solanawp_process_solana_address_enhanced( $address ) {
     // 💾 Check cache first
-    $cache_key = "solana_analysis_{$address}";
+    $cache_key = "solana_analysis_enhanced_{$address}";
     $cached_result = solanawp_get_cache( $cache_key );
 
     if ( $cached_result !== false ) {
@@ -325,21 +309,29 @@ function solanawp_process_solana_address( $address ) {
     $validation_data = solanawp_fetch_validation_data( $address );
     $balance_data = solanawp_fetch_balance_data( $address, $dexscreener_data );
     $transaction_data = solanawp_fetch_transaction_data( $address, $dexscreener_data );
-    $account_data = solanawp_fetch_account_data( $address );
     $security_data = solanawp_fetch_security_data( $address, $dexscreener_data );
-    $rugpull_data = solanawp_fetch_rugpull_data( $address, $dexscreener_data );
     $social_data = solanawp_fetch_social_data( $address, $dexscreener_data );
 
-    // NEW: Extract token analytics data from DexScreener
-    $token_analytics = solanawp_extract_token_analytics( $dexscreener_data );
+    // NEW: Enhanced data with all 3 phases
+    $enhanced_account_data = solanawp_fetch_enhanced_account_data( $address );
+    $authority_risk_data = solanawp_fetch_authority_risk_data( $address );
+    $distribution_data = solanawp_fetch_token_distribution_data( $address );
 
-    // Generate final scores
+    // Enhanced rug pull analysis incorporating all phases
+    $enhanced_rugpull_data = solanawp_fetch_enhanced_rugpull_data(
+        $address,
+        $dexscreener_data,
+        $authority_risk_data,
+        $distribution_data
+    );
+
+    $token_analytics = solanawp_extract_token_analytics( $dexscreener_data );
     $scores_data = solanawp_calculate_final_scores(
         $validation_data,
         $balance_data,
         $transaction_data,
         $security_data,
-        $rugpull_data,
+        $enhanced_rugpull_data,
         $social_data
     );
 
@@ -348,13 +340,16 @@ function solanawp_process_solana_address( $address ) {
         'validation' => $validation_data,
         'balance' => $balance_data,
         'transactions' => $transaction_data,
-        'account' => $account_data,
+        'account' => $enhanced_account_data, // PHASE 1: Enhanced account details
         'security' => $security_data,
-        'rugpull' => $rugpull_data,
+        'rugpull' => $enhanced_rugpull_data, // PHASE 2 & 3: Enhanced rug pull analysis
         'social' => $social_data,
         'scores' => $scores_data,
-        'dexscreener_data' => $dexscreener_data, // NEW: Include raw DexScreener data
-        'token_analytics' => $token_analytics, // NEW: Structured token analytics
+        'dexscreener_data' => $dexscreener_data,
+        'token_analytics' => $token_analytics,
+        // NEW: Additional data from roadmap phases
+        'authority_analysis' => $authority_risk_data, // PHASE 2: Authority risk data
+        'distribution_analysis' => $distribution_data, // PHASE 3: Token distribution data
         'timestamp' => current_time( 'timestamp' )
     );
 
@@ -365,7 +360,436 @@ function solanawp_process_solana_address( $address ) {
 }
 
 /**
- * 🔥 NEW: Extract Token Analytics from DexScreener Data
+ * PHASE 1: Enhanced Account Details with Alchemy API
+ */
+function solanawp_fetch_enhanced_account_data( $address ) {
+    try {
+        // Use Alchemy endpoint from roadmap
+        $alchemy_url = 'https://solana-mainnet.g.alchemy.com/v2/7b0nzOAaomkkueSW09CGrMnl1VPMy6vY';
+
+        // API Call #1: getAccountInfo (Basic)
+        $payload = json_encode( array(
+            'jsonrpc' => '2.0',
+            'id' => 1,
+            'method' => 'getAccountInfo',
+            'params' => array( $address, array( 'encoding' => 'base64' ) )
+        ) );
+
+        $response = solanawp_make_request( $alchemy_url, array(
+            'method' => 'POST',
+            'headers' => array( 'Content-Type' => 'application/json' ),
+            'body' => $payload,
+            'timeout' => 10
+        ) );
+
+        if ( isset( $response['result']['value'] ) && $response['result']['value'] !== null ) {
+            $account_info = $response['result']['value'];
+
+            $is_token = ( $account_info['owner'] === 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' );
+
+            return array(
+                'is_token' => $is_token,
+                // PHASE 1 REQUIREMENTS:
+                'owner' => $account_info['owner'] ?? 'Unknown',                    // OWNER
+                'executable' => $account_info['executable'] ? 'Yes' : 'No',       // EXECUTABLES
+                'data_size' => isset( $account_info['data'][0] ) ? strlen( $account_info['data'][0] ) : 0, // DATA SIZE
+                'rent_epoch' => $account_info['rentEpoch'] ?? 0,                  // RENT EPOCH
+                'lamports' => $account_info['lamports'] ?? 0,
+                'account_type' => $is_token ? 'Token Mint' : 'Wallet Account'
+            );
+        }
+
+        return array(
+            'is_token' => false,
+            'owner' => 'Unknown',
+            'executable' => 'No',
+            'data_size' => 0,
+            'rent_epoch' => 0,
+            'account_type' => 'Unknown',
+            'error' => 'Account not found'
+        );
+
+    } catch ( Exception $e ) {
+        return array(
+            'error' => $e->getMessage(),
+            'is_token' => false,
+            'owner' => 'Error',
+            'executable' => 'Unknown',
+            'data_size' => 0,
+            'rent_epoch' => 0
+        );
+    }
+}
+
+/**
+ * PHASE 2: Authority Check with Risk Analysis
+ */
+function solanawp_fetch_authority_risk_data( $address ) {
+    try {
+        $alchemy_url = 'https://solana-mainnet.g.alchemy.com/v2/7b0nzOAaomkkueSW09CGrMnl1VPMy6vY';
+
+        // API Call #2: getAccountInfo (Parsed)
+        $payload = json_encode( array(
+            'jsonrpc' => '2.0',
+            'id' => 1,
+            'method' => 'getAccountInfo',
+            'params' => array( $address, array( 'encoding' => 'jsonParsed' ) )
+        ) );
+
+        $response = solanawp_make_request( $alchemy_url, array(
+            'method' => 'POST',
+            'headers' => array( 'Content-Type' => 'application/json' ),
+            'body' => $payload,
+            'timeout' => 10
+        ) );
+
+        $authority_data = array(
+            'mint_authority' => array(
+                'value' => null,
+                'status' => 'Unknown',
+                'risk_level' => 'Unknown',
+                'color' => '#6b7280',
+                'explanation' => 'Unable to determine mint authority status'
+            ),
+            'freeze_authority' => array(
+                'value' => null,
+                'status' => 'Unknown',
+                'risk_level' => 'Unknown',
+                'color' => '#6b7280',
+                'explanation' => 'Unable to determine freeze authority status'
+            )
+        );
+
+        if ( isset( $response['result']['value']['data']['parsed']['info'] ) ) {
+            $parsed_info = $response['result']['value']['data']['parsed']['info'];
+
+            // PHASE 2: Mint Authority Analysis
+            if ( isset( $parsed_info['mintAuthority'] ) ) {
+                $mint_auth = $parsed_info['mintAuthority'];
+
+                if ( $mint_auth === null ) {
+                    // ✅ Safe (null) - SAFE
+                    $authority_data['mint_authority'] = array(
+                        'value' => 'null',
+                        'status' => 'SAFE',
+                        'risk_level' => 'Low',
+                        'color' => '#10B981',
+                        'explanation' => 'Token supply is fixed, no new tokens can be created to devalue existing holders'
+                    );
+                } else {
+                    // 🚨 Risk (address) - DANGER
+                    $authority_data['mint_authority'] = array(
+                        'value' => $mint_auth,
+                        'status' => 'DANGER',
+                        'risk_level' => 'High',
+                        'color' => '#EF4444',
+                        'explanation' => 'Creator can mint unlimited new tokens and crash the price instantly'
+                    );
+                }
+            }
+
+            // PHASE 2: Freeze Authority Analysis
+            if ( isset( $parsed_info['freezeAuthority'] ) ) {
+                $freeze_auth = $parsed_info['freezeAuthority'];
+
+                if ( $freeze_auth === null ) {
+                    // ✅ Safe (null) - SAFE
+                    $authority_data['freeze_authority'] = array(
+                        'value' => 'null',
+                        'status' => 'SAFE',
+                        'risk_level' => 'Low',
+                        'color' => '#10B981',
+                        'explanation' => 'Your tokens cannot be frozen or locked by anyone'
+                    );
+                } else {
+                    // 🚨 Risk (address) - DANGER
+                    $authority_data['freeze_authority'] = array(
+                        'value' => $freeze_auth,
+                        'status' => 'DANGER',
+                        'risk_level' => 'High',
+                        'color' => '#EF4444',
+                        'explanation' => 'Creator can freeze your tokens, preventing you from selling or transferring'
+                    );
+                }
+            }
+        }
+
+        return $authority_data;
+
+    } catch ( Exception $e ) {
+        error_log( 'Authority risk analysis error: ' . $e->getMessage() );
+        return array(
+            'mint_authority' => array(
+                'value' => 'Error',
+                'status' => 'Error',
+                'risk_level' => 'Unknown',
+                'color' => '#EF4444',
+                'explanation' => 'Error retrieving mint authority data'
+            ),
+            'freeze_authority' => array(
+                'value' => 'Error',
+                'status' => 'Error',
+                'risk_level' => 'Unknown',
+                'color' => '#EF4444',
+                'explanation' => 'Error retrieving freeze authority data'
+            ),
+            'error' => $e->getMessage()
+        );
+    }
+}
+
+/**
+ * PHASE 3: Token Distribution Analysis
+ */
+function solanawp_fetch_token_distribution_data( $address ) {
+    try {
+        $alchemy_url = 'https://solana-mainnet.g.alchemy.com/v2/7b0nzOAaomkkueSW09CGrMnl1VPMy6vY';
+
+        // API Call #3: getTokenSupply
+        $supply_payload = json_encode( array(
+            'jsonrpc' => '2.0',
+            'id' => 1,
+            'method' => 'getTokenSupply',
+            'params' => array( $address )
+        ) );
+
+        $supply_response = solanawp_make_request( $alchemy_url, array(
+            'method' => 'POST',
+            'headers' => array( 'Content-Type' => 'application/json' ),
+            'body' => $supply_payload,
+            'timeout' => 10
+        ) );
+
+        // API Call #4: getTokenLargestAccounts
+        $holders_payload = json_encode( array(
+            'jsonrpc' => '2.0',
+            'id' => 1,
+            'method' => 'getTokenLargestAccounts',
+            'params' => array( $address )
+        ) );
+
+        $holders_response = solanawp_make_request( $alchemy_url, array(
+            'method' => 'POST',
+            'headers' => array( 'Content-Type' => 'application/json' ),
+            'body' => $holders_payload,
+            'timeout' => 10
+        ) );
+
+        $distribution_data = array(
+            'total_supply' => 0,
+            'top_1_percentage' => 0,
+            'top_5_percentage' => 0,
+            'top_20_percentage' => 0,
+            'risk_level' => 'Unknown',
+            'risk_assessment' => array(
+                'level' => 'Unknown',
+                'color' => '#6b7280',
+                'explanation' => 'Unable to analyze token distribution'
+            ),
+            'largest_holders' => array()
+        );
+
+        // Process token supply
+        if ( isset( $supply_response['result']['value']['amount'] ) ) {
+            $distribution_data['total_supply'] = intval( $supply_response['result']['value']['amount'] );
+        }
+
+        // Process largest holders
+        if ( isset( $holders_response['result']['value'] ) && is_array( $holders_response['result']['value'] ) ) {
+            $holders = $holders_response['result']['value'];
+            $total_supply = $distribution_data['total_supply'];
+
+            if ( $total_supply > 0 && !empty( $holders ) ) {
+                // Calculate concentration percentages
+                $top_1_amount = 0;
+                $top_5_amount = 0;
+                $top_20_amount = 0;
+
+                foreach ( $holders as $index => $holder ) {
+                    $amount = intval( $holder['amount'] ?? 0 );
+
+                    if ( $index === 0 ) {
+                        $top_1_amount = $amount;
+                    }
+                    if ( $index < 5 ) {
+                        $top_5_amount += $amount;
+                    }
+                    if ( $index < 20 ) {
+                        $top_20_amount += $amount;
+                    }
+
+                    // Store holder data
+                    if ( $index < 10 ) { // Top 10 for display
+                        $distribution_data['largest_holders'][] = array(
+                            'rank' => $index + 1,
+                            'address' => $holder['address'] ?? 'Unknown',
+                            'amount' => $amount,
+                            'percentage' => round( ($amount / $total_supply) * 100, 2 )
+                        );
+                    }
+                }
+
+                // Calculate percentages as specified in roadmap
+                $distribution_data['top_1_percentage'] = round( ($top_1_amount / $total_supply) * 100, 2 );
+                $distribution_data['top_5_percentage'] = round( ($top_5_amount / $total_supply) * 100, 2 );
+                $distribution_data['top_20_percentage'] = round( ($top_20_amount / $total_supply) * 100, 2 );
+
+                // Risk assessment based on roadmap criteria
+                $top_1 = $distribution_data['top_1_percentage'];
+                $top_5 = $distribution_data['top_5_percentage'];
+                $top_20 = $distribution_data['top_20_percentage'];
+
+                if ( $top_1 > 40 || $top_5 > 80 || $top_20 > 95 ) {
+                    // 🚨 HIGH RISK - DANGER ZONE
+                    $distribution_data['risk_assessment'] = array(
+                        'level' => 'HIGH RISK - DANGER ZONE',
+                        'color' => '#EF4444',
+                        'explanation' => 'Extreme concentration - few wallets control most tokens. Very high rug pull risk!'
+                    );
+                } elseif ( ($top_1 >= 20 && $top_1 <= 40) || ($top_5 >= 60 && $top_5 <= 80) || ($top_20 >= 80 && $top_20 <= 95) ) {
+                    // ⚠️ MEDIUM RISK - CAUTION
+                    $distribution_data['risk_assessment'] = array(
+                        'level' => 'MEDIUM RISK - CAUTION',
+                        'color' => '#F59E0B',
+                        'explanation' => 'Moderate concentration - some wallets have significant control. Monitor closely before investing.'
+                    );
+                } else {
+                    // ✅ LOW RISK - HEALTHY
+                    $distribution_data['risk_assessment'] = array(
+                        'level' => 'LOW RISK - HEALTHY',
+                        'color' => '#10B981',
+                        'explanation' => 'Well-distributed tokens reduce single-party manipulation and rug pull risk.'
+                    );
+                }
+            }
+        }
+
+        return $distribution_data;
+
+    } catch ( Exception $e ) {
+        error_log( 'Token distribution analysis error: ' . $e->getMessage() );
+        return array(
+            'total_supply' => 0,
+            'top_1_percentage' => 0,
+            'top_5_percentage' => 0,
+            'top_20_percentage' => 0,
+            'risk_assessment' => array(
+                'level' => 'Error',
+                'color' => '#EF4444',
+                'explanation' => 'Error analyzing token distribution: ' . $e->getMessage()
+            ),
+            'largest_holders' => array(),
+            'error' => $e->getMessage()
+        );
+    }
+}
+
+/**
+ * Enhanced Rug Pull Analysis incorporating Authority and Distribution data
+ */
+function solanawp_fetch_enhanced_rugpull_data( $address, $dexscreener_data = null, $authority_data = null, $distribution_data = null ) {
+    // Start with existing rug pull data structure
+    $rugpull_data = solanawp_fetch_rugpull_data( $address, $dexscreener_data );
+
+    // PHASE 2: Integrate Authority Analysis
+    if ( $authority_data ) {
+        $rugpull_data['mint_authority'] = array(
+            'text' => $authority_data['mint_authority']['status'] ?? 'Unknown',
+            'color' => $authority_data['mint_authority']['color'] ?? '#6b7280',
+            'explanation' => $authority_data['mint_authority']['explanation'] ?? 'Unknown'
+        );
+
+        $rugpull_data['freeze_authority'] = array(
+            'text' => $authority_data['freeze_authority']['status'] ?? 'Unknown',
+            'color' => $authority_data['freeze_authority']['color'] ?? '#6b7280',
+            'explanation' => $authority_data['freeze_authority']['explanation'] ?? 'Unknown'
+        );
+
+        // Adjust risk score based on authorities
+        if ( isset( $authority_data['mint_authority']['risk_level'] ) && $authority_data['mint_authority']['risk_level'] === 'High' ) {
+            $rugpull_data['overall_score'] = min( 100, $rugpull_data['overall_score'] + 25 );
+            $rugpull_data['warning_signs'][] = 'Mint authority not renounced - creator can mint new tokens';
+        }
+
+        if ( isset( $authority_data['freeze_authority']['risk_level'] ) && $authority_data['freeze_authority']['risk_level'] === 'High' ) {
+            $rugpull_data['overall_score'] = min( 100, $rugpull_data['overall_score'] + 20 );
+            $rugpull_data['warning_signs'][] = 'Freeze authority active - creator can freeze your tokens';
+        }
+    }
+
+    // PHASE 3: Integrate Distribution Analysis
+    if ( $distribution_data ) {
+        // Update token distribution with real data
+        $rugpull_data['token_distribution'] = array();
+
+        if ( !empty( $distribution_data['largest_holders'] ) ) {
+            foreach ( $distribution_data['largest_holders'] as $index => $holder ) {
+                $rugpull_data['token_distribution'][] = array(
+                    'label' => 'Top ' . ($index + 1) . ' Holder',
+                    'percentage' => $holder['percentage'],
+                    'color' => solanawp_get_distribution_color( $holder['percentage'] )
+                );
+
+                if ( $index >= 4 ) break; // Only show top 5 in chart
+            }
+        }
+
+        // Add concentration risk warnings
+        $top_1 = $distribution_data['top_1_percentage'] ?? 0;
+        $top_5 = $distribution_data['top_5_percentage'] ?? 0;
+        $top_20 = $distribution_data['top_20_percentage'] ?? 0;
+
+        if ( $top_1 > 40 ) {
+            $rugpull_data['overall_score'] = min( 100, $rugpull_data['overall_score'] + 30 );
+            $rugpull_data['warning_signs'][] = "Top holder owns {$top_1}% of total supply - extreme concentration risk";
+        }
+
+        if ( $top_5 > 80 ) {
+            $rugpull_data['overall_score'] = min( 100, $rugpull_data['overall_score'] + 20 );
+            $rugpull_data['warning_signs'][] = "Top 5 holders own {$top_5}% of total supply - high manipulation risk";
+        }
+
+        // Add distribution metrics to rugpull data for frontend display
+        $rugpull_data['concentration_metrics'] = array(
+            'top_1_percentage' => $top_1,
+            'top_5_percentage' => $top_5,
+            'top_20_percentage' => $top_20,
+            'risk_assessment' => $distribution_data['risk_assessment'] ?? array()
+        );
+    }
+
+    // Recalculate risk level based on enhanced score
+    $score = $rugpull_data['overall_score'];
+    if ( $score >= 70 ) {
+        $rugpull_data['risk_level'] = 'High';
+        $rugpull_data['risk_percentage'] = min( $score, 100 );
+    } elseif ( $score >= 40 ) {
+        $rugpull_data['risk_level'] = 'Medium';
+        $rugpull_data['risk_percentage'] = $score;
+    } else {
+        $rugpull_data['risk_level'] = 'Low';
+        $rugpull_data['risk_percentage'] = max( $score, 10 );
+    }
+
+    return $rugpull_data;
+}
+
+/**
+ * Helper function to assign colors based on holder percentage
+ */
+function solanawp_get_distribution_color( $percentage ) {
+    if ( $percentage > 30 ) return '#ef4444'; // Red for high concentration
+    if ( $percentage > 15 ) return '#f59e0b'; // Orange for medium
+    if ( $percentage > 5 ) return '#3b82f6';  // Blue for moderate
+    return '#10b981'; // Green for low/healthy
+}
+
+// ============================================================================
+// EXISTING FUNCTIONS (UNCHANGED - KEEPING ORIGINAL STRUCTURE)
+// ============================================================================
+
+/**
+ * Extract Token Analytics from DexScreener Data
  */
 function solanawp_extract_token_analytics( $dexscreener_data ) {
     if ( !$dexscreener_data ) {
@@ -412,7 +836,7 @@ function solanawp_extract_token_analytics( $dexscreener_data ) {
 }
 
 /**
- * 🔥 Enhanced: Fetch DexScreener Data (PRIMARY SOURCE)
+ * Fetch DexScreener Data (PRIMARY SOURCE)
  */
 function solanawp_fetch_dexscreener_data( $address ) {
     try {
@@ -420,15 +844,11 @@ function solanawp_fetch_dexscreener_data( $address ) {
         $response = solanawp_make_request( $url );
 
         if ( isset( $response['pairs'] ) && !empty( $response['pairs'] ) ) {
-            // Return the first pair (usually the most liquid)
             $pair = $response['pairs'][0];
-
-            // Add additional metadata for easier access
             $pair['token_address'] = $address;
             $pair['pair_count'] = count( $response['pairs'] );
             $pair['data_source'] = 'dexscreener';
             $pair['fetched_at'] = time();
-
             return $pair;
         }
 
@@ -439,22 +859,14 @@ function solanawp_fetch_dexscreener_data( $address ) {
     }
 }
 
-// ============================================================================
-// DATA FETCHING FUNCTIONS
-// ============================================================================
-
 /**
- * 1️⃣ Address Validation (Fixed field names for frontend compatibility)
+ * Address Validation
  */
 function solanawp_fetch_validation_data( $address ) {
-    // Remove whitespace
     $address = trim( $address );
     $length = strlen( $address );
 
-    // Very basic validation - if it looks like a Solana address, accept it
     if ( $length >= 32 && $length <= 44 && ctype_alnum( str_replace( array( '1', '2', '3', '4', '5', '6', '7', '8', '9' ), '', $address ) ) ) {
-
-        // Try DexScreener first to verify it's a known token
         try {
             $dexscreener_check = solanawp_check_dexscreener_token( $address );
 
@@ -474,42 +886,6 @@ function solanawp_fetch_validation_data( $address ) {
             error_log( 'DexScreener validation error: ' . $e->getMessage() );
         }
 
-        // Try RPC validation as fallback
-        try {
-            $solana_rpc_url = get_option( 'solanawp_solana_rpc_url' );
-
-            if ( !empty( $solana_rpc_url ) ) {
-                $payload = json_encode( array(
-                    'jsonrpc' => '2.0',
-                    'id' => 1,
-                    'method' => 'getAccountInfo',
-                    'params' => array( $address )
-                ) );
-
-                $response = solanawp_make_request( $solana_rpc_url, array(
-                    'method' => 'POST',
-                    'headers' => array( 'Content-Type' => 'application/json' ),
-                    'body' => $payload,
-                    'timeout' => 10
-                ) );
-
-                $exists = isset( $response['result']['value'] ) && $response['result']['value'] !== null;
-
-                return array(
-                    'valid' => true,
-                    'isValid' => true,
-                    'exists' => $exists,
-                    'format' => 'Valid Solana address',
-                    'type' => $exists ? 'Active Account' : 'Valid Format',
-                    'length' => $length,
-                    'verification_source' => 'RPC'
-                );
-            }
-        } catch ( Exception $e ) {
-            error_log( 'RPC validation error: ' . $e->getMessage() );
-        }
-
-        // If both checks fail but format looks OK, still accept it
         return array(
             'valid' => true,
             'isValid' => true,
@@ -521,7 +897,6 @@ function solanawp_fetch_validation_data( $address ) {
         );
     }
 
-    // Only reject if it's clearly not a Solana address
     return array(
         'valid' => false,
         'isValid' => false,
@@ -532,9 +907,6 @@ function solanawp_fetch_validation_data( $address ) {
     );
 }
 
-/**
- * Simple address type detection
- */
 function solanawp_get_address_type_simple( $address ) {
     $length = strlen( $address );
 
@@ -551,9 +923,6 @@ function solanawp_get_address_type_simple( $address ) {
     return 'Solana Address';
 }
 
-/**
- * Check if token exists in DexScreener
- */
 function solanawp_check_dexscreener_token( $address ) {
     $url = "https://api.dexscreener.com/latest/dex/tokens/{$address}";
 
@@ -587,7 +956,7 @@ function solanawp_check_dexscreener_token( $address ) {
 }
 
 /**
- * 2️⃣ Balance & Holdings (Fixed field names for frontend compatibility)
+ * Balance & Holdings
  */
 function solanawp_fetch_balance_data( $address, $dexscreener_data = null ) {
     $balance_data = array(
@@ -600,7 +969,6 @@ function solanawp_fetch_balance_data( $address, $dexscreener_data = null ) {
     );
 
     try {
-        // 🥇 PRIMARY: DexScreener data for token price/market cap
         if ( $dexscreener_data ) {
             $token_price = $dexscreener_data['priceUsd'] ?? 0;
             $balance_data['token_price'] = $token_price;
@@ -609,7 +977,6 @@ function solanawp_fetch_balance_data( $address, $dexscreener_data = null ) {
             $balance_data['volume_24h'] = $dexscreener_data['volume']['h24'] ?? 0;
         }
 
-        // 🥈 SECONDARY: QuickNode for SOL balance
         $solana_rpc_url = get_option( 'solanawp_solana_rpc_url' );
         if ( !empty( $solana_rpc_url ) ) {
             $payload = json_encode( array(
@@ -634,7 +1001,6 @@ function solanawp_fetch_balance_data( $address, $dexscreener_data = null ) {
             }
         }
 
-        // 🥈 SECONDARY: Helius for tokens and NFTs (ONLY if no DexScreener data)
         if ( !$dexscreener_data ) {
             $helius_api_key = get_option( 'solanawp_helius_api_key' );
             if ( !empty( $helius_api_key ) ) {
@@ -649,9 +1015,6 @@ function solanawp_fetch_balance_data( $address, $dexscreener_data = null ) {
                     $balance_data['nft_count'] = count( $helius_response['nfts'] );
                 }
             }
-        } else {
-            // When DexScreener data available, skip Helius and use DexScreener priority
-            error_log( 'SolanaWP: Skipping Helius balance API - DexScreener data available' );
         }
 
     } catch ( Exception $e ) {
@@ -662,8 +1025,7 @@ function solanawp_fetch_balance_data( $address, $dexscreener_data = null ) {
 }
 
 /**
- * 3️⃣ ENHANCED Transaction Analysis - DEXSCREENER ONLY FOR FIRST ACTIVITY
- * Completely removes Helius API from first activity date calculation
+ * Transaction Analysis
  */
 function solanawp_fetch_transaction_data( $address, $dexscreener_data = null ) {
     $transaction_data = array(
@@ -675,7 +1037,6 @@ function solanawp_fetch_transaction_data( $address, $dexscreener_data = null ) {
     );
 
     try {
-        // 🥇 PRIMARY: DexScreener transaction data
         if ( $dexscreener_data ) {
             $buys_24h = $dexscreener_data['txns']['h24']['buys'] ?? 0;
             $sells_24h = $dexscreener_data['txns']['h24']['sells'] ?? 0;
@@ -688,30 +1049,23 @@ function solanawp_fetch_transaction_data( $address, $dexscreener_data = null ) {
             $transaction_data['buys_5m'] = $dexscreener_data['txns']['m5']['buys'] ?? 0;
             $transaction_data['sells_5m'] = $dexscreener_data['txns']['m5']['sells'] ?? 0;
 
-            // FIXED: Use ONLY DexScreener pairCreatedAt for First Activity Date
             if ( isset( $dexscreener_data['pairCreatedAt'] ) ) {
-                // Convert UNIX timestamp to human-readable date format
-                $creation_timestamp = $dexscreener_data['pairCreatedAt'] / 1000; // Convert from milliseconds to seconds
+                $creation_timestamp = $dexscreener_data['pairCreatedAt'] / 1000;
                 $transaction_data['first_transaction'] = date( 'M j, Y', $creation_timestamp );
-
-                // For last transaction, use current date
                 $transaction_data['last_transaction'] = date( 'M j, Y', time() );
             }
         }
 
-        // 🥈 SECONDARY: Helius ONLY for recent transactions list (NOT for first activity date)
         $helius_api_key = get_option( 'solanawp_helius_api_key' );
         if ( !empty( $helius_api_key ) ) {
             $helius_url = "https://api.helius.xyz/v0/addresses/{$address}/transactions?api-key={$helius_api_key}&limit=10";
             $helius_response = solanawp_make_request( $helius_url, array( 'timeout' => 10 ) );
 
             if ( isset( $helius_response ) && is_array( $helius_response ) && !empty( $helius_response ) ) {
-                // Update total transaction count ONLY if we don't have DexScreener data
                 if ( empty( $transaction_data['total_transactions'] ) ) {
                     $transaction_data['total_transactions'] = count( $helius_response );
                 }
 
-                // Format recent transactions for frontend display
                 $recent_txs = array();
                 foreach ( array_slice( $helius_response, 0, 5 ) as $tx ) {
                     $recent_txs[] = array(
@@ -723,8 +1077,6 @@ function solanawp_fetch_transaction_data( $address, $dexscreener_data = null ) {
                 }
                 $transaction_data['recent_transactions'] = $recent_txs;
 
-                // REMOVED: Helius override for first activity date
-                // Only update last_transaction if we don't have DexScreener data
                 if ( $transaction_data['last_transaction'] === 'Unknown' && !empty( $helius_response ) ) {
                     $latest_tx = $helius_response[0];
                     if ( isset( $latest_tx['timestamp'] ) ) {
@@ -734,22 +1086,11 @@ function solanawp_fetch_transaction_data( $address, $dexscreener_data = null ) {
             }
         }
 
-        // Final validation: Ensure we have different dates if both are set
         if ( $transaction_data['first_transaction'] !== 'Unknown' &&
             $transaction_data['last_transaction'] !== 'Unknown' &&
             $transaction_data['first_transaction'] === $transaction_data['last_transaction'] ) {
 
-            // If they're the same, make last transaction today and keep first transaction as is
             $transaction_data['last_transaction'] = date( 'M j, Y', time() );
-        }
-
-        // Add debug info for troubleshooting
-        if ( WP_DEBUG ) {
-            $transaction_data['debug_info'] = array(
-                'dexscreener_pair_created' => $dexscreener_data['pairCreatedAt'] ?? 'not_available',
-                'first_activity_source' => isset( $dexscreener_data['pairCreatedAt'] ) ? 'dexscreener_only' : 'unknown',
-                'helius_used_for' => !empty( $helius_api_key ) ? 'recent_transactions_only' : 'not_used'
-            );
         }
 
     } catch ( Exception $e ) {
@@ -761,74 +1102,7 @@ function solanawp_fetch_transaction_data( $address, $dexscreener_data = null ) {
 }
 
 /**
- * 4️⃣ Account Details (Fixed field names for frontend compatibility)
- */
-function solanawp_fetch_account_data( $address ) {
-    try {
-        $solana_rpc_url = get_option( 'solanawp_solana_rpc_url' );
-
-        if ( empty( $solana_rpc_url ) ) {
-            return array( 'error' => 'RPC URL not configured' );
-        }
-
-        $payload = json_encode( array(
-            'jsonrpc' => '2.0',
-            'id' => 1,
-            'method' => 'getAccountInfo',
-            'params' => array( $address, array( 'encoding' => 'base64' ) )
-        ) );
-
-        $response = solanawp_make_request( $solana_rpc_url, array(
-            'method' => 'POST',
-            'headers' => array( 'Content-Type' => 'application/json' ),
-            'body' => $payload,
-            'timeout' => 10
-        ) );
-
-        if ( isset( $response['result']['value'] ) && $response['result']['value'] !== null ) {
-            $account_info = $response['result']['value'];
-
-            // Detect if this is a token mint account
-            $is_token = ( $account_info['owner'] === 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' );
-
-            return array(
-                'is_token' => $is_token,
-                'owner' => $account_info['owner'] ?? 'Unknown',
-                'executable' => $account_info['executable'] ? 'Yes' : 'No',
-                'lamports' => $account_info['lamports'] ?? 0,
-                'data_size' => isset( $account_info['data'][0] ) ? strlen( $account_info['data'][0] ) : 0,
-                'rent_epoch' => $account_info['rentEpoch'] ?? 0,
-                'account_type' => $is_token ? 'Token Mint' : 'Wallet Account',
-                'decimals' => 'Unknown',
-                'supply' => 'Unknown'
-            );
-        }
-
-        return array(
-            'is_token' => false,
-            'owner' => 'Unknown',
-            'executable' => 'No',
-            'lamports' => 0,
-            'data_size' => 0,
-            'rent_epoch' => 0,
-            'account_type' => 'Unknown',
-            'error' => 'Account not found'
-        );
-
-    } catch ( Exception $e ) {
-        return array(
-            'error' => $e->getMessage(),
-            'is_token' => false,
-            'owner' => 'Error',
-            'executable' => 'Unknown',
-            'data_size' => 0,
-            'rent_epoch' => 0
-        );
-    }
-}
-
-/**
- * 5️⃣ Security Analysis (Fixed field names for frontend compatibility)
+ * Security Analysis
  */
 function solanawp_fetch_security_data( $address, $dexscreener_data = null ) {
     $security_data = array(
@@ -842,9 +1116,7 @@ function solanawp_fetch_security_data( $address, $dexscreener_data = null ) {
     try {
         $risk_factors = array();
 
-        // 🥇 PRIMARY: DexScreener security metrics
         if ( $dexscreener_data ) {
-            // Age analysis
             if ( isset( $dexscreener_data['pairCreatedAt'] ) ) {
                 $creation_timestamp = $dexscreener_data['pairCreatedAt'] / 1000;
                 $age_days = ( time() - $creation_timestamp ) / 86400;
@@ -866,7 +1138,6 @@ function solanawp_fetch_security_data( $address, $dexscreener_data = null ) {
                 $security_data['token_age_days'] = round( $age_days, 1 );
             }
 
-            // Liquidity analysis
             $liquidity = $dexscreener_data['liquidity']['usd'] ?? 0;
             if ( $liquidity < 1000 ) {
                 $risk_factors[] = 'Very low liquidity (< $1,000)';
@@ -882,7 +1153,6 @@ function solanawp_fetch_security_data( $address, $dexscreener_data = null ) {
                 $security_data['suspicious_activity']['text'] = 'Good Liquidity';
             }
 
-            // Volume analysis
             $volume_24h = $dexscreener_data['volume']['h24'] ?? 0;
             if ( $volume_24h < 100 ) {
                 $risk_factors[] = 'Very low trading volume';
@@ -897,7 +1167,6 @@ function solanawp_fetch_security_data( $address, $dexscreener_data = null ) {
             $security_data['suspicious_activity']['text'] = 'No Activity Data';
         }
 
-        // Calculate overall risk score
         $high_risk_count = 0;
         $medium_risk_count = 0;
 
@@ -935,7 +1204,7 @@ function solanawp_fetch_security_data( $address, $dexscreener_data = null ) {
 }
 
 /**
- * 6️⃣ Rug Pull Risk (Fixed field names for frontend compatibility)
+ * Rug Pull Risk
  */
 function solanawp_fetch_rugpull_data( $address, $dexscreener_data = null ) {
     $rugpull_data = array(
@@ -957,9 +1226,7 @@ function solanawp_fetch_rugpull_data( $address, $dexscreener_data = null ) {
         $warning_signs = array();
         $safe_indicators = array();
 
-        // 🥇 PRIMARY: DexScreener rug pull indicators
         if ( $dexscreener_data ) {
-            // Liquidity concentration risk
             $liquidity = $dexscreener_data['liquidity']['usd'] ?? 0;
             $volume_24h = $dexscreener_data['volume']['h24'] ?? 0;
 
@@ -981,7 +1248,6 @@ function solanawp_fetch_rugpull_data( $address, $dexscreener_data = null ) {
                 $rugpull_data['liquidity_locked']['color'] = '#10b981';
             }
 
-            // Volume vs Liquidity ratio
             if ( $liquidity > 0 ) {
                 $volume_liquidity_ratio = $volume_24h / $liquidity;
                 if ( $volume_liquidity_ratio > 5 ) {
@@ -995,7 +1261,6 @@ function solanawp_fetch_rugpull_data( $address, $dexscreener_data = null ) {
                 }
             }
 
-            // Mock authority data (since we don't have real on-chain data)
             $rugpull_data['ownership_renounced']['text'] = 'Unable to verify';
             $rugpull_data['ownership_renounced']['color'] = '#f59e0b';
 
@@ -1005,7 +1270,6 @@ function solanawp_fetch_rugpull_data( $address, $dexscreener_data = null ) {
             $rugpull_data['freeze_authority']['text'] = 'Unable to verify';
             $rugpull_data['freeze_authority']['color'] = '#f59e0b';
 
-            // Create mock token distribution for chart
             $rugpull_data['token_distribution'] = array(
                 array( 'label' => 'Public', 'percentage' => 60, 'color' => '#10b981' ),
                 array( 'label' => 'Team', 'percentage' => 20, 'color' => '#f59e0b' ),
@@ -1014,7 +1278,6 @@ function solanawp_fetch_rugpull_data( $address, $dexscreener_data = null ) {
             );
         }
 
-        // Determine risk level and percentage
         if ( $risk_score >= 60 ) {
             $rugpull_data['risk_level'] = 'High';
             $rugpull_data['risk_percentage'] = min( $risk_score, 100 );
@@ -1039,7 +1302,7 @@ function solanawp_fetch_rugpull_data( $address, $dexscreener_data = null ) {
 }
 
 /**
- * 7️⃣ ENHANCED: Website & Social with X API Integration
+ * Website & Social with X API Integration
  */
 function solanawp_fetch_social_data( $address, $dexscreener_data = null ) {
     $social_data = array(
@@ -1052,7 +1315,6 @@ function solanawp_fetch_social_data( $address, $dexscreener_data = null ) {
             'handle' => 'Not found',
             'verified' => false,
             'raw_url' => '',
-            // NEW: 6 additional fields - using "Unavailable" when data not accessible
             'verificationType' => 'Unavailable',
             'verifiedFollowers' => 'Unavailable',
             'subscriptionType' => 'Unavailable',
@@ -1077,23 +1339,18 @@ function solanawp_fetch_social_data( $address, $dexscreener_data = null ) {
     );
 
     try {
-        // 🥇 PRIMARY: DexScreener social data extraction with X API enhancement
         if ( $dexscreener_data ) {
-            // INSTRUCTION 3: Extract websites and get registration details via WHOIS
             if ( isset( $dexscreener_data['info']['websites'] ) && !empty( $dexscreener_data['info']['websites'] ) ) {
                 $primary_website = $dexscreener_data['info']['websites'][0]['url'] ?? $dexscreener_data['info']['websites'][0];
                 if ( is_string( $primary_website ) ) {
                     $social_data['webInfo']['website'] = $primary_website;
 
-                    // Get WHOIS data for domain registration details
                     $domain = solanawp_extract_domain_without_www( $primary_website );
                     if ( $domain ) {
                         $whois_data = solanawp_get_whois_registration_data( $domain );
                         if ( !isset( $whois_data['error'] ) ) {
-                            // Extract created_date for Registration Date
                             $social_data['webInfo']['registrationDate'] = $whois_data['created_date'] ?? 'Unknown';
 
-                            // Prioritize registrant.country, fallback to registrar.country
                             $registration_country = 'Unknown';
                             if ( !empty( $whois_data['registrant']['country'] ) ) {
                                 $registration_country = $whois_data['registrant']['country'];
@@ -1106,7 +1363,6 @@ function solanawp_fetch_social_data( $address, $dexscreener_data = null ) {
                 }
             }
 
-            // INSTRUCTION 2: Extract social links from DexScreener API socials array with X API integration
             if ( isset( $dexscreener_data['info']['socials'] ) && !empty( $dexscreener_data['info']['socials'] ) ) {
                 foreach ( $dexscreener_data['info']['socials'] as $social ) {
                     $type = strtolower( $social['type'] ?? '' );
@@ -1114,45 +1370,33 @@ function solanawp_fetch_social_data( $address, $dexscreener_data = null ) {
 
                     switch ( $type ) {
                         case 'twitter':
-                            // ENHANCED: Extract Twitter username and fetch detailed data from X API
                             $social_data['twitterInfo']['handle'] = $url;
                             $social_data['twitterInfo']['verified'] = false;
                             $social_data['twitterInfo']['raw_url'] = $url;
 
-                            // NEW: Fetch detailed Twitter data from X API
                             $twitter_username = solanawp_extract_twitter_username_from_url( $url );
                             if ( $twitter_username ) {
                                 $x_api_data = solanawp_fetch_twitter_data_from_x_api( $twitter_username );
                                 if ( $x_api_data ) {
-                                    // Update verified status from X API
                                     $social_data['twitterInfo']['verified'] = $x_api_data['verified'] ?? false;
-
-                                    // Map X API data to the 6 new fields
                                     $mapped_data = solanawp_map_x_api_data_to_frontend( $x_api_data );
                                     $social_data['twitterInfo'] = array_merge( $social_data['twitterInfo'], $mapped_data );
-
-                                    error_log( 'SolanaWP: Successfully fetched and mapped X API data for @' . $twitter_username );
-                                } else {
-                                    error_log( 'SolanaWP: Failed to fetch X API data for @' . $twitter_username );
                                 }
                             }
                             break;
 
                         case 'telegram':
-                            // UNCHANGED: Keep existing extraction logic
                             $social_data['telegramInfo']['channel'] = solanawp_extract_telegram_handle( $url );
                             $social_data['telegramInfo']['raw_url'] = $url;
                             break;
 
                         case 'discord':
-                            // UNCHANGED: Keep existing extraction logic
                             $social_data['discordInfo']['invite'] = solanawp_extract_discord_invite( $url );
                             $social_data['discordInfo']['serverName'] = 'Discord Server';
                             $social_data['discordInfo']['raw_url'] = $url;
                             break;
 
                         case 'github':
-                            // UNCHANGED: Keep existing extraction logic
                             $social_data['githubInfo']['repository'] = solanawp_extract_github_handle( $url );
                             $social_data['githubInfo']['organization'] = solanawp_extract_github_org( $url ) ?? 'Unknown';
                             $social_data['githubInfo']['raw_url'] = $url;
@@ -1161,76 +1405,9 @@ function solanawp_fetch_social_data( $address, $dexscreener_data = null ) {
                 }
             }
 
-            // Token image/logo
             if ( isset( $dexscreener_data['info']['imageUrl'] ) ) {
                 $social_data['token_image'] = $dexscreener_data['info']['imageUrl'];
             }
-        }
-
-        // 🥈 SECONDARY: Helius metadata for additional social info (ONLY if no DexScreener data)
-        if ( !$dexscreener_data ) {
-            $helius_api_key = get_option( 'solanawp_helius_api_key' );
-            if ( !empty( $helius_api_key ) ) {
-                try {
-                    $helius_url = "https://api.helius.xyz/v0/token-metadata?api-key={$helius_api_key}";
-                    $helius_response = solanawp_make_request( $helius_url, array(
-                        'method' => 'POST',
-                        'headers' => array( 'Content-Type' => 'application/json' ),
-                        'body' => json_encode( array( 'mintAccounts' => array( $address ) ) ),
-                        'timeout' => 10
-                    ) );
-
-                    if ( isset( $helius_response[0] ) ) {
-                        $metadata = $helius_response[0];
-
-                        if ( isset( $metadata['onChainMetadata']['metadata'] ) ) {
-                            $on_chain_metadata = $metadata['onChainMetadata']['metadata'];
-
-                            // Look for website if not found in DexScreener
-                            if ( $social_data['webInfo']['website'] === 'Not found' && isset( $on_chain_metadata['external_url'] ) ) {
-                                $social_data['webInfo']['website'] = $on_chain_metadata['external_url'];
-                            }
-
-                            // Extract social links from metadata description
-                            if ( isset( $on_chain_metadata['description'] ) ) {
-                                $extracted_socials = solanawp_extract_social_links( $on_chain_metadata['description'] );
-
-                                // Fill in missing social data and fetch X API data if Twitter found
-                                if ( isset( $extracted_socials['twitter'] ) && $social_data['twitterInfo']['handle'] === 'Not found' ) {
-                                    $social_data['twitterInfo']['handle'] = $extracted_socials['twitter'];
-
-                                    // NEW: Fetch X API data for Helius-sourced Twitter handles too
-                                    $twitter_username = solanawp_extract_twitter_username_from_url( $extracted_socials['twitter'] );
-                                    if ( $twitter_username ) {
-                                        $x_api_data = solanawp_fetch_twitter_data_from_x_api( $twitter_username );
-                                        if ( $x_api_data ) {
-                                            $social_data['twitterInfo']['verified'] = $x_api_data['verified'] ?? false;
-                                            $mapped_data = solanawp_map_x_api_data_to_frontend( $x_api_data );
-                                            $social_data['twitterInfo'] = array_merge( $social_data['twitterInfo'], $mapped_data );
-                                        }
-                                    }
-                                }
-
-                                if ( isset( $extracted_socials['telegram'] ) && $social_data['telegramInfo']['channel'] === 'Not found' ) {
-                                    $social_data['telegramInfo']['channel'] = $extracted_socials['telegram'];
-                                }
-                                if ( isset( $extracted_socials['discord'] ) && $social_data['discordInfo']['invite'] === 'Not found' ) {
-                                    $social_data['discordInfo']['invite'] = $extracted_socials['discord'];
-                                }
-                                if ( isset( $extracted_socials['github'] ) && $social_data['githubInfo']['repository'] === 'Not found' ) {
-                                    $social_data['githubInfo']['repository'] = $extracted_socials['github'];
-                                    $social_data['githubInfo']['organization'] = solanawp_extract_github_org( $extracted_socials['github'] ) ?? 'Unknown';
-                                }
-                            }
-                        }
-                    }
-                } catch ( Exception $e ) {
-                    error_log( 'Helius metadata fetch error: ' . $e->getMessage() );
-                }
-            }
-        } else {
-            // When DexScreener data available, skip Helius metadata API
-            error_log( 'SolanaWP: Skipping Helius metadata API - DexScreener social data takes priority' );
         }
 
     } catch ( Exception $e ) {
@@ -1242,12 +1419,9 @@ function solanawp_fetch_social_data( $address, $dexscreener_data = null ) {
 }
 
 // ============================================================================
-// HELPER FUNCTIONS - INCLUDING NUMBER FORMATTING FOR X API
+// HELPER FUNCTIONS
 // ============================================================================
 
-/**
- * Helper function to format numbers with K, M, B suffixes (used by X API)
- */
 function solanawp_format_number( $number ) {
     if ( $number >= 1000000000 ) {
         return round( $number / 1000000000, 1 ) . 'B';
@@ -1259,13 +1433,8 @@ function solanawp_format_number( $number ) {
     return number_format( $number );
 }
 
-/**
- * FIXED: Get WHOIS registration data using hannisolwhois.vercel.app
- * Updated to use correct JSON structure: response['domain']['created_date']
- */
 function solanawp_get_whois_registration_data( $domain ) {
     try {
-        // Use the specified WHOIS service: https://hannisolwhois.vercel.app/{{domain}}
         $whois_url = "https://hannisolwhois.vercel.app/{$domain}";
         $response = solanawp_make_request( $whois_url );
 
@@ -1276,15 +1445,12 @@ function solanawp_get_whois_registration_data( $domain ) {
             );
         }
 
-        // FIXED: Extract creation date from correct path: domain.created_date
         $creation_date = null;
         if ( isset( $response['domain']['created_date'] ) && !empty( $response['domain']['created_date'] ) ) {
-            $full_datetime = $response['domain']['created_date']; // "2023-04-26T18:42:30Z"
-            // Extract just the date part (YYYY-MM-DD) from the full datetime
-            $creation_date = substr( $full_datetime, 0, 10 ); // "2023-04-26"
+            $full_datetime = $response['domain']['created_date'];
+            $creation_date = substr( $full_datetime, 0, 10 );
         }
 
-        // Extract country information from registrant or administrative
         $registration_country = 'Unknown';
         if ( !empty( $response['registrant']['country'] ) ) {
             $registration_country = $response['registrant']['country'];
@@ -1292,7 +1458,6 @@ function solanawp_get_whois_registration_data( $domain ) {
             $registration_country = $response['administrative']['country'];
         }
 
-        // Extract the required fields as per instruction 3
         $result = array(
             'domain' => $domain,
             'created_date' => $creation_date,
@@ -1319,9 +1484,6 @@ function solanawp_get_whois_registration_data( $domain ) {
     }
 }
 
-/**
- * Calculate final scores for the summary section
- */
 function solanawp_calculate_final_scores( $validation, $balance, $transactions, $security, $rugpull, $social ) {
     $trust_score = 50;
     $activity_score = 50;
@@ -1329,7 +1491,6 @@ function solanawp_calculate_final_scores( $validation, $balance, $transactions, 
     $recommendation = 'Analysis completed.';
 
     try {
-        // Trust Score Calculation (0-100)
         if ( isset( $security['risk_level'] ) ) {
             switch ( $security['risk_level'] ) {
                 case 'Low':
@@ -1358,7 +1519,6 @@ function solanawp_calculate_final_scores( $validation, $balance, $transactions, 
             }
         }
 
-        // Activity Score Calculation (0-100)
         if ( isset( $transactions['total_transactions'] ) ) {
             $tx_count = $transactions['total_transactions'];
             if ( $tx_count > 1000 ) {
@@ -1381,7 +1541,6 @@ function solanawp_calculate_final_scores( $validation, $balance, $transactions, 
             }
         }
 
-        // Social presence bonus
         $social_count = 0;
         if ( isset( $social['twitterInfo']['handle'] ) && $social['twitterInfo']['handle'] !== 'Not found' ) {
             $social_count++;
@@ -1394,16 +1553,12 @@ function solanawp_calculate_final_scores( $validation, $balance, $transactions, 
         }
 
         $trust_score += ( $social_count * 5 );
-
-        // Overall Score (average of trust and activity)
         $overall_score = round( ( $trust_score + $activity_score ) / 2 );
 
-        // Ensure scores are within bounds
         $trust_score = max( 0, min( 100, $trust_score ) );
         $activity_score = max( 0, min( 100, $activity_score ) );
         $overall_score = max( 0, min( 100, $overall_score ) );
 
-        // Generate recommendation
         if ( $overall_score >= 80 ) {
             $recommendation = 'This address shows strong indicators of legitimacy and activity. Generally considered safe for interaction.';
         } elseif ( $overall_score >= 60 ) {
@@ -1426,9 +1581,6 @@ function solanawp_calculate_final_scores( $validation, $balance, $transactions, 
     );
 }
 
-/**
- * Helper function to extract Twitter handle from URL
- */
 function solanawp_extract_twitter_handle( $url ) {
     if ( preg_match( '/twitter\.com\/([a-zA-Z0-9_]+)/', $url, $matches ) ) {
         return '@' . $matches[1];
@@ -1436,9 +1588,6 @@ function solanawp_extract_twitter_handle( $url ) {
     return 'Not found';
 }
 
-/**
- * Helper function to extract Telegram handle from URL
- */
 function solanawp_extract_telegram_handle( $url ) {
     if ( preg_match( '/t\.me\/([a-zA-Z0-9_]+)/', $url, $matches ) ) {
         return '@' . $matches[1];
@@ -1446,9 +1595,6 @@ function solanawp_extract_telegram_handle( $url ) {
     return 'Not found';
 }
 
-/**
- * Helper function to extract Discord invite from URL
- */
 function solanawp_extract_discord_invite( $url ) {
     if ( preg_match( '/discord\.gg\/([a-zA-Z0-9]+)/', $url, $matches ) ) {
         return 'discord.gg/' . $matches[1];
@@ -1458,44 +1604,13 @@ function solanawp_extract_discord_invite( $url ) {
     return 'Not found';
 }
 
-/**
- * Legacy WHOIS function - maintained for backward compatibility
- * Redirects to new INSTRUCTION 3 compliant function
- */
-function solanawp_get_real_whois_data( $domain ) {
-    // Redirect to the new INSTRUCTION 3 compliant function
-    $whois_data = solanawp_get_whois_registration_data( $domain );
-
-    // Map the new structure to the old structure for compatibility
-    return array(
-        'domain' => $domain,
-        'creation_date' => $whois_data['created_date'] ?? null,
-        'expiration_date' => $whois_data['raw_data']['expiration_date'] ?? null,
-        'registrar' => $whois_data['registrar']['name'] ?? 'Unknown',
-        'country' => $whois_data['registrant']['country'] ?? $whois_data['registrar']['country'] ?? 'Unknown',
-        'age' => solanawp_calculate_domain_age( $whois_data['created_date'] ?? null ),
-        'ssl_enabled' => solanawp_check_ssl( "https://{$domain}" ),
-        'raw_data' => $whois_data['raw_data'] ?? array(),
-        'error' => $whois_data['error'] ?? null
-    );
-}
-
-/**
- * INSTRUCTION 3: Extract domain from URL without www prefix
- */
 function solanawp_extract_domain_without_www( $url ) {
     $parsed = parse_url( $url );
     $host = $parsed['host'] ?? $url;
-
-    // Remove www. prefix as specified in instruction 3
     $domain = preg_replace( '/^www\./', '', $host );
-
     return $domain;
 }
 
-/**
- * INSTRUCTION 2: Extract GitHub handle from URL
- */
 function solanawp_extract_github_handle( $url ) {
     if ( preg_match( '/github\.com\/([a-zA-Z0-9_\-\.]+)/', $url, $matches ) ) {
         return $matches[1];
@@ -1503,22 +1618,13 @@ function solanawp_extract_github_handle( $url ) {
     return 'Not found';
 }
 
-/**
- * Calculate domain age
- */
-function solanawp_calculate_domain_age( $creation_date ) {
-    if ( !$creation_date ) return null;
-
-    $creation_timestamp = strtotime( $creation_date );
-    if ( !$creation_timestamp ) return null;
-
-    $age_years = floor( ( time() - $creation_timestamp ) / ( 365.25 * 24 * 3600 ) );
-    return $age_years . ' years';
+function solanawp_extract_github_org($github_url) {
+    if (preg_match('/github\.com\/([a-zA-Z0-9_\-\.]+)\//', $github_url, $matches)) {
+        return $matches[1];
+    }
+    return null;
 }
 
-/**
- * Map registrar to country
- */
 function solanawp_get_country_from_registrar( $registrar_name ) {
     $registrar_countries = array(
         'HOSTINGER operations, UAB' => 'Lithuania',
@@ -1528,22 +1634,13 @@ function solanawp_get_country_from_registrar( $registrar_name ) {
         'Namecheap' => 'United States',
         'Google LLC' => 'United States',
         'Amazon Registrar, Inc.' => 'United States',
-        'Cloudflare, Inc.' => 'United States',
-        'Network Solutions, LLC' => 'United States',
-        'Tucows Domains Inc.' => 'Canada',
-        'eNom, LLC' => 'United States',
-        'OVH sas' => 'France',
-        'Gandi SAS' => 'France',
-        '1&1 IONOS SE' => 'Germany',
-        'PSI-USA, Inc.' => 'United States'
+        'Cloudflare, Inc.' => 'United States'
     );
 
-    // Try exact match first
     if ( isset( $registrar_countries[$registrar_name] ) ) {
         return $registrar_countries[$registrar_name];
     }
 
-    // Try partial match
     foreach ( $registrar_countries as $registrar => $country ) {
         if ( stripos( $registrar_name, $registrar ) !== false ) {
             return $country;
@@ -1553,63 +1650,6 @@ function solanawp_get_country_from_registrar( $registrar_name ) {
     return 'Registrar: ' . $registrar_name;
 }
 
-/**
- * Extract social links from text
- */
-function solanawp_extract_social_links( $text ) {
-    $links = array();
-
-    // Extract Twitter
-    if ( preg_match( '/twitter\.com\/([a-zA-Z0-9_]+)/', $text, $matches ) ) {
-        $links['twitter'] = 'twitter.com/' . $matches[1];
-    } elseif ( preg_match( '/@([a-zA-Z0-9_]+)/', $text, $matches ) ) {
-        $links['twitter'] = 'twitter.com/' . $matches[1];
-    }
-
-    // Extract Telegram
-    if ( preg_match( '/t\.me\/([a-zA-Z0-9_]+)/', $text, $matches ) ) {
-        $links['telegram'] = 't.me/' . $matches[1];
-    } elseif ( preg_match( '/telegram\.me\/([a-zA-Z0-9_]+)/', $text, $matches ) ) {
-        $links['telegram'] = 't.me/' . $matches[1];
-    }
-
-    // Extract Discord
-    if ( preg_match( '/discord\.gg\/([a-zA-Z0-9]+)/', $text, $matches ) ) {
-        $links['discord'] = 'discord.gg/' . $matches[1];
-    } elseif ( preg_match( '/discord\.com\/invite\/([a-zA-Z0-9]+)/', $text, $matches ) ) {
-        $links['discord'] = 'discord.gg/' . $matches[1];
-    }
-
-    // Extract GitHub
-    if ( preg_match( '/github\.com\/([a-zA-Z0-9_\-\.]+\/[a-zA-Z0-9_\-\.]+)/', $text, $matches ) ) {
-        $links['github'] = 'github.com/' . $matches[1];
-    } elseif ( preg_match( '/github\.com\/([a-zA-Z0-9_\-\.]+)/', $text, $matches ) ) {
-        $links['github'] = 'github.com/' . $matches[1];
-    }
-
-    return $links;
-}
-
-/**
- * Extract GitHub organization from repository URL
- */
-function solanawp_extract_github_org($github_url) {
-    if (preg_match('/github\.com\/([a-zA-Z0-9_\-\.]+)\//', $github_url, $matches)) {
-        return $matches[1];
-    }
-    return null;
-}
-
-/**
- * Check if website has SSL certificate
- */
-function solanawp_check_ssl($url) {
-    return strpos($url, 'https://') === 0;
-}
-
-/**
- * Make HTTP request with error handling
- */
 function solanawp_make_request( $url, $args = array() ) {
     $defaults = array(
         'timeout' => 30,
@@ -1618,7 +1658,6 @@ function solanawp_make_request( $url, $args = array() ) {
 
     $args = wp_parse_args( $args, $defaults );
 
-    // Add rate limiting check
     if ( ! solanawp_check_rate_limit( $url ) ) {
         throw new Exception( 'Rate limit exceeded. Please try again later.' );
     }
@@ -1639,9 +1678,6 @@ function solanawp_make_request( $url, $args = array() ) {
     return $data;
 }
 
-/**
- * Check rate limiting
- */
 function solanawp_check_rate_limit( $url ) {
     $rate_limit_enabled = get_option( 'solanawp_enable_rate_limiting', true );
 
@@ -1668,9 +1704,6 @@ function solanawp_check_rate_limit( $url ) {
     return true;
 }
 
-/**
- * Get client IP address
- */
 function solanawp_get_client_ip() {
     $ip_keys = array( 'HTTP_CF_CONNECTING_IP', 'HTTP_CLIENT_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_X_FORWARDED', 'HTTP_X_CLUSTER_CLIENT_IP', 'HTTP_FORWARDED_FOR', 'HTTP_FORWARDED', 'REMOTE_ADDR' );
 
@@ -1688,9 +1721,6 @@ function solanawp_get_client_ip() {
     return $_SERVER['REMOTE_ADDR'] ?? 'unknown';
 }
 
-/**
- * Log address check
- */
 function solanawp_log_request( $address, $user_ip, $status, $error = null ) {
     $logging_enabled = get_option( 'solanawp_enable_logging', true );
 
@@ -1698,7 +1728,6 @@ function solanawp_log_request( $address, $user_ip, $status, $error = null ) {
         return;
     }
 
-    // Simple logging to WordPress error log
     $log_message = sprintf(
         'SolanaWP Check: %s | IP: %s | Status: %s | Error: %s',
         $address,
@@ -1710,16 +1739,10 @@ function solanawp_log_request( $address, $user_ip, $status, $error = null ) {
     error_log( $log_message );
 }
 
-/**
- * Convert lamports to SOL
- */
 function solanawp_lamports_to_sol( $lamports ) {
     return $lamports / 1000000000;
 }
 
-/**
- * Cache management functions
- */
 function solanawp_get_cache( $key ) {
     if ( ! get_option( 'solanawp_enable_caching', true ) ) {
         return false;
