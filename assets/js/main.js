@@ -1,9 +1,9 @@
 /**
- * SolanaWP Main JavaScript File - ENHANCED WITH SOLANA.FM API INTEGRATION
+ * SolanaWP Main JavaScript File - REAL API Integration with Token Analytics
  * File location: assets/js/main.js
  *
- * Enhanced with Token Analytics and REAL Authority Data from Solana.fm API
- * Version: SOLANA.FM INTEGRATION - Real Mint/Freeze Authority Analysis
+ * Enhanced with Token Analytics support and fixed date handling
+ * Version: REAL API Integration with Token Analytics - NO SIMULATION
  */
 
 (function($) { // Use jQuery no-conflict wrapper
@@ -12,15 +12,16 @@
     $(function() {
 
         // --- Solana Address Checker Logic ---
-        const $checkAddressBtn = $('#checkAddressBtn');
-        const $solanaAddressInput = $('#solanaAddressInput');
-        const $resultsSection = $('#resultsSection');
+        const $checkAddressBtn = $('#checkAddressBtn'); // From template-parts/checker/input-section.php
+        const $solanaAddressInput = $('#solanaAddressInput'); // From template-parts/checker/input-section.php
+        const $resultsSection = $('#resultsSection'); // From template-address-checker.php
 
         // Helper to show/hide loading state on button
         function setButtonLoading(isLoading) {
             if (isLoading) {
                 $checkAddressBtn.html('<svg class="icon animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m-15.357-2a8.001 8.001 0 0015.357 2M15 15h-5"></path></svg>' + (typeof solanaWP_ajax_object !== 'undefined' ? solanaWP_ajax_object.checking_text : 'Checking...')).prop('disabled', true);
             } else {
+                // Original button content from input-section.php
                 $checkAddressBtn.html('<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>' + (typeof solanaWP_ajax_object !== 'undefined' ? solanaWP_ajax_object.check_address_text : 'Check Address')).prop('disabled', false);
             }
         }
@@ -32,7 +33,7 @@
                 const id = $(this).attr('id');
                 if (id && id !== 'resultsSection' && !$(this).is('input, button, h2, h3, h4, div.affiliate-title')) {
                     if ($(this).is('span:not(.dist-label):not(.dist-percentage), div.metric-value, div.score-value, div.risk-level-indicator, p#finalSummaryText') || $(this).hasClass('value-placeholder')) {
-                        if (!$(this).children(':not(svg)').length) {
+                        if (!$(this).children(':not(svg)').length) { // Only clear if it's a direct text holder or placeholder span
                             $(this).text('-');
                         }
                     } else if (id === 'recentTransactionsList' || id === 'rugTokenDistribution' || id === 'communityCardContent') {
@@ -42,18 +43,21 @@
             });
         }
 
-        // Helper to update validation UI
+        // Helper to update validation UI - FIXED ELEMENT IDS
         function updateValidationUI(validation) {
             const isValid = validation.isValid || validation.valid;
-            const $validationCard = $('#addressValidationCard');
+            const $validationCard = $('#addressValidationCard'); // Correct ID from template
 
+            // Update validation status indicators - CORRECT IDS
             $('#validationStatus').text(isValid ? 'Valid' : 'Invalid');
             $('#validationFormat').text(validation.format || 'Unknown');
             $('#validationLength').text(validation.length || 'Unknown');
             $('#validationType').text(validation.type || 'Unknown');
 
+            // Show validation card
             $validationCard.show();
 
+            // Show success or error banner
             const $banner = $('#validationNoteBanner');
             const $bannerText = $('#validationNoteText');
 
@@ -65,6 +69,66 @@
                 $banner.removeClass('success-banner').addClass('error-banner');
                 $bannerText.text(validation.message || 'Invalid address format');
                 $banner.show();
+            }
+        }
+
+        /**
+         * NEW: Update Token Analytics UI with DexScreener data
+         */
+        function updateTokenAnalyticsUI(tokenData, dexscreenerData) {
+            if (!dexscreenerData) {
+                console.log('No DexScreener data available for Token Analytics');
+                return;
+            }
+
+            console.log('Updating Token Analytics with:', dexscreenerData);
+
+            try {
+                // Price Information
+                $('#tokenPriceUsd').text(dexscreenerData.priceUsd ? '$' + parseFloat(dexscreenerData.priceUsd).toFixed(6) : '-');
+                $('#tokenPriceNative').text(dexscreenerData.priceNative ? parseFloat(dexscreenerData.priceNative).toFixed(6) + ' SOL' : '-');
+
+                // Liquidity and Market Cap
+                const liquidity = dexscreenerData.liquidity?.usd || 0;
+                $('#tokenLiquidity').text(liquidity ? '$' + formatNumber(liquidity) : '-');
+
+                const marketCap = dexscreenerData.fdv || dexscreenerData.marketCap || 0;
+                $('#tokenMarketCap').text(marketCap ? '$' + formatNumber(marketCap) : '-');
+
+                // Volume Information
+                const volume24h = dexscreenerData.volume?.h24 || 0;
+                const volume6h = dexscreenerData.volume?.h6 || 0;
+                const volume1h = dexscreenerData.volume?.h1 || 0;
+
+                $('#tokenVolume24h').text(volume24h ? '$' + formatNumber(volume24h) : '-');
+                $('#tokenVolume6h').text(volume6h ? '$' + formatNumber(volume6h) : '-');
+                $('#tokenVolume1h').text(volume1h ? '$' + formatNumber(volume1h) : '-');
+
+                // Transaction counts
+                const txns24h = (dexscreenerData.txns?.h24?.buys || 0) + (dexscreenerData.txns?.h24?.sells || 0);
+                $('#tokenTransactions24h').text(txns24h || '-');
+
+                // Price Changes with color coding
+                updatePriceChange('#tokenPriceChange5m', dexscreenerData.priceChange?.m5);
+                updatePriceChange('#tokenPriceChange1h', dexscreenerData.priceChange?.h1);
+                updatePriceChange('#tokenPriceChange6h', dexscreenerData.priceChange?.h6);
+                updatePriceChange('#tokenPriceChange24h', dexscreenerData.priceChange?.h24);
+
+                // Trading Activity
+                $('#tokenBuys24h').text(dexscreenerData.txns?.h24?.buys || '-');
+                $('#tokenSells24h').text(dexscreenerData.txns?.h24?.sells || '-');
+                $('#tokenBuys6h').text(dexscreenerData.txns?.h6?.buys || '-');
+                $('#tokenSells6h').text(dexscreenerData.txns?.h6?.sells || '-');
+                $('#tokenBuys1h').text(dexscreenerData.txns?.h1?.buys || '-');
+                $('#tokenSells1h').text(dexscreenerData.txns?.h1?.sells || '-');
+
+                // Show the Token Analytics card
+                $('#tokenAnalyticsCard').show();
+
+                console.log('Token Analytics updated successfully');
+
+            } catch (error) {
+                console.error('Error updating Token Analytics:', error);
             }
         }
 
@@ -143,234 +207,11 @@
         }
 
         /**
-         * Update Token Analytics UI with DexScreener data
-         */
-        function updateTokenAnalyticsUI(tokenData, dexscreenerData) {
-            if (!dexscreenerData) {
-                console.log('No DexScreener data available for Token Analytics');
-                return;
-            }
-
-            console.log('Updating Token Analytics with:', dexscreenerData);
-
-            try {
-                // Price Information
-                $('#tokenPriceUsd').text(dexscreenerData.priceUsd ? '$' + parseFloat(dexscreenerData.priceUsd).toFixed(6) : '-');
-                $('#tokenPriceNative').text(dexscreenerData.priceNative ? parseFloat(dexscreenerData.priceNative).toFixed(6) + ' SOL' : '-');
-
-                // Liquidity and Market Cap
-                const liquidity = dexscreenerData.liquidity?.usd || 0;
-                $('#tokenLiquidity').text(liquidity ? '$' + formatNumber(liquidity) : '-');
-
-                const marketCap = dexscreenerData.fdv || dexscreenerData.marketCap || 0;
-                $('#tokenMarketCap').text(marketCap ? '$' + formatNumber(marketCap) : '-');
-
-                // Volume Information
-                const volume24h = dexscreenerData.volume?.h24 || 0;
-                const volume6h = dexscreenerData.volume?.h6 || 0;
-                const volume1h = dexscreenerData.volume?.h1 || 0;
-
-                $('#tokenVolume24h').text(volume24h ? '$' + formatNumber(volume24h) : '-');
-                $('#tokenVolume6h').text(volume6h ? '$' + formatNumber(volume6h) : '-');
-                $('#tokenVolume1h').text(volume1h ? '$' + formatNumber(volume1h) : '-');
-
-                // Transaction counts
-                const txns24h = (dexscreenerData.txns?.h24?.buys || 0) + (dexscreenerData.txns?.h24?.sells || 0);
-                $('#tokenTransactions24h').text(txns24h || '-');
-
-                // Price Changes with color coding
-                updatePriceChange('#tokenPriceChange5m', dexscreenerData.priceChange?.m5);
-                updatePriceChange('#tokenPriceChange1h', dexscreenerData.priceChange?.h1);
-                updatePriceChange('#tokenPriceChange6h', dexscreenerData.priceChange?.h6);
-                updatePriceChange('#tokenPriceChange24h', dexscreenerData.priceChange?.h24);
-
-                // Trading Activity
-                $('#tokenBuys24h').text(dexscreenerData.txns?.h24?.buys || '-');
-                $('#tokenSells24h').text(dexscreenerData.txns?.h24?.sells || '-');
-                $('#tokenBuys6h').text(dexscreenerData.txns?.h6?.buys || '-');
-                $('#tokenSells6h').text(dexscreenerData.txns?.h6?.sells || '-');
-                $('#tokenBuys1h').text(dexscreenerData.txns?.h1?.buys || '-');
-                $('#tokenSells1h').text(dexscreenerData.txns?.h1?.sells || '-');
-
-                // Show the Token Analytics card
-                $('#tokenAnalyticsCard').show();
-
-                console.log('Token Analytics updated successfully');
-
-            } catch (error) {
-                console.error('Error updating Token Analytics:', error);
-            }
-        }
-
-        /**
-         * 🔥 ENHANCED: Update Account Details UI with Solana.fm Enhanced Data
-         */
-        function updateAccountDetailsUI(accountData, solanafmData) {
-            console.log('🔥 UPDATING ACCOUNT DETAILS with Solana.fm data:');
-            console.log('Account Data:', accountData);
-            console.log('Solana.fm Data:', solanafmData);
-
-            try {
-                if (accountData && accountData.success) {
-                    if (accountData.is_token) {
-                        // Enhanced token display with Solana.fm data
-                        $('#accOwner').text(accountData.account_type || 'Token Mint');
-                        $('#accExecutable').text(accountData.executable || 'Token Program');
-
-                        // Show enhanced token information from Solana.fm
-                        if (solanafmData && solanafmData.tokenList) {
-                            const tokenInfo = solanafmData.tokenList;
-                            $('#accDataSize').html(`<strong>${tokenInfo.name || 'Unknown Token'}</strong>`);
-                            $('#accRentEpoch').html(`${tokenInfo.symbol || 'Unknown'} • ${solanafmData.decimals || 'Unknown'} decimals`);
-
-                            console.log('✅ Enhanced token display:', {
-                                name: tokenInfo.name,
-                                symbol: tokenInfo.symbol,
-                                decimals: solanafmData.decimals
-                            });
-                        } else if (accountData.token_name && accountData.token_name !== 'Unknown Token') {
-                            $('#accDataSize').text(accountData.token_name);
-                            $('#accRentEpoch').text((accountData.token_symbol || 'Unknown') + ' • ' + (accountData.decimals || 'Unknown') + ' decimals');
-                        } else {
-                            $('#accDataSize').text(accountData.decimals !== 'Unknown' ? accountData.decimals + ' decimals' : 'Unknown');
-                            $('#accRentEpoch').text(accountData.supply !== 'Unknown' ? accountData.supply : 'Unknown');
-                        }
-
-                        // Update labels for enhanced token view
-                        $('#accountDetailsCard .metric-label').eq(0).text('Type:');
-                        $('#accountDetailsCard .metric-label').eq(1).text('Program:');
-                        $('#accountDetailsCard .metric-label').eq(2).text('Token:');
-                        $('#accountDetailsCard .metric-label').eq(3).text('Details:');
-
-                        console.log('✅ Account Details updated for token with Solana.fm data');
-                    } else {
-                        // Display wallet-specific information
-                        $('#accOwner').text(accountData.owner || 'Unknown');
-                        $('#accExecutable').text(accountData.executable || 'Unknown');
-                        $('#accDataSize').text(accountData.data_size || 'Unknown');
-                        $('#accRentEpoch').text(accountData.rent_epoch || 'Unknown');
-
-                        // Reset labels for wallet view
-                        $('#accountDetailsCard .metric-label').eq(0).text('Owner:');
-                        $('#accountDetailsCard .metric-label').eq(1).text('Executable:');
-                        $('#accountDetailsCard .metric-label').eq(2).text('Data Size:');
-                        $('#accountDetailsCard .metric-label').eq(3).text('Rent Epoch:');
-
-                        console.log('✅ Account Details updated for wallet/account');
-                    }
-
-                } else {
-                    // Handle error case
-                    $('#accOwner').text('Error');
-                    $('#accExecutable').text('Unknown');
-                    $('#accDataSize').text('Unknown');
-                    $('#accRentEpoch').text('Unknown');
-
-                    console.error('❌ Account data error:', accountData?.error || 'Unknown error');
-                }
-
-            } catch (error) {
-                console.error('❌ Error updating Account Details UI:', error);
-            }
-        }
-
-        /**
-         * 🔥 COMPLETE: Update Rug Pull Risk UI with REAL Solana.fm Authority Data
-         * EXACT STYLING FORMAT IMPLEMENTATION
-         */
-        /**
-         * 🔥 FIXED: Update Rug Pull Risk UI with REAL Solana.fm Authority Data
-         * Replace the existing updateRugPullRiskUI function with this
-         */
-        /**
-         * FIXED: Update Account Details UI - Shows different data for each token
-         */
-        function updateAccountDetailsUI(accountData, solanafmData) {
-            console.log('🔥 UPDATING ACCOUNT DETAILS for new address');
-            console.log('Account Data:', accountData);
-
-            try {
-                if (accountData && accountData.success) {
-                    // ALWAYS use the fresh RPC data from backend
-                    const owner = accountData.owner || 'Unknown';
-                    const executable = accountData.executable || 'Unknown';
-                    const dataSize = accountData.data_size || 'Unknown';
-                    const rentEpoch = accountData.rent_epoch || 'Unknown';
-
-                    // Update with REAL data from RPC call
-                    $('#accOwner').text(owner);
-                    $('#accExecutable').text(executable);
-                    $('#accDataSize').text(dataSize);
-                    $('#accRentEpoch').text(rentEpoch);
-
-                    // Update labels based on account type
-                    if (accountData.is_token) {
-                        // Update labels for token view
-                        $('#accountDetailsCard .metric-label').eq(0).text('Owner:');
-                        $('#accountDetailsCard .metric-label').eq(1).text('Executable:');
-                        $('#accountDetailsCard .metric-label').eq(2).text('Data Size:');
-                        $('#accountDetailsCard .metric-label').eq(3).text('Rent Epoch:');
-
-                        console.log('✅ Token account updated:', {
-                            owner: owner,
-                            executable: executable,
-                            dataSize: dataSize,
-                            rentEpoch: rentEpoch
-                        });
-                    } else {
-                        // Update labels for wallet view
-                        $('#accountDetailsCard .metric-label').eq(0).text('Owner:');
-                        $('#accountDetailsCard .metric-label').eq(1).text('Executable:');
-                        $('#accountDetailsCard .metric-label').eq(2).text('Data Size:');
-                        $('#accountDetailsCard .metric-label').eq(3).text('Rent Epoch:');
-
-                        console.log('✅ Wallet account updated:', {
-                            owner: owner,
-                            executable: executable,
-                            dataSize: dataSize,
-                            rentEpoch: rentEpoch
-                        });
-                    }
-
-                } else {
-                    // Handle error case
-                    $('#accOwner').text('Error');
-                    $('#accExecutable').text('Unknown');
-                    $('#accDataSize').text('Unknown');
-                    $('#accRentEpoch').text('Unknown');
-                    console.error('❌ Account data error:', accountData?.error || 'Unknown error');
-                }
-
-            } catch (error) {
-                console.error('❌ Error updating Account Details UI:', error);
-                // Reset to error state
-                $('#accOwner').text('Error');
-                $('#accExecutable').text('Error');
-                $('#accDataSize').text('Error');
-                $('#accRentEpoch').text('Error');
-            }
-        }
-// Note: Add the authority display CSS styles to your main.css file
-        /**
          * Update the results UI with fetched data
-         * ENHANCED: Now includes real Solana.fm Authority data integration
+         * ENHANCED: Now includes Token Analytics population
          */
         function populateResults(data) {
-            console.log('🚀 POPULATING RESULTS with REAL Solana.fm authority data:');
-            console.log('Full Response Data:', data);
-
-            // Check if we have Solana.fm data
-            if (data.solanafm_data) {
-                console.log('🎯 Solana.fm API Data Available:', {
-                    tokenName: data.solanafm_data.tokenList?.name,
-                    tokenSymbol: data.solanafm_data.tokenList?.symbol,
-                    mintAuthority: data.solanafm_data.mintAuthority,
-                    freezeAuthority: data.solanafm_data.freezeAuthority,
-                    decimals: data.solanafm_data.decimals
-                });
-            } else {
-                console.warn('⚠️ No Solana.fm data in response - authority analysis will be limited');
-            }
+            console.log('SolanaWP: Populating results with real API data:', data);
 
             // Clear previous results
             $('.card').hide();
@@ -389,7 +230,7 @@
                 return;
             }
 
-            // 2. TOKEN ANALYTICS CARD - Show for valid tokens
+            // 2. NEW: TOKEN ANALYTICS CARD - Show for valid tokens
             if (data.dexscreener_data || data.token_analytics) {
                 updateTokenAnalyticsUI(data.token_analytics, data.dexscreener_data);
             }
@@ -404,10 +245,12 @@
                 $('#balanceHoldingsCard').show();
             }
 
-            // 4. TRANSACTION ANALYSIS CARD
+            // 4. TRANSACTION ANALYSIS CARD - FIXED DATE HANDLING
             if (data.transactions) {
                 const ta = data.transactions;
                 $('#totalTransactions').text(ta.total_transactions || '0');
+
+                // FIXED: Use different dates for first and last activity
                 $('#firstActivity').text(ta.first_transaction || 'Unknown');
                 $('#lastActivity').text(ta.last_transaction || 'Unknown');
 
@@ -433,9 +276,37 @@
             // 5. ACCOUNT DETAILS & SECURITY ANALYSIS (Grid Layout)
             let accountSecurityVisible = false;
 
-            // 🔥 ENHANCED: Account Details with Solana.fm Enhanced Data
+            // Account Details
             if (data.account) {
-                updateAccountDetailsUI(data.account, data.solanafm_data);
+                const ad = data.account;
+
+                // Check if this is a token or wallet
+                if (ad.is_token) {
+                    // Display token-specific information
+                    $('#accOwner').text(ad.account_type || 'Token Mint');
+                    $('#accExecutable').text('Token Program');
+                    $('#accDataSize').text((ad.decimals || 'Unknown') + ' decimals');
+                    $('#accRentEpoch').text((ad.supply || 'Unknown supply'));
+
+                    // Update labels for token view
+                    $('#accountDetailsCard .metric-label').eq(0).text('Type:');
+                    $('#accountDetailsCard .metric-label').eq(1).text('Program:');
+                    $('#accountDetailsCard .metric-label').eq(2).text('Decimals:');
+                    $('#accountDetailsCard .metric-label').eq(3).text('Supply:');
+                } else {
+                    // Display wallet-specific information
+                    $('#accOwner').text(ad.owner || 'Unknown');
+                    $('#accExecutable').text(ad.executable || 'Unknown');
+                    $('#accDataSize').text(ad.data_size || 'Unknown');
+                    $('#accRentEpoch').text(ad.rent_epoch || 'Unknown');
+
+                    // Reset labels for wallet view
+                    $('#accountDetailsCard .metric-label').eq(0).text('Owner:');
+                    $('#accountDetailsCard .metric-label').eq(1).text('Executable:');
+                    $('#accountDetailsCard .metric-label').eq(2).text('Data Size:');
+                    $('#accountDetailsCard .metric-label').eq(3).text('Rent Epoch:');
+                }
+
                 $('#accountDetailsCard').show();
                 accountSecurityVisible = true;
             }
@@ -462,15 +333,83 @@
                 $('#accountAndSecurityOuterGrid').css('display', 'grid');
             }
 
-            // 6. 🔥 ENHANCED: RUG PULL RISK CARD with REAL Solana.fm Authority Data
+            // 6. RUG PULL RISK CARD
             if (data.rugpull) {
-                updateRugPullRiskUI(data.rugpull, data.solanafm_data);
-                $('#rugPullRiskCard').show();
+                const rp = data.rugpull;
 
-                console.log('🎯 RUG PULL ANALYSIS COMPLETE with EXACT STYLING FORMAT');
+                // Update risk level with proper styling
+                $('#rugPullRiskLevel').text(rp.risk_level || 'Unknown')
+                    .removeClass('low medium high')
+                    .addClass(rp.risk_level ? rp.risk_level.toLowerCase() : '');
+
+                $('#rugPullRiskPercentage').text((rp.risk_percentage || '0') + '%');
+
+                // Warning signs
+                const $warnList = $('#rugPullWarningsList').empty();
+                if (rp.warning_signs && rp.warning_signs.length > 0) {
+                    rp.warning_signs.forEach(sign => {
+                        $warnList.append(`<li class="warning-item">${sign}</li>`);
+                    });
+                } else {
+                    $warnList.append('<li class="safe-item">No warning signs detected</li>');
+                }
+
+                // Safe indicators
+                const $safeList = $('#rugPullSafeIndicatorsList').empty();
+                if (rp.safe_indicators && rp.safe_indicators.length > 0) {
+                    rp.safe_indicators.forEach(indicator => {
+                        $safeList.append(`<li class="safe-item">${indicator}</li>`);
+                    });
+                } else {
+                    $safeList.append('<li class="neutral-item">No safe indicators found</li>');
+                }
+
+                // Update metrics with proper styling
+                $('#overallScore').text(rp.overall_score || '0');
+                $('#volume24h').text(rp.volume_24h || 'Unknown');
+
+                // FIXED: Properly display authority status with colors
+                if (rp.liquidity_locked) {
+                    $('#liquidityLocked').text(rp.liquidity_locked.text || 'Unknown')
+                        .css('color', rp.liquidity_locked.color || '#6b7280');
+                }
+
+                if (rp.ownership_renounced) {
+                    $('#ownershipRenounced').text(rp.ownership_renounced.text || 'Unknown')
+                        .css('color', rp.ownership_renounced.color || '#6b7280');
+                }
+
+                if (rp.mint_authority) {
+                    $('#mintAuthority').text(rp.mint_authority.text || 'Unknown')
+                        .css('color', rp.mint_authority.color || '#6b7280');
+                }
+
+                if (rp.freeze_authority) {
+                    $('#freezeAuthority').text(rp.freeze_authority.text || 'Unknown')
+                        .css('color', rp.freeze_authority.color || '#6b7280');
+                }
+
+                // FIXED: Update token distribution chart with real data
+                if (rp.token_distribution && Array.isArray(rp.token_distribution)) {
+                    updateTokenDistributionChart(rp.token_distribution);
+
+                    // Also update the text list if it exists
+                    const $distList = $('#rugTokenDistribution').empty();
+                    rp.token_distribution.forEach(item => {
+                        $distList.append(`
+                            <div class="distribution-item">
+                                <span class="dist-color" style="background-color: ${item.color}"></span>
+                                <span class="dist-label">${item.label}</span>
+                                <span class="dist-percentage">${item.percentage}%</span>
+                            </div>
+                        `);
+                    });
+                }
+
+                $('#rugPullRiskCard').show();
             }
 
-            // 7. WEBSITE & SOCIAL ACCOUNTS CARD
+            // 7. WEBSITE & SOCIAL ACCOUNTS CARD - UPDATED with Discord and GitHub
             if (data.social) {
                 const ws = data.social;
 
@@ -482,7 +421,7 @@
                     $('#webInfoRegCountry').text(web.registrationCountry || 'Unknown');
                 }
 
-                // Twitter info
+                // Twitter info - UPDATED: Removed followers, kept verified
                 if (ws.twitterInfo) {
                     const twitter = ws.twitterInfo;
                     $('#twitterHandle').text(twitter.handle || 'Not found');
@@ -491,13 +430,13 @@
                         .css('color', twitter.verified ? '#10b981' : '#ef4444');
                 }
 
-                // Telegram info
+                // Telegram info - UPDATED: Removed members
                 if (ws.telegramInfo) {
                     const telegram = ws.telegramInfo;
                     $('#telegramChannel').text(telegram.channel || 'Not found');
                 }
 
-                // Discord info
+                // NEW: Discord info
                 if (ws.discordInfo) {
                     const discord = ws.discordInfo;
                     $('#discordServer').text(discord.invite || 'Not found');
@@ -507,7 +446,7 @@
                     $('#discordName').text('Unknown');
                 }
 
-                // GitHub info
+                // NEW: GitHub info
                 if (ws.githubInfo) {
                     const github = ws.githubInfo;
                     $('#githubRepo').text(github.repository || 'Not found');
@@ -520,12 +459,12 @@
                 $('#websiteSocialCard').show();
             }
 
-            // RECOMMENDED SECURITY TOOLS SECTION
+            // RECOMMENDED SECURITY TOOLS SECTION - RESTORED ORIGINAL LOGIC
             if ($('#affiliateSection').children().length > 0) {
                 $('#affiliateSection').show();
             }
 
-            // 8. FINAL RESULTS CARD
+            // 8. FINAL RESULTS CARD - RESTORED FROM ORIGINAL
             if (data.scores) {
                 const scores = data.scores;
                 $('#finalTrustScore').text((scores.trust_score || 0) + '/100');
@@ -545,14 +484,13 @@
             $('html, body').animate({
                 scrollTop: $('#resultsSection').offset().top - 100
             }, 500);
-
-            console.log('✅ ALL RESULTS POPULATED with EXACT STYLING FORMAT applied');
         }
 
         /**
          * Initialize charts
          */
         function initializeCharts() {
+            // Initialize token distribution chart if canvas exists
             const tokenDistCanvas = document.getElementById('tokenDistributionChart');
             if (tokenDistCanvas) {
                 const ctx = tokenDistCanvas.getContext('2d');
@@ -588,13 +526,13 @@
         }
 
         // ===================================================================
-        // EVENT LISTENER FOR THE CHECK BUTTON - SOLANA.FM INTEGRATION
+        // EVENT LISTENER FOR THE CHECK BUTTON - REAL API IMPLEMENTATION
         // ===================================================================
         if ($checkAddressBtn.length && $solanaAddressInput.length) {
             $checkAddressBtn.on('click', function() {
                 const address = $solanaAddressInput.val().trim();
 
-                console.log('🚀 SolanaWP: Button clicked with Solana.fm integration, address:', address);
+                console.log('SolanaWP: Button clicked, address:', address);
 
                 if (address === '') {
                     resetResultAreas();
@@ -610,11 +548,11 @@
                 setButtonLoading(true);
                 resetResultAreas();
 
-                console.log('📡 SolanaWP: Making Solana.fm-enhanced API call for address:', address);
+                console.log('SolanaWP: Making REAL API call for address:', address);
 
                 // Check if AJAX object is available
                 if (typeof solanaWP_ajax_object === 'undefined') {
-                    console.error('❌ AJAX Error: solanaWP_ajax_object not found.');
+                    console.error('AJAX Error: solanaWP_ajax_object not found.');
                     updateValidationUI({
                         valid: false,
                         message: 'Configuration error. Please refresh the page and try again.'
@@ -624,55 +562,28 @@
                 }
 
                 // ===================================================================
-                // REAL WORDPRESS AJAX CALL - NOW WITH SOLANA.FM INTEGRATION
+                // REAL WORDPRESS AJAX CALL - CONNECTS TO YOUR BACKEND APIs
                 // ===================================================================
                 $.ajax({
                     url: solanaWP_ajax_object.ajax_url,
                     type: 'POST',
                     data: {
-                        action: 'solanawp_check_address',
+                        action: 'solanawp_check_address',  // This matches your ajax-handlers.php
                         address: address,
                         nonce: solanaWP_ajax_object.nonce
                     },
                     dataType: 'json',
-                    timeout: 60000, // 60 second timeout for multiple API calls
+                    timeout: 45000, // 45 second timeout for blockchain API calls
                     beforeSend: function() {
-                        console.log('📡 SolanaWP: Sending Solana.fm-enhanced AJAX request...');
+                        console.log('SolanaWP: Sending AJAX request to backend...');
                     },
                     success: function(response) {
-                        console.log('📥 SolanaWP: Solana.fm-enhanced response received:', response);
+                        console.log('SolanaWP: Backend response received:', response);
 
                         if (response.success && response.data) {
-                            // 🔥 LOG SOLANA.FM AUTHORITY DATA IMMEDIATELY
-                            if (response.data.solanafm_data) {
-                                console.log('🎯 SOLANA.FM AUTHORITY DATA RECEIVED:');
-                                console.log({
-                                    token: response.data.solanafm_data.tokenList?.name || 'Unknown',
-                                    symbol: response.data.solanafm_data.tokenList?.symbol || 'Unknown',
-                                    mintAuthority: response.data.solanafm_data.mintAuthority || 'RENOUNCED',
-                                    freezeAuthority: response.data.solanafm_data.freezeAuthority || 'RENOUNCED',
-                                    mintRenounced: response.data.solanafm_data.mintAuthority === null,
-                                    freezeRenounced: response.data.solanafm_data.freezeAuthority === null,
-                                    dataSource: 'solana.fm'
-                                });
-                            } else {
-                                console.warn('⚠️ No Solana.fm data in backend response');
-                            }
-
-                            // Use the real data from enhanced backend with Solana.fm authority data
+                            // Use the real data from your Helius/QuickNode backend
                             populateResults(response.data);
-                            console.log('✅ Solana.fm authority data integrated successfully with EXACT STYLING');
-
-                            // Log rug pull risk assessment
-                            if (response.data.rugpull) {
-                                console.log('🎯 Rug Pull Risk Assessment:', {
-                                    riskLevel: response.data.rugpull.risk_level,
-                                    riskPercentage: response.data.rugpull.risk_percentage,
-                                    mintAuthority: response.data.rugpull.mint_authority,
-                                    freezeAuthority: response.data.rugpull.freeze_authority,
-                                    overallSafety: response.data.rugpull.ownership_renounced
-                                });
-                            }
+                            console.log('SolanaWP: Real blockchain data populated successfully');
                         } else {
                             // Handle API errors gracefully
                             let errorMessage = 'Error processing address.';
@@ -686,18 +597,18 @@
                                 valid: false,
                                 message: errorMessage
                             });
-                            console.error('❌ SolanaWP: Backend Error:', response.data);
+                            console.error('SolanaWP: Backend Error:', response.data);
                         }
                         setButtonLoading(false);
                     },
                     error: function(jqXHR, textStatus, errorThrown) {
-                        console.error('❌ SolanaWP: AJAX Error:', textStatus, jqXHR.responseText, errorThrown);
+                        console.error('SolanaWP: AJAX Error:', textStatus, jqXHR.responseText, errorThrown);
 
                         let errorMessage = 'Network error occurred while checking the address.';
 
                         // Provide more specific error messages
                         if (textStatus === 'timeout') {
-                            errorMessage = 'Request timed out. The Solana.fm API might be slow. Please try again.';
+                            errorMessage = 'Request timed out. The Solana network might be slow. Please try again.';
                         } else if (textStatus === 'parsererror') {
                             errorMessage = 'Server response error. Please try again.';
                         } else if (jqXHR.status === 403) {
@@ -717,12 +628,12 @@
                 });
             });
         } else {
-            console.error('❌ SolanaWP: Button or input elements not found!');
+            console.error('SolanaWP: Button or input elements not found!');
             console.log('Button found:', $checkAddressBtn.length > 0);
             console.log('Input found:', $solanaAddressInput.length > 0);
         }
 
-        // Handle example button clicks
+        // Handle example button clicks (if they exist in your theme)
         $('.example-btn').on('click', function() {
             const address = $(this).data('address');
             if (address && $solanaAddressInput.length) {
@@ -731,12 +642,12 @@
             }
         });
 
-        // Initialize charts
+        // Initialize any charts that might be needed
         initializeCharts();
 
-        // Add keyboard support
+        // Add keyboard support for better accessibility
         $solanaAddressInput.on('keypress', function(e) {
-            if (e.which === 13) {
+            if (e.which === 13) { // Enter key
                 e.preventDefault();
                 $checkAddressBtn.trigger('click');
             }
@@ -747,36 +658,13 @@
             $(this).val($(this).val().trim());
         });
 
-        // 🔥 ENHANCED: Add click-to-copy functionality for authority addresses
-        $(document).on('click', '#mintAuthority, #freezeAuthority', function() {
-            const title = $(this).attr('title');
-            if (title && title.includes('Full Address:')) {
-                const address = title.split('Full Address: ')[1].split('\n')[0];
-                if (address && address.length > 20) {
-                    navigator.clipboard.writeText(address).then(function() {
-                        // Show temporary feedback
-                        const $element = $(this);
-                        const originalText = $element.text();
-                        $element.text('Copied!').addClass('copied-feedback');
-                        setTimeout(() => {
-                            $element.text(originalText).removeClass('copied-feedback');
-                        }, 1000);
-                    }.bind(this)).catch(function(err) {
-                        console.error('Failed to copy address:', err);
-                    });
-                }
-            }
-        });
-
         // Debug info
-        console.log('🚀 SolanaWP: Main JavaScript initialized with SOLANA.FM API INTEGRATION');
-        console.log('🔥 SolanaWP: Enhanced with REAL Authority Data from Solana.fm API');
-        console.log('🎯 SolanaWP: EXACT STYLING FORMAT implemented');
-        console.log('✅ SolanaWP: AJAX object available:', typeof solanaWP_ajax_object !== 'undefined');
+        console.log('SolanaWP: Main JavaScript initialized with REAL API integration and Token Analytics');
+        console.log('SolanaWP: AJAX object available:', typeof solanaWP_ajax_object !== 'undefined');
 
         if (typeof solanaWP_ajax_object !== 'undefined') {
-            console.log('📡 SolanaWP: AJAX URL:', solanaWP_ajax_object.ajax_url);
-            console.log('🔐 SolanaWP: Nonce present:', !!solanaWP_ajax_object.nonce);
+            console.log('SolanaWP: AJAX URL:', solanaWP_ajax_object.ajax_url);
+            console.log('SolanaWP: Nonce present:', !!solanaWP_ajax_object.nonce);
         }
     });
 
