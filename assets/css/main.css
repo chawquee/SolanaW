@@ -954,3 +954,403 @@ a:hover,
     background-color: rgba(107, 114, 128, 0.1);
     color: #6b7280;
 }
+.authority-status {
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-block;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: 1px solid transparent;
+}
+
+/* 🎯 RENOUNCED AUTHORITIES - GREEN STYLING */
+.authority-renounced,
+#mintAuthority.authority-renounced,
+#freezeAuthority.authority-renounced {
+    background-color: rgba(16, 185, 129, 0.1) !important;
+    color: #10b981 !important;
+    border-color: rgba(16, 185, 129, 0.2);
+}
+
+.authority-renounced:hover {
+    background-color: rgba(16, 185, 129, 0.15);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+}
+
+/* 🎯 ACTIVE AUTHORITIES - RED STYLING */
+.authority-active,
+#mintAuthority.authority-active,
+#freezeAuthority.authority-active {
+    background-color: rgba(239, 68, 68, 0.1) !important;
+    color: #ef4444 !important;
+    border-color: rgba(239, 68, 68, 0.2);
+}
+
+.authority-active:hover {
+    background-color: rgba(239, 68, 68, 0.15);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+}
+
+/* 🎯 UNKNOWN AUTHORITIES - GRAY STYLING */
+.authority-unknown,
+#mintAuthority.authority-unknown,
+#freezeAuthority.authority-unknown {
+    background-color: rgba(107, 114, 128, 0.1) !important;
+    color: #6b7280 !important;
+    border-color: rgba(107, 114, 128, 0.2);
+}
+
+.authority-unknown:hover {
+    background-color: rgba(107, 114, 128, 0.15);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(107, 114, 128, 0.2);
+}
+
+/* 🎯 SPECIFIC AUTHORITY ELEMENTS */
+#mintAuthority,
+#freezeAuthority {
+    font-weight: 600;
+    padding: 6px 10px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    display: inline-block;
+    min-width: 120px;
+    text-align: center;
+}
+
+#mintAuthority:hover,
+#freezeAuthority:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 🎯 OWNERSHIP STATUS - OVERALL DISPLAY */
+#ownershipRenounced {
+    font-weight: 700;
+    font-size: 16px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    display: inline-block;
+    min-width: 180px;
+    text-align: center;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+/* Copy feedback animation */
+.copied-feedback {
+    background-color: rgba(59, 130, 246, 0.2) !important;
+    color: #3b82f6 !important;
+    transform: scale(1.05);
+}
+
+/* Enhanced tooltip styling */
+#mintAuthority[title]:hover::after,
+#freezeAuthority[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 120%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: pre-line;
+    z-index: 1000;
+    max-width: 250px;
+    text-align: left;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+#mintAuthority[title]:hover::before,
+#freezeAuthority[title]:hover::before {
+    content: '';
+    position: absolute;
+    bottom: 115%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: rgba(0, 0, 0, 0.9);
+    z-index: 1000;
+}
+
+/* 🎯 WARNING AND SAFE INDICATORS - ENHANCED */
+.warning-item {
+    color: #ef4444 !important;
+    font-weight: 500;
+    padding: 6px 12px;
+    margin: 4px 0;
+    background-color: rgba(239, 68, 68, 0.05);
+    border-left: 3px solid #ef4444;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.warning-item:hover {
+    background-color: rgba(239, 68, 68, 0.1);
+    transform: translateX(4px);
+}
+
+.safe-item {
+    color: #10b981 !important;
+    font-weight: 500;
+    padding: 6px 12px;
+    margin: 4px 0;
+    background-color: rgba(16, 185, 129, 0.05);
+    border-left: 3px solid #10b981;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.safe-item:hover {
+    background-color: rgba(16, 185, 129, 0.1);
+    transform: translateX(4px);
+}
+
+.neutral-item {
+    color: #6b7280 !important;
+    font-weight: 400;
+    padding: 6px 12px;
+    margin: 4px 0;
+    background-color: rgba(107, 114, 128, 0.05);
+    border-left: 3px solid #6b7280;
+    border-radius: 4px;
+}
+
+/* 🎯 LIST STYLING IMPROVEMENTS */
+#rugPullWarningsList,
+#rugPullSafeIndicatorsList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#rugPullWarningsList li,
+#rugPullSafeIndicatorsList li {
+    margin-bottom: 8px;
+}
+
+#rugPullWarningsList li:last-child,
+#rugPullSafeIndicatorsList li:last-child {
+    margin-bottom: 0;
+}
+
+/* 🎯 TOKEN DISTRIBUTION STYLING - ENHANCED */
+.distribution-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+    padding: 8px 12px;
+    background-color: rgba(248, 250, 252, 0.8);
+    border-radius: 8px;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    transition: all 0.3s ease;
+}
+
+.distribution-item:hover {
+    background-color: rgba(241, 245, 249, 0.9);
+    transform: translateX(4px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.dist-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.dist-label {
+    flex-grow: 1;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+}
+
+.dist-percentage {
+    font-weight: 700;
+    font-size: 14px;
+    color: #1f2937;
+    min-width: 40px;
+    text-align: right;
+}
+
+/* 🎯 RISK LEVEL INDICATOR - ENHANCED */
+.risk-level-indicator {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    color: #92400e;
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 18px;
+    display: inline-block;
+    border: 2px solid #f59e0b;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+    transition: all 0.3s ease;
+}
+
+.risk-level-indicator:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(245, 158, 11, 0.4);
+}
+
+/* Risk level specific colors */
+.risk-level-indicator.low {
+    background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+    color: #166534;
+    border-color: #10b981;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.risk-level-indicator.medium {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    color: #92400e;
+    border-color: #f59e0b;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.risk-level-indicator.high {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    color: #991b1b;
+    border-color: #ef4444;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* 🎯 RESPONSIVE AUTHORITY DISPLAY */
+@media (max-width: 768px) {
+    #mintAuthority,
+    #freezeAuthority {
+        min-width: 100px;
+        font-size: 12px;
+        padding: 4px 8px;
+    }
+
+    #ownershipRenounced {
+        font-size: 14px;
+        min-width: 150px;
+        padding: 6px 10px;
+    }
+
+    .distribution-item {
+        padding: 6px 10px;
+        gap: 8px;
+    }
+
+    .dist-color {
+        width: 12px;
+        height: 12px;
+    }
+
+    .warning-item,
+    .safe-item,
+    .neutral-item {
+        padding: 4px 8px;
+        font-size: 13px;
+    }
+}
+
+/* 🎯 ACCESSIBILITY IMPROVEMENTS */
+#mintAuthority:focus,
+#freezeAuthority:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .authority-renounced {
+        background-color: #10b981 !important;
+        color: white !important;
+    }
+
+    .authority-active {
+        background-color: #ef4444 !important;
+        color: white !important;
+    }
+
+    .authority-unknown {
+        background-color: #6b7280 !important;
+        color: white !important;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    #mintAuthority,
+    #freezeAuthority,
+    .distribution-item,
+    .warning-item,
+    .safe-item {
+        transition: none;
+    }
+
+    #mintAuthority:hover,
+    #freezeAuthority:hover,
+    .distribution-item:hover,
+    .warning-item:hover,
+    .safe-item:hover {
+        transform: none;
+    }
+}
+// 🔥 ADD CSS for enhanced authority display (add to your stylesheet)
+const additionalCSS = `
+.authority-active {
+    font-weight: 600;
+    background-color: rgba(239, 68, 68, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.authority-renounced {
+    font-weight: 600;
+    background-color: rgba(16, 185, 129, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.authority-unknown {
+    font-weight: 500;
+    background-color: rgba(245, 158, 11, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.copied-feedback {
+    background-color: rgba(16, 185, 129, 0.2) !important;
+    transition: background-color 0.3s ease;
+}
+
+.warning-item {
+    color: #dc2626;
+    margin-bottom: 4px;
+}
+
+.safe-item {
+    color: #059669;
+    margin-bottom: 4px;
+}
+
+.neutral-item {
+    color: #6b7280;
+    margin-bottom: 4px;
+}
+;
+
+// Inject CSS if not already present
+   if (!document.getElementById('solanawp-authority-styles')) {
+    const style = document.createElement('style');
+style.id = 'solanawp-authority-styles';
+style.textContent = additionalCSS;
+document.head.appendChild(style);
+}
