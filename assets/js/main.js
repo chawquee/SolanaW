@@ -409,7 +409,7 @@
                 $('#rugPullRiskCard').show();
             }
 
-            // 7. WEBSITE & SOCIAL ACCOUNTS CARD - UPDATED with Discord and GitHub
+            // 7. WEBSITE & SOCIAL ACCOUNTS CARD - ENHANCED: Added 6 new Twitter fields
             if (data.social) {
                 const ws = data.social;
 
@@ -421,13 +421,21 @@
                     $('#webInfoRegCountry').text(web.registrationCountry || 'Unknown');
                 }
 
-                // Twitter info - UPDATED: Removed followers, kept verified
+                // Twitter info - ENHANCED: Added 6 new sub-sections
                 if (ws.twitterInfo) {
                     const twitter = ws.twitterInfo;
                     $('#twitterHandle').text(twitter.handle || 'Not found');
                     $('#twitterVerified')
                         .text(twitter.verified ? 'Yes' : 'No')
                         .css('color', twitter.verified ? '#10b981' : '#ef4444');
+
+                    // NEW: 6 additional Twitter fields with placeholders (backend will populate later)
+                    $('#twitterVerificationType').text(twitter.verificationType || 'Unavailable');
+                    $('#twitterVerifiedFollowers').text(twitter.verifiedFollowers || 'Unavailable');
+                    $('#twitterSubscriptionType').text(twitter.subscriptionType || 'Unavailable');
+                    $('#twitterFollowers').text(twitter.followers || 'Unavailable');
+                    $('#twitterIdentityVerification').text(twitter.identityVerification || 'Unavailable');
+                    $('#twitterCreationDate').text(twitter.creationDate || 'Unavailable');
                 }
 
                 // Telegram info - UPDATED: Removed members

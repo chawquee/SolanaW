@@ -53,7 +53,7 @@ if ( ! defined( 'ABSPATH' ) ) {
             </div>
         </div>
 
-        <?php // X (Twitter) Information Section - UPDATED: Removed Followers, kept Verified ?>
+        <?php // X (Twitter) Information Section - ENHANCED: Added 6 new sub-sections ?>
         <div class="website-social-section">
             <h4><?php esc_html_e( 'X (Twitter) Information', 'solanawp' ); ?></h4>
             <div class="twitter-info-grid"> <?php // Grid for twitter information ?>
@@ -64,6 +64,30 @@ if ( ! defined( 'ABSPATH' ) ) {
                 <div class="twitter-info-item">
                     <div class="twitter-info-label"><?php esc_html_e( 'Verified', 'solanawp' ); ?></div>
                     <div class="twitter-info-value" id="twitterVerified">-</div> <?php // Placeholder for JS, color will be set by JS ?>
+                </div>
+                <div class="twitter-info-item">
+                    <div class="twitter-info-label"><?php esc_html_e( 'Verification Type', 'solanawp' ); ?></div>
+                    <div class="twitter-info-value" id="twitterVerificationType">-</div> <?php // Placeholder for JS ?>
+                </div>
+                <div class="twitter-info-item">
+                    <div class="twitter-info-label"><?php esc_html_e( 'Verified Followers', 'solanawp' ); ?></div>
+                    <div class="twitter-info-value" id="twitterVerifiedFollowers">-</div> <?php // Placeholder for JS ?>
+                </div>
+                <div class="twitter-info-item">
+                    <div class="twitter-info-label"><?php esc_html_e( 'Subscription Type', 'solanawp' ); ?></div>
+                    <div class="twitter-info-value" id="twitterSubscriptionType">-</div> <?php // Placeholder for JS ?>
+                </div>
+                <div class="twitter-info-item">
+                    <div class="twitter-info-label"><?php esc_html_e( 'Followers', 'solanawp' ); ?></div>
+                    <div class="twitter-info-value" id="twitterFollowers">-</div> <?php // Placeholder for JS ?>
+                </div>
+                <div class="twitter-info-item">
+                    <div class="twitter-info-label"><?php esc_html_e( 'Identity Verification', 'solanawp' ); ?></div>
+                    <div class="twitter-info-value" id="twitterIdentityVerification">-</div> <?php // Placeholder for JS ?>
+                </div>
+                <div class="twitter-info-item">
+                    <div class="twitter-info-label"><?php esc_html_e( 'Account Creation Date', 'solanawp' ); ?></div>
+                    <div class="twitter-info-value" id="twitterCreationDate">-</div> <?php // Placeholder for JS ?>
                 </div>
             </div>
         </div>

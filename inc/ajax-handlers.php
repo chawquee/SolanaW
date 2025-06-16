@@ -1,13 +1,14 @@
 <?php
 /**
- * AJAX Handlers for SolanaWP Theme - ENHANCED DEXSCREENER INTEGRATION
+ * AJAX Handlers for SolanaWP Theme - COMPLETE WITH X API INTEGRATION
  * DexScreener as PRIMARY source, QuickNode/Helius as SECONDARY fallback
- * Enhanced with Token Analytics support and fixed date handling
+ * Enhanced with Token Analytics support and X API integration for detailed Twitter data
  *
  * IMPLEMENTED INSTRUCTIONS:
  * 1. First Activity Date: Extract pairCreatedAt from DexScreener API, convert UNIX timestamp to readable date
  * 2. Social Media Extraction: Extract type and url from DexScreener API socials array
  * 3. Website Registration: Extract website from DexScreener, use WHOIS API for registration details
+ * 4. X API Integration: Real data extraction using exact API v2 fields from documentation
  *
  * @package SolanaWP
  * @since SolanaWP 1.0.0
@@ -121,6 +122,189 @@ function solanawp_handle_save_api_settings() {
         'message' => __( 'Settings saved successfully!', 'solanawp' )
     ) );
 }
+
+// ============================================================================
+// X API INTEGRATION FUNCTIONS - NEW
+// ============================================================================
+
+/**
+ * NEW: Get X API Bearer Token from WordPress options
+ */
+function solanawp_get_x_api_bearer_token() {
+    // Retrieve X API credentials from WordPress options for security
+    return get_option( 'solanawp_x_api_bearer_token', '' );
+}
+
+/**
+ * NEW: Extract Twitter username from URL (supports both twitter.com and x.com)
+ */
+function solanawp_extract_twitter_username_from_url( $url ) {
+    // Handle both twitter.com and x.com URLs
+    if ( preg_match( '/(?:twitter\.com|x\.com)\/([a-zA-Z0-9_]+)/', $url, $matches ) ) {
+        return $matches[1];
+    }
+    return null;
+}
+
+/**
+ * NEW: Fetch detailed Twitter data from X API v2 using EXACT fields from API docs
+ */
+function solanawp_fetch_twitter_data_from_x_api( $username ) {
+    $bearer_token = solanawp_get_x_api_bearer_token();
+
+    if ( empty( $bearer_token ) ) {
+        error_log( 'SolanaWP: X API Bearer Token not configured' );
+        return null;
+    }
+
+    try {
+        // X API v2 users by username endpoint with EXACT fields from API documentation
+        $api_url = 'https://api.twitter.com/2/users/by/username/' . urlencode( $username );
+        $api_url .= '?user.fields=created_at,is_identity_verified,public_metrics,subscription_type,verified,verified_followers_count,verified_type';
+
+        $response = wp_remote_get( $api_url, array(
+            'timeout' => 15,
+            'headers' => array(
+                'Authorization' => 'Bearer ' . $bearer_token,
+                'Content-Type' => 'application/json',
+            ),
+        ) );
+
+        if ( is_wp_error( $response ) ) {
+            error_log( 'SolanaWP: X API request failed: ' . $response->get_error_message() );
+            return null;
+        }
+
+        $response_code = wp_remote_retrieve_response_code( $response );
+        if ( $response_code !== 200 ) {
+            error_log( 'SolanaWP: X API returned HTTP ' . $response_code );
+            return null;
+        }
+
+        $body = wp_remote_retrieve_body( $response );
+        $data = json_decode( $body, true );
+
+        if ( isset( $data['data'] ) ) {
+            error_log( 'SolanaWP: Successfully fetched X API data for @' . $username );
+            return $data['data'];
+        }
+
+        // Log any API errors
+        if ( isset( $data['errors'] ) ) {
+            error_log( 'SolanaWP: X API error: ' . json_encode( $data['errors'] ) );
+        }
+
+        return null;
+
+    } catch ( Exception $e ) {
+        error_log( 'SolanaWP: X API exception: ' . $e->getMessage() );
+        return null;
+    }
+}
+
+/**
+ * NEW: Map X API response to frontend fields using REAL data extraction
+ */
+function solanawp_map_x_api_data_to_frontend( $x_api_data ) {
+    if ( !$x_api_data ) {
+        return array(
+            'verificationType' => 'Unavailable',
+            'verifiedFollowers' => 'Unavailable',
+            'subscriptionType' => 'Unavailable',
+            'followers' => 'Unavailable',
+            'identityVerification' => 'Unavailable',
+            'creationDate' => 'Unavailable'
+        );
+    }
+
+    // REAL DATA EXTRACTION from X API v2 fields
+
+    // 1. Verification Type - from verified_type field
+    $verification_type = 'Unavailable';
+    if ( isset( $x_api_data['verified_type'] ) ) {
+        switch ( $x_api_data['verified_type'] ) {
+            case 'blue':
+                $verification_type = 'Blue Checkmark';
+                break;
+            case 'government':
+                $verification_type = 'Government';
+                break;
+            case 'business':
+                $verification_type = 'Business';
+                break;
+            default:
+                $verification_type = ucfirst( $x_api_data['verified_type'] );
+                break;
+        }
+    } elseif ( isset( $x_api_data['verified'] ) && $x_api_data['verified'] ) {
+        $verification_type = 'Legacy Verified';
+    } else {
+        $verification_type = 'Not Verified';
+    }
+
+    // 2. Verified Followers - from verified_followers_count field (REAL DATA)
+    $verified_followers = 'Unavailable';
+    if ( isset( $x_api_data['verified_followers_count'] ) ) {
+        $verified_followers = solanawp_format_number( $x_api_data['verified_followers_count'] );
+    }
+
+    // 3. Subscription Type - from subscription_type field (REAL DATA)
+    $subscription_type = 'Unavailable';
+    if ( isset( $x_api_data['subscription_type'] ) ) {
+        $subscription_type = ucfirst( str_replace( '_', ' ', $x_api_data['subscription_type'] ) );
+    }
+
+    // 4. Followers - from public_metrics.followers_count (REAL DATA)
+    $followers = 'Unavailable';
+    if ( isset( $x_api_data['public_metrics']['followers_count'] ) ) {
+        $followers = solanawp_format_number( $x_api_data['public_metrics']['followers_count'] );
+    }
+
+    // 5. Identity Verification - from is_identity_verified field (REAL DATA)
+    $identity_verification = 'Unavailable';
+    if ( isset( $x_api_data['is_identity_verified'] ) ) {
+        $identity_verification = $x_api_data['is_identity_verified'] ? 'Verified' : 'Not Verified';
+    }
+
+    // 6. Creation Date - from created_at field (REAL DATA)
+    $creation_date = 'Unavailable';
+    if ( isset( $x_api_data['created_at'] ) ) {
+        $creation_date = date( 'F j, Y', strtotime( $x_api_data['created_at'] ) );
+    }
+
+    return array(
+        'verificationType' => $verification_type,
+        'verifiedFollowers' => $verified_followers,
+        'subscriptionType' => $subscription_type,
+        'followers' => $followers,
+        'identityVerification' => $identity_verification,
+        'creationDate' => $creation_date
+    );
+}
+
+/**
+ * SETUP FUNCTION: Configure X API credentials using YOUR EXACT Bearer Token
+ * Call this function once to store your X API credentials securely
+ */
+function solanawp_setup_x_api_credentials() {
+    // YOUR EXACT X API Bearer Token from the credentials you provided
+    $bearer_token = 'AAAAAAAAAAAAAAAAAAAAAIXm2QEAAAAA817IAG%2BBxH8ox%2FVyn7mnO2YBkV4%3DmPIb4p67b4Tfhtff5438ZWpgywZ5Engi66rNtvOU4ethEy6f1K';
+
+    update_option( 'solanawp_x_api_bearer_token', $bearer_token );
+
+    error_log( 'SolanaWP: X API credentials configured successfully with your Bearer Token' );
+
+    // Also store API key and secret for reference (not used in Bearer Token auth)
+    update_option( 'solanawp_x_api_key', 'MymGaEXxCy3oOTXsmQ33IESFi' );
+    update_option( 'solanawp_x_api_secret', 'RO7hxR03cVweFONnNur3QBmZnP3z9eKbgJ3Q1qv4SMX3lT4wPJ' );
+}
+
+// AUTO-SETUP: Uncomment this line ONCE to configure credentials, then comment it back
+// add_action( 'init', 'solanawp_setup_x_api_credentials' );
+
+// ============================================================================
+// MAIN PROCESSING FUNCTIONS
+// ============================================================================
 
 /**
  * 🚀 ENHANCED MAIN PROCESSING FUNCTION - DEXSCREENER PRIORITIZATION WITH TOKEN ANALYTICS
@@ -254,6 +438,10 @@ function solanawp_fetch_dexscreener_data( $address ) {
         return null;
     }
 }
+
+// ============================================================================
+// DATA FETCHING FUNCTIONS
+// ============================================================================
 
 /**
  * 1️⃣ Address Validation (Fixed field names for frontend compatibility)
@@ -851,7 +1039,7 @@ function solanawp_fetch_rugpull_data( $address, $dexscreener_data = null ) {
 }
 
 /**
- * 7️⃣ Website & Social (Fixed field names for frontend compatibility)
+ * 7️⃣ ENHANCED: Website & Social with X API Integration
  */
 function solanawp_fetch_social_data( $address, $dexscreener_data = null ) {
     $social_data = array(
@@ -862,23 +1050,34 @@ function solanawp_fetch_social_data( $address, $dexscreener_data = null ) {
         ),
         'twitterInfo' => array(
             'handle' => 'Not found',
-            'verified' => false
+            'verified' => false,
+            'raw_url' => '',
+            // NEW: 6 additional fields - using "Unavailable" when data not accessible
+            'verificationType' => 'Unavailable',
+            'verifiedFollowers' => 'Unavailable',
+            'subscriptionType' => 'Unavailable',
+            'followers' => 'Unavailable',
+            'identityVerification' => 'Unavailable',
+            'creationDate' => 'Unavailable'
         ),
         'telegramInfo' => array(
-            'channel' => 'Not found'
+            'channel' => 'Not found',
+            'raw_url' => ''
         ),
         'discordInfo' => array(
             'invite' => 'Not found',
-            'serverName' => 'Unknown'
+            'serverName' => 'Unknown',
+            'raw_url' => ''
         ),
         'githubInfo' => array(
             'repository' => 'Not found',
-            'organization' => 'Unknown'
+            'organization' => 'Unknown',
+            'raw_url' => ''
         )
     );
 
     try {
-        // 🥇 PRIMARY: DexScreener social and website data
+        // 🥇 PRIMARY: DexScreener social data extraction with X API enhancement
         if ( $dexscreener_data ) {
             // INSTRUCTION 3: Extract websites and get registration details via WHOIS
             if ( isset( $dexscreener_data['info']['websites'] ) && !empty( $dexscreener_data['info']['websites'] ) ) {
@@ -907,7 +1106,7 @@ function solanawp_fetch_social_data( $address, $dexscreener_data = null ) {
                 }
             }
 
-            // INSTRUCTION 2: Extract social links from DexScreener API socials array
+            // INSTRUCTION 2: Extract social links from DexScreener API socials array with X API integration
             if ( isset( $dexscreener_data['info']['socials'] ) && !empty( $dexscreener_data['info']['socials'] ) ) {
                 foreach ( $dexscreener_data['info']['socials'] as $social ) {
                     $type = strtolower( $social['type'] ?? '' );
@@ -915,22 +1114,43 @@ function solanawp_fetch_social_data( $address, $dexscreener_data = null ) {
 
                     switch ( $type ) {
                         case 'twitter':
-                            // FIXED: Use full URL for Twitter instead of parsing
+                            // ENHANCED: Extract Twitter username and fetch detailed data from X API
                             $social_data['twitterInfo']['handle'] = $url;
                             $social_data['twitterInfo']['verified'] = false;
                             $social_data['twitterInfo']['raw_url'] = $url;
+
+                            // NEW: Fetch detailed Twitter data from X API
+                            $twitter_username = solanawp_extract_twitter_username_from_url( $url );
+                            if ( $twitter_username ) {
+                                $x_api_data = solanawp_fetch_twitter_data_from_x_api( $twitter_username );
+                                if ( $x_api_data ) {
+                                    // Update verified status from X API
+                                    $social_data['twitterInfo']['verified'] = $x_api_data['verified'] ?? false;
+
+                                    // Map X API data to the 6 new fields
+                                    $mapped_data = solanawp_map_x_api_data_to_frontend( $x_api_data );
+                                    $social_data['twitterInfo'] = array_merge( $social_data['twitterInfo'], $mapped_data );
+
+                                    error_log( 'SolanaWP: Successfully fetched and mapped X API data for @' . $twitter_username );
+                                } else {
+                                    error_log( 'SolanaWP: Failed to fetch X API data for @' . $twitter_username );
+                                }
+                            }
                             break;
+
                         case 'telegram':
                             // UNCHANGED: Keep existing extraction logic
                             $social_data['telegramInfo']['channel'] = solanawp_extract_telegram_handle( $url );
                             $social_data['telegramInfo']['raw_url'] = $url;
                             break;
+
                         case 'discord':
                             // UNCHANGED: Keep existing extraction logic
                             $social_data['discordInfo']['invite'] = solanawp_extract_discord_invite( $url );
                             $social_data['discordInfo']['serverName'] = 'Discord Server';
                             $social_data['discordInfo']['raw_url'] = $url;
                             break;
+
                         case 'github':
                             // UNCHANGED: Keep existing extraction logic
                             $social_data['githubInfo']['repository'] = solanawp_extract_github_handle( $url );
@@ -975,10 +1195,22 @@ function solanawp_fetch_social_data( $address, $dexscreener_data = null ) {
                             if ( isset( $on_chain_metadata['description'] ) ) {
                                 $extracted_socials = solanawp_extract_social_links( $on_chain_metadata['description'] );
 
-                                // Fill in missing social data
+                                // Fill in missing social data and fetch X API data if Twitter found
                                 if ( isset( $extracted_socials['twitter'] ) && $social_data['twitterInfo']['handle'] === 'Not found' ) {
                                     $social_data['twitterInfo']['handle'] = $extracted_socials['twitter'];
+
+                                    // NEW: Fetch X API data for Helius-sourced Twitter handles too
+                                    $twitter_username = solanawp_extract_twitter_username_from_url( $extracted_socials['twitter'] );
+                                    if ( $twitter_username ) {
+                                        $x_api_data = solanawp_fetch_twitter_data_from_x_api( $twitter_username );
+                                        if ( $x_api_data ) {
+                                            $social_data['twitterInfo']['verified'] = $x_api_data['verified'] ?? false;
+                                            $mapped_data = solanawp_map_x_api_data_to_frontend( $x_api_data );
+                                            $social_data['twitterInfo'] = array_merge( $social_data['twitterInfo'], $mapped_data );
+                                        }
+                                    }
                                 }
+
                                 if ( isset( $extracted_socials['telegram'] ) && $social_data['telegramInfo']['channel'] === 'Not found' ) {
                                     $social_data['telegramInfo']['channel'] = $extracted_socials['telegram'];
                                 }
@@ -1007,6 +1239,24 @@ function solanawp_fetch_social_data( $address, $dexscreener_data = null ) {
     }
 
     return $social_data;
+}
+
+// ============================================================================
+// HELPER FUNCTIONS - INCLUDING NUMBER FORMATTING FOR X API
+// ============================================================================
+
+/**
+ * Helper function to format numbers with K, M, B suffixes (used by X API)
+ */
+function solanawp_format_number( $number ) {
+    if ( $number >= 1000000000 ) {
+        return round( $number / 1000000000, 1 ) . 'B';
+    } elseif ( $number >= 1000000 ) {
+        return round( $number / 1000000, 1 ) . 'M';
+    } elseif ( $number >= 1000 ) {
+        return round( $number / 1000, 1 ) . 'K';
+    }
+    return number_format( $number );
 }
 
 /**
@@ -1485,3 +1735,5 @@ function solanawp_set_cache( $key, $data, $expiration = 300 ) {
 
     return set_transient( 'solanawp_' . md5( $key ), $data, $expiration );
 }
+
+?>

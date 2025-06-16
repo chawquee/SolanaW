@@ -685,7 +685,7 @@ function solanawp_add_customizer_to_admin_bar( $wp_admin_bar ) {
         'meta'  => array( 'title' => __( 'Customize SolanaWP Theme', 'solanawp' ), ),
     ) );
 }
-
+// Add this line once, then remove it
 add_action( 'admin_menu', 'solanawp_add_customizer_menu' );
 function solanawp_add_customizer_menu() {
     add_theme_page(
