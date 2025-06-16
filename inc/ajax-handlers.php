@@ -4,11 +4,7 @@
  * DexScreener as PRIMARY source, Solana.fm API for REAL Authority Data
  * Enhanced with Token Analytics support and REAL Account/Mint Authority data
  *
- * UPDATED FEATURES:
- * 1. Real Account Details from Solana RPC (Owner, Executable, Data Size, Rent Epoch)
- * 2. REAL Mint Authority and Freeze Authority data from Solana.fm API
- * 3. Enhanced token detection and validation
- * 4. Fallback to RPC when Solana.fm unavailable
+ * CLEAN VERSION: No duplicates, no caching, fresh data every time
  *
  * @package SolanaWP
  * @since SolanaWP 1.0.0
@@ -35,18 +31,7 @@ function solanawp_handle_address_check() {
         ) );
     }
 
-    // 🔐 Rate Limiting: Check if user is making too many requests
-    $user_ip = solanawp_get_client_ip();
-    $rate_limit_key = 'solanawp_rate_limit_' . md5( $user_ip );
-    $requests = get_transient( $rate_limit_key );
-    $max_requests = get_option( 'solanawp_rate_limit', 100 ); // Default: 100 requests per hour
-
-    if ( $requests >= $max_requests ) {
-        wp_send_json_error( array(
-            'message' => __( 'Too many requests. Please wait a moment before trying again.', 'solanawp' ),
-            'code' => 'rate_limit_exceeded'
-        ) );
-    }
+    // NO RATE LIMITING FOR DEVELOPMENT
 
     // 🧹 Input Sanitization
     $address = sanitize_text_field( $_POST['address'] ?? '' );
@@ -58,22 +43,12 @@ function solanawp_handle_address_check() {
         ) );
     }
 
-    // 📊 Update rate limiting counter
-    set_transient( $rate_limit_key, ($requests + 1), 3600 ); // 1 hour window
-
-    // 🔍 Process the Solana address
+    // 🔍 Process the Solana address with fresh data
     try {
         $result = solanawp_process_solana_address( $address );
-
-        // 📝 Log successful request (optional)
-        solanawp_log_request( $address, $user_ip, 'success' );
-
         wp_send_json_success( $result );
 
     } catch ( Exception $e ) {
-        // 📝 Log error
-        solanawp_log_request( $address, $user_ip, 'error', $e->getMessage() );
-
         wp_send_json_error( array(
             'message' => __( 'Unable to process address. Please try again.', 'solanawp' ),
             'code' => 'processing_error',
@@ -123,6 +98,9 @@ function solanawp_handle_save_api_settings() {
     ) );
 }
 
+/**
+ * MAIN PROCESSING FUNCTION - NO CACHING, FRESH DATA EVERY TIME
+ */
 function solanawp_process_solana_address( $address ) {
     // NO CACHING - Fresh data every time
     error_log( "🚀 SolanaWP: Processing address (FRESH DATA): {$address}" );
@@ -162,8 +140,7 @@ function solanawp_process_solana_address( $address ) {
 }
 
 /**
- * 🔥 CORRECTED: Fetch Token Data from Solana.fm API
- * Fixed to properly handle the actual JSON response structure
+ * Fetch Token Data from Solana.fm API
  */
 function solanawp_fetch_solanafm_token_data( $address ) {
     try {
@@ -203,7 +180,7 @@ function solanawp_fetch_solanafm_token_data( $address ) {
             return null;
         }
 
-        // ✅ CORRECTED VALIDATION: Check for valid response structure
+        // Check for valid response structure
         if ( !is_array( $data ) ) {
             error_log( 'Solana.fm: Response is not an array' );
             return null;
@@ -221,7 +198,7 @@ function solanawp_fetch_solanafm_token_data( $address ) {
             return null;
         }
 
-        // 🔥 EXTRACT AUTHORITIES from the correct simple structure
+        // Extract authorities from the response
         $mint_authority = $data['mintAuthority'] ?? null;
         $freeze_authority = $data['freezeAuthority'] ?? null;
 
@@ -233,7 +210,7 @@ function solanawp_fetch_solanafm_token_data( $address ) {
         error_log( "- Decimals: " . ( $data['decimals'] ?? 'Unknown' ) );
         error_log( "- Token Type: " . ( $data['tokenType'] ?? 'Unknown' ) );
 
-        // 🔥 ADD PROCESSED AUTHORITY STATUS for easier frontend use
+        // Add processed authority status for easier frontend use
         $data['mint_authority_renounced'] = ( $mint_authority === null );
         $data['freeze_authority_renounced'] = ( $freeze_authority === null );
         $data['both_authorities_renounced'] = ( $mint_authority === null && $freeze_authority === null );
@@ -258,8 +235,7 @@ function solanawp_fetch_solanafm_token_data( $address ) {
 }
 
 /**
- * 🔥 CORRECTED: Enhanced Rug Pull Analysis using ONLY Solana.fm for authorities
- * Updated to prioritize Solana.fm API data for authority extraction
+ * Enhanced Rug Pull Analysis using Solana.fm for authorities
  */
 function solanawp_fetch_enhanced_rugpull_data( $address, $dexscreener_data = null, $account_data = null, $solanafm_data = null ) {
     $rugpull_data = array(
@@ -281,7 +257,7 @@ function solanawp_fetch_enhanced_rugpull_data( $address, $dexscreener_data = nul
         $warning_signs = array();
         $safe_indicators = array();
 
-        // 🔥 AUTHORITY ANALYSIS - ONLY use Solana.fm data for authorities
+        // Authority analysis using Solana.fm data
         if ( $solanafm_data ) {
             error_log( "🎯 Processing Solana.fm authority data for: {$address}" );
             error_log( "🎯 Solana.fm data: " . json_encode( $solanafm_data ) );
@@ -294,7 +270,7 @@ function solanawp_fetch_enhanced_rugpull_data( $address, $dexscreener_data = nul
             error_log( "- Mint Authority: " . ( $mint_authority ? $mint_authority : 'NULL (RENOUNCED)' ) );
             error_log( "- Freeze Authority: " . ( $freeze_authority ? $freeze_authority : 'NULL (RENOUNCED)' ) );
 
-            // 🎯 MINT AUTHORITY ANALYSIS with Professional UX Display
+            // Mint Authority Analysis with Professional UX Display
             if ( $mint_authority === null ) {
                 $rugpull_data['mint_authority'] = array(
                     'text' => 'Renounced ✓',
@@ -317,7 +293,7 @@ function solanawp_fetch_enhanced_rugpull_data( $address, $dexscreener_data = nul
                 $risk_score += 35; // Increase risk significantly
             }
 
-            // 🎯 FREEZE AUTHORITY ANALYSIS with Professional UX Display
+            // Freeze Authority Analysis with Professional UX Display
             if ( $freeze_authority === null ) {
                 $rugpull_data['freeze_authority'] = array(
                     'text' => 'Renounced ✓',
@@ -340,7 +316,7 @@ function solanawp_fetch_enhanced_rugpull_data( $address, $dexscreener_data = nul
                 $risk_score += 25; // Increase risk
             }
 
-            // 🎯 OVERALL OWNERSHIP STATUS with Professional UX Display
+            // Overall Ownership Status with Professional UX Display
             if ( $mint_authority === null && $freeze_authority === null ) {
                 $rugpull_data['ownership_renounced'] = array(
                     'text' => 'Fully Renounced ✓',
@@ -408,7 +384,7 @@ function solanawp_fetch_enhanced_rugpull_data( $address, $dexscreener_data = nul
             $risk_score += 40; // High risk when we can't verify
         }
 
-        // 🔥 DEXSCREENER LIQUIDITY & VOLUME ANALYSIS
+        // DexScreener liquidity & volume analysis
         if ( $dexscreener_data ) {
             $liquidity = $dexscreener_data['liquidity']['usd'] ?? 0;
             $volume_24h = $dexscreener_data['volume']['h24'] ?? 0;
@@ -430,7 +406,7 @@ function solanawp_fetch_enhanced_rugpull_data( $address, $dexscreener_data = nul
             }
         }
 
-        // 🎯 CALCULATE FINAL RISK LEVEL
+        // Calculate final risk level
         $risk_score = max( 0, min( 100, $risk_score + 30 ) ); // Base risk + calculated risk
 
         if ( $risk_score >= 70 ) {
@@ -470,11 +446,7 @@ function solanawp_fetch_enhanced_rugpull_data( $address, $dexscreener_data = nul
 }
 
 /**
- * 🔥 FIXED: Get Real Solana Token Details via RPC
- * Updated to properly extract mint and freeze authority from actual RPC response structure
- */
-/**
- * FIXED: Get Real Solana Token Details - Fresh RPC call each time
+ * Get Real Solana Token Details via RPC - Fresh call each time
  */
 function solanawp_get_real_solana_token_details( $tokenMintAddress, $rpcUrl = null ) {
     if ( empty( $rpcUrl ) ) {
@@ -505,7 +477,10 @@ function solanawp_get_real_solana_token_details( $tokenMintAddress, $rpcUrl = nu
             $accountInfo = $response['result']['value'];
 
             // Check if it's a valid SPL token mint account
-            if ( isset( $accountInfo['owner'] ) || isset( $accountInfo['data']['parsed'] ) &&
+            if ( isset( $accountInfo['owner'] ) &&
+                ( $accountInfo['owner'] === 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' ||
+                    $accountInfo['owner'] === 'TokenzQdBNbLqFMegL5EtgA5P9XPAbULoPSIbSNU5' ) &&
+                isset( $accountInfo['data']['parsed']['program'] ) &&
                 $accountInfo['data']['parsed']['program'] === 'spl-token' &&
                 isset( $accountInfo['data']['parsed']['info'] ) ) {
 
@@ -521,8 +496,8 @@ function solanawp_get_real_solana_token_details( $tokenMintAddress, $rpcUrl = nu
                     'rentEpoch' => $accountInfo['rentEpoch'] ?? 'Unknown',
                     'decimals' => $parsedInfo['decimals'] ?? 'Unknown',
                     'supply' => $parsedInfo['supply'] ?? 'Unknown',
-                    'mintAuthority' => $parsedInfo['mintAuthority'] ,
-                    'freezeAuthority' => $parsedInfo['freezeAuthority'] ,
+                    'mintAuthority' => $parsedInfo['mintAuthority'] ?? null,
+                    'freezeAuthority' => $parsedInfo['freezeAuthority'] ?? null,
                     'account_type' => 'Token Mint',
                     'lamports' => $accountInfo['lamports'] ?? 0,
                     'isInitialized' => $parsedInfo['isInitialized'] ?? false,
@@ -544,8 +519,8 @@ function solanawp_get_real_solana_token_details( $tokenMintAddress, $rpcUrl = nu
                     'rentEpoch' => $accountInfo['rentEpoch'] ?? 'Unknown',
                     'account_type' => 'Wallet/Program Account',
                     'lamports' => $accountInfo['lamports'] ?? 0,
-                    'mintAuthority' => 'N/A',
-                    'freezeAuthority' => 'N/A',
+                    'mintAuthority' => null,
+                    'freezeAuthority' => null,
                     'decimals' => 'N/A',
                     'supply' => 'N/A',
                     'data_source' => 'fresh_rpc_account',
@@ -577,7 +552,7 @@ function solanawp_get_real_solana_token_details( $tokenMintAddress, $rpcUrl = nu
 }
 
 /**
- * FIXED: Make RPC Request - No caching, fresh request each time
+ * SINGLE RPC REQUEST FUNCTION - NO DUPLICATES
  */
 function solanawp_make_rpc_request( $rpcUrl, $requestBody ) {
     $jsonRequestBody = json_encode( $requestBody );
@@ -619,8 +594,9 @@ function solanawp_make_rpc_request( $rpcUrl, $requestBody ) {
 
     return $data;
 }
+
 /**
- * FIXED: Enhanced Account Data - Proper RPC calls for each address
+ * Enhanced Account Data - Fresh RPC calls for each address
  */
 function solanawp_fetch_enhanced_account_data( $address, $solanafm_data = null ) {
     error_log( "🔥 FETCHING ACCOUNT DATA FOR: {$address}" );
@@ -700,102 +676,7 @@ function solanawp_fetch_enhanced_account_data( $address, $solanafm_data = null )
 }
 
 /**
- * 🔥 GET BASIC RPC ACCOUNT INFO
- */
-function solanawp_get_basic_rpc_account_info( $address ) {
-    try {
-        $rpcUrl = get_option( 'solanawp_solana_rpc_url', 'https://api.mainnet-beta.solana.com' );
-
-        $requestBody = array(
-            'jsonrpc' => '2.0',
-            'id' => 1,
-            'method' => 'getAccountInfo',
-            'params' => array(
-                $address,
-                array(
-                    'encoding' => 'base64',
-                    'commitment' => 'confirmed'
-                ),
-            ),
-        );
-
-        $response = solanawp_make_rpc_request( $rpcUrl, $requestBody );
-
-        if ( isset( $response['result']['value'] ) && $response['result']['value'] !== null ) {
-            $accountInfo = $response['result']['value'];
-
-            return array(
-                'owner' => $accountInfo['owner'] ?? 'Unknown',
-                'executable' => $accountInfo['executable'] ? 'Yes' : 'No',
-                'data_size' => $accountInfo['data']['space'] ?? 'Unknown',
-                'rent_epoch' => $accountInfo['rentEpoch'] ?? 'Unknown',
-                'lamports' => $accountInfo['lamports'] ?? 0
-            );
-        }
-
-        return array(
-            'owner' => 'Unknown',
-            'executable' => 'Unknown',
-            'data_size' => 'Unknown',
-            'rent_epoch' => 'Unknown',
-            'lamports' => 0
-        );
-
-    } catch ( Exception $e ) {
-        error_log( 'Basic RPC account info error: ' . $e->getMessage() );
-        return array(
-            'owner' => 'Error',
-            'executable' => 'Unknown',
-            'data_size' => 'Unknown',
-            'rent_epoch' => 'Unknown',
-            'lamports' => 0
-        );
-    }
-}
-
-/**
- * 🔥 MAKE RPC REQUEST HELPER FUNCTION
- */
-function solanawp_make_rpc_request( $rpcUrl, $requestBody ) {
-    $jsonRequestBody = json_encode( $requestBody );
-    if ( $jsonRequestBody === false ) {
-        throw new Exception( 'Failed to encode JSON request body.' );
-    }
-
-    $args = array(
-        'method' => 'POST',
-        'headers' => array(
-            'Content-Type' => 'application/json',
-            'Accept' => 'application/json',
-        ),
-        'body' => $jsonRequestBody,
-        'timeout' => 15
-    );
-
-    $response = wp_remote_request( $rpcUrl, $args );
-
-    if ( is_wp_error( $response ) ) {
-        throw new Exception( 'RPC Request failed: ' . $response->get_error_message() );
-    }
-
-    $httpCode = wp_remote_retrieve_response_code( $response );
-    if ( $httpCode !== 200 ) {
-        $body = wp_remote_retrieve_body( $response );
-        throw new Exception( "RPC HTTP Error: Status Code {$httpCode}, Response: {$body}" );
-    }
-
-    $body = wp_remote_retrieve_body( $response );
-    $data = json_decode( $body, true );
-
-    if ( json_last_error() !== JSON_ERROR_NONE ) {
-        throw new Exception( 'Invalid JSON response: ' . json_last_error_msg() );
-    }
-
-    return $data;
-}
-
-/**
- * 🔥 EXTRACT TOKEN ANALYTICS FROM DEXSCREENER DATA
+ * Extract Token Analytics from DexScreener Data
  */
 function solanawp_extract_token_analytics( $dexscreener_data ) {
     if ( !$dexscreener_data ) {
@@ -842,7 +723,7 @@ function solanawp_extract_token_analytics( $dexscreener_data ) {
 }
 
 /**
- * 🔥 ENHANCED: FETCH DEXSCREENER DATA (PRIMARY SOURCE)
+ * Fetch DexScreener Data (Primary Source)
  */
 function solanawp_fetch_dexscreener_data( $address ) {
     try {
@@ -870,7 +751,7 @@ function solanawp_fetch_dexscreener_data( $address ) {
 }
 
 /**
- * 1️⃣ ADDRESS VALIDATION (Fixed field names for frontend compatibility)
+ * Address Validation
  */
 function solanawp_fetch_validation_data( $address ) {
     // Remove whitespace
@@ -1013,7 +894,7 @@ function solanawp_check_dexscreener_token( $address ) {
 }
 
 /**
- * 2️⃣ BALANCE & HOLDINGS (Fixed field names for frontend compatibility)
+ * Balance & Holdings Data
  */
 function solanawp_fetch_balance_data( $address, $dexscreener_data = null ) {
     $balance_data = array(
@@ -1026,7 +907,7 @@ function solanawp_fetch_balance_data( $address, $dexscreener_data = null ) {
     );
 
     try {
-        // 🥇 PRIMARY: DexScreener data for token price/market cap
+        // PRIMARY: DexScreener data for token price/market cap
         if ( $dexscreener_data ) {
             $token_price = $dexscreener_data['priceUsd'] ?? 0;
             $balance_data['token_price'] = $token_price;
@@ -1035,7 +916,7 @@ function solanawp_fetch_balance_data( $address, $dexscreener_data = null ) {
             $balance_data['volume_24h'] = $dexscreener_data['volume']['h24'] ?? 0;
         }
 
-        // 🥈 SECONDARY: QuickNode for SOL balance
+        // SECONDARY: QuickNode for SOL balance
         $solana_rpc_url = get_option( 'solanawp_solana_rpc_url' );
         if ( !empty( $solana_rpc_url ) ) {
             $payload = json_encode( array(
@@ -1060,7 +941,7 @@ function solanawp_fetch_balance_data( $address, $dexscreener_data = null ) {
             }
         }
 
-        // 🥈 SECONDARY: Helius for tokens and NFTs (ONLY if no DexScreener data)
+        // SECONDARY: Helius for tokens and NFTs (ONLY if no DexScreener data)
         if ( !$dexscreener_data ) {
             $helius_api_key = get_option( 'solanawp_helius_api_key' );
             if ( !empty( $helius_api_key ) ) {
@@ -1088,7 +969,7 @@ function solanawp_fetch_balance_data( $address, $dexscreener_data = null ) {
 }
 
 /**
- * 3️⃣ ENHANCED TRANSACTION ANALYSIS - DEXSCREENER ONLY FOR FIRST ACTIVITY
+ * Transaction Analysis - DexScreener Priority
  */
 function solanawp_fetch_transaction_data( $address, $dexscreener_data = null ) {
     $transaction_data = array(
@@ -1100,7 +981,7 @@ function solanawp_fetch_transaction_data( $address, $dexscreener_data = null ) {
     );
 
     try {
-        // 🥇 PRIMARY: DexScreener transaction data
+        // PRIMARY: DexScreener transaction data
         if ( $dexscreener_data ) {
             $buys_24h = $dexscreener_data['txns']['h24']['buys'] ?? 0;
             $sells_24h = $dexscreener_data['txns']['h24']['sells'] ?? 0;
@@ -1113,7 +994,7 @@ function solanawp_fetch_transaction_data( $address, $dexscreener_data = null ) {
             $transaction_data['buys_5m'] = $dexscreener_data['txns']['m5']['buys'] ?? 0;
             $transaction_data['sells_5m'] = $dexscreener_data['txns']['m5']['sells'] ?? 0;
 
-            // FIXED: Use ONLY DexScreener pairCreatedAt for First Activity Date
+            // Use ONLY DexScreener pairCreatedAt for First Activity Date
             if ( isset( $dexscreener_data['pairCreatedAt'] ) ) {
                 // Convert UNIX timestamp to human-readable date format
                 $creation_timestamp = $dexscreener_data['pairCreatedAt'] / 1000; // Convert from milliseconds to seconds
@@ -1124,7 +1005,7 @@ function solanawp_fetch_transaction_data( $address, $dexscreener_data = null ) {
             }
         }
 
-        // 🥈 SECONDARY: Helius ONLY for recent transactions list (NOT for first activity date)
+        // SECONDARY: Helius ONLY for recent transactions list (NOT for first activity date)
         $helius_api_key = get_option( 'solanawp_helius_api_key' );
         if ( !empty( $helius_api_key ) ) {
             $helius_url = "https://api.helius.xyz/v0/addresses/{$address}/transactions?api-key={$helius_api_key}&limit=10";
@@ -1148,7 +1029,6 @@ function solanawp_fetch_transaction_data( $address, $dexscreener_data = null ) {
                 }
                 $transaction_data['recent_transactions'] = $recent_txs;
 
-                // REMOVED: Helius override for first activity date
                 // Only update last_transaction if we don't have DexScreener data
                 if ( $transaction_data['last_transaction'] === 'Unknown' && !empty( $helius_response ) ) {
                     $latest_tx = $helius_response[0];
@@ -1168,15 +1048,6 @@ function solanawp_fetch_transaction_data( $address, $dexscreener_data = null ) {
             $transaction_data['last_transaction'] = date( 'M j, Y', time() );
         }
 
-        // Add debug info for troubleshooting
-        if ( WP_DEBUG ) {
-            $transaction_data['debug_info'] = array(
-                'dexscreener_pair_created' => $dexscreener_data['pairCreatedAt'] ?? 'not_available',
-                'first_activity_source' => isset( $dexscreener_data['pairCreatedAt'] ) ? 'dexscreener_only' : 'unknown',
-                'helius_used_for' => !empty( $helius_api_key ) ? 'recent_transactions_only' : 'not_used'
-            );
-        }
-
     } catch ( Exception $e ) {
         error_log( 'Transaction fetch error: ' . $e->getMessage() );
         $transaction_data['error'] = $e->getMessage();
@@ -1186,7 +1057,7 @@ function solanawp_fetch_transaction_data( $address, $dexscreener_data = null ) {
 }
 
 /**
- * 5️⃣ SECURITY ANALYSIS (Fixed field names for frontend compatibility)
+ * Security Analysis
  */
 function solanawp_fetch_security_data( $address, $dexscreener_data = null ) {
     $security_data = array(
@@ -1200,7 +1071,7 @@ function solanawp_fetch_security_data( $address, $dexscreener_data = null ) {
     try {
         $risk_factors = array();
 
-        // 🥇 PRIMARY: DexScreener security metrics
+        // PRIMARY: DexScreener security metrics
         if ( $dexscreener_data ) {
             // Age analysis
             if ( isset( $dexscreener_data['pairCreatedAt'] ) ) {
@@ -1293,7 +1164,7 @@ function solanawp_fetch_security_data( $address, $dexscreener_data = null ) {
 }
 
 /**
- * 7️⃣ WEBSITE & SOCIAL (Fixed field names for frontend compatibility)
+ * Website & Social Data
  */
 function solanawp_fetch_social_data( $address, $dexscreener_data = null ) {
     $social_data = array(
@@ -1320,7 +1191,7 @@ function solanawp_fetch_social_data( $address, $dexscreener_data = null ) {
     );
 
     try {
-        // 🥇 PRIMARY: DexScreener social and website data
+        // PRIMARY: DexScreener social and website data
         if ( $dexscreener_data ) {
             // Extract websites and get registration details via WHOIS
             if ( isset( $dexscreener_data['info']['websites'] ) && !empty( $dexscreener_data['info']['websites'] ) ) {
@@ -1357,7 +1228,6 @@ function solanawp_fetch_social_data( $address, $dexscreener_data = null ) {
 
                     switch ( $type ) {
                         case 'twitter':
-                            // Use full URL for Twitter instead of parsing
                             $social_data['twitterInfo']['handle'] = $url;
                             $social_data['twitterInfo']['verified'] = false;
                             $social_data['twitterInfo']['raw_url'] = $url;
@@ -1386,7 +1256,7 @@ function solanawp_fetch_social_data( $address, $dexscreener_data = null ) {
             }
         }
 
-        // 🥈 SECONDARY: Helius metadata for additional social info (ONLY if no DexScreener data)
+        // SECONDARY: Helius metadata for additional social info (ONLY if no DexScreener data)
         if ( !$dexscreener_data ) {
             $helius_api_key = get_option( 'solanawp_helius_api_key' );
             if ( !empty( $helius_api_key ) ) {
@@ -1449,11 +1319,10 @@ function solanawp_fetch_social_data( $address, $dexscreener_data = null ) {
 }
 
 /**
- * Get WHOIS registration data using hannisolwhois.vercel.app
+ * Get WHOIS registration data
  */
 function solanawp_get_whois_registration_data( $domain ) {
     try {
-        // Use the specified WHOIS service: https://hannisolwhois.vercel.app/{{domain}}
         $whois_url = "https://hannisolwhois.vercel.app/{$domain}";
         $response = solanawp_make_request( $whois_url );
 
@@ -1480,7 +1349,6 @@ function solanawp_get_whois_registration_data( $domain ) {
             $registration_country = $response['administrative']['country'];
         }
 
-        // Extract the required fields as per instruction 3
         $result = array(
             'domain' => $domain,
             'created_date' => $creation_date,
@@ -1714,18 +1582,21 @@ function solanawp_extract_social_links( $text ) {
     return $links;
 }
 
+/**
+ * NO RATE LIMITING - Make fresh request every time
+ */
 function solanawp_make_request( $url, $args = array() ) {
     $defaults = array(
         'timeout' => 30,
-        'headers' => array()
+        'headers' => array(
+            'Cache-Control' => 'no-cache',
+            'X-Request-ID' => uniqid()
+        )
     );
 
     $args = wp_parse_args( $args, $defaults );
 
-    if ( ! solanawp_check_rate_limit( $url ) ) {
-        throw new Exception( 'Rate limit exceeded. Please try again later.' );
-    }
-
+    // NO RATE LIMITING - Make fresh request every time
     $response = wp_remote_request( $url, $args );
 
     if ( is_wp_error( $response ) ) {
@@ -1742,65 +1613,20 @@ function solanawp_make_request( $url, $args = array() ) {
     return $data;
 }
 
+/**
+ * DISABLED FUNCTIONS - NO CACHING, NO RATE LIMITING
+ */
 function solanawp_check_rate_limit( $url ) {
-    $rate_limit_enabled = get_option( 'solanawp_enable_rate_limiting', true );
-
-    if ( ! $rate_limit_enabled ) {
-        return true;
-    }
-
-    $rate_limit = get_option( 'solanawp_rate_limit', 100 );
-    $rate_window = 60; // 1 minute window
-
-    $transient_key = 'solanawp_rate_' . md5( parse_url( $url, PHP_URL_HOST ) );
-    $current_count = get_transient( $transient_key );
-
-    if ( $current_count === false ) {
-        set_transient( $transient_key, 1, $rate_window );
-        return true;
-    }
-
-    if ( $current_count >= $rate_limit ) {
-        return false;
-    }
-
-    set_transient( $transient_key, $current_count + 1, $rate_window );
-    return true;
+    return true; // NO RATE LIMITING
 }
 
 function solanawp_get_client_ip() {
-    $ip_keys = array( 'HTTP_CF_CONNECTING_IP', 'HTTP_CLIENT_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_X_FORWARDED', 'HTTP_X_CLUSTER_CLIENT_IP', 'HTTP_FORWARDED_FOR', 'HTTP_FORWARDED', 'REMOTE_ADDR' );
-
-    foreach ( $ip_keys as $key ) {
-        if ( array_key_exists( $key, $_SERVER ) === true ) {
-            foreach ( explode( ',', $_SERVER[$key] ) as $ip ) {
-                $ip = trim( $ip );
-                if ( filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) !== false ) {
-                    return $ip;
-                }
-            }
-        }
-    }
-
     return $_SERVER['REMOTE_ADDR'] ?? 'unknown';
 }
 
 function solanawp_log_request( $address, $user_ip, $status, $error = null ) {
-    $logging_enabled = get_option( 'solanawp_enable_logging', true );
-
-    if ( ! $logging_enabled ) {
-        return;
-    }
-
-    $log_message = sprintf(
-        'SolanaWP Check: %s | IP: %s | Status: %s | Error: %s',
-        $address,
-        $user_ip,
-        $status,
-        $error ?? 'none'
-    );
-
-    error_log( $log_message );
+    // Simplified logging
+    error_log( "SolanaWP: {$address} | {$status}" );
 }
 
 function solanawp_lamports_to_sol( $lamports ) {
