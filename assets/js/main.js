@@ -278,207 +278,79 @@
          * 🔥 COMPLETE: Update Rug Pull Risk UI with REAL Solana.fm Authority Data
          * EXACT STYLING FORMAT IMPLEMENTATION
          */
-        function updateRugPullRiskUI(rugpullData, solanafmData) {
-            console.log('🔥 UPDATING RUG PULL RISK with REAL Solana.fm authority data:');
-            console.log('Rugpull Data:', rugpullData);
-            console.log('Solana.fm Raw Data:', solanafmData);
+        /**
+         * 🔥 FIXED: Update Rug Pull Risk UI with REAL Solana.fm Authority Data
+         * Replace the existing updateRugPullRiskUI function with this
+         */
+        /**
+         * FIXED: Update Account Details UI - Shows different data for each token
+         */
+        function updateAccountDetailsUI(accountData, solanafmData) {
+            console.log('🔥 UPDATING ACCOUNT DETAILS for new address');
+            console.log('Account Data:', accountData);
 
             try {
-                // Update risk level with proper styling
-                $('#rugPullRiskLevel').text(rugpullData.risk_level || 'Unknown')
-                    .removeClass('low medium high')
-                    .addClass(rugpullData.risk_level ? rugpullData.risk_level.toLowerCase() : '');
+                if (accountData && accountData.success) {
+                    // ALWAYS use the fresh RPC data from backend
+                    const owner = accountData.owner || 'Unknown';
+                    const executable = accountData.executable || 'Unknown';
+                    const dataSize = accountData.data_size || 'Unknown';
+                    const rentEpoch = accountData.rent_epoch || 'Unknown';
 
-                $('#rugPullRiskPercentage').text((rugpullData.risk_percentage || '0') + '%');
+                    // Update with REAL data from RPC call
+                    $('#accOwner').text(owner);
+                    $('#accExecutable').text(executable);
+                    $('#accDataSize').text(dataSize);
+                    $('#accRentEpoch').text(rentEpoch);
 
-                // 🎯 REAL MINT AUTHORITY - Professional UX Display
-                if (rugpullData.mint_authority) {
-                    const mintAuth = rugpullData.mint_authority;
+                    // Update labels based on account type
+                    if (accountData.is_token) {
+                        // Update labels for token view
+                        $('#accountDetailsCard .metric-label').eq(0).text('Owner:');
+                        $('#accountDetailsCard .metric-label').eq(1).text('Executable:');
+                        $('#accountDetailsCard .metric-label').eq(2).text('Data Size:');
+                        $('#accountDetailsCard .metric-label').eq(3).text('Rent Epoch:');
 
-                    // Display with professional UX format and colors
-                    $('#mintAuthority')
-                        .html(mintAuth.text || 'Unknown')
-                        .css('color', mintAuth.color || '#6b7280')
-                        .removeClass('authority-active authority-renounced authority-unknown')
-                        .addClass(mintAuth.status === 'renounced' ? 'authority-renounced' :
-                            mintAuth.status === 'active' ? 'authority-active' : 'authority-unknown');
-
-                    // Add hover tooltip with full address if available
-                    if (mintAuth.raw_address) {
-                        $('#mintAuthority').attr('title', `Full Address: ${mintAuth.raw_address}\nClick to copy to clipboard`);
-
-                        // Add click-to-copy functionality
-                        $('#mintAuthority').css('cursor', 'pointer').off('click').on('click', function() {
-                            navigator.clipboard.writeText(mintAuth.raw_address).then(function() {
-                                const $element = $('#mintAuthority');
-                                const originalText = $element.text();
-                                $element.text('Copied!').addClass('copied-feedback');
-                                setTimeout(() => {
-                                    $element.text(originalText).removeClass('copied-feedback');
-                                }, 1000);
-                            }).catch(function(err) {
-                                console.error('Failed to copy mint authority address:', err);
-                            });
+                        console.log('✅ Token account updated:', {
+                            owner: owner,
+                            executable: executable,
+                            dataSize: dataSize,
+                            rentEpoch: rentEpoch
                         });
                     } else {
-                        $('#mintAuthority').attr('title', 'Mint authority has been renounced (null)')
-                            .css('cursor', 'default').off('click');
-                    }
+                        // Update labels for wallet view
+                        $('#accountDetailsCard .metric-label').eq(0).text('Owner:');
+                        $('#accountDetailsCard .metric-label').eq(1).text('Executable:');
+                        $('#accountDetailsCard .metric-label').eq(2).text('Data Size:');
+                        $('#accountDetailsCard .metric-label').eq(3).text('Rent Epoch:');
 
-                    console.log('✅ MINT AUTHORITY DISPLAY:', {
-                        display: mintAuth.text,
-                        status: mintAuth.status,
-                        fullAddress: mintAuth.raw_address,
-                        color: mintAuth.color
-                    });
-                }
-
-                // 🎯 REAL FREEZE AUTHORITY - Professional UX Display
-                if (rugpullData.freeze_authority) {
-                    const freezeAuth = rugpullData.freeze_authority;
-
-                    // Display with professional UX format and colors
-                    $('#freezeAuthority')
-                        .html(freezeAuth.text || 'Unknown')
-                        .css('color', freezeAuth.color || '#6b7280')
-                        .removeClass('authority-active authority-renounced authority-unknown')
-                        .addClass(freezeAuth.status === 'renounced' ? 'authority-renounced' :
-                            freezeAuth.status === 'active' ? 'authority-active' : 'authority-unknown');
-
-                    // Add hover tooltip with full address if available
-                    if (freezeAuth.raw_address) {
-                        $('#freezeAuthority').attr('title', `Full Address: ${freezeAuth.raw_address}\nClick to copy to clipboard`);
-
-                        // Add click-to-copy functionality
-                        $('#freezeAuthority').css('cursor', 'pointer').off('click').on('click', function() {
-                            navigator.clipboard.writeText(freezeAuth.raw_address).then(function() {
-                                const $element = $('#freezeAuthority');
-                                const originalText = $element.text();
-                                $element.text('Copied!').addClass('copied-feedback');
-                                setTimeout(() => {
-                                    $element.text(originalText).removeClass('copied-feedback');
-                                }, 1000);
-                            }).catch(function(err) {
-                                console.error('Failed to copy freeze authority address:', err);
-                            });
+                        console.log('✅ Wallet account updated:', {
+                            owner: owner,
+                            executable: executable,
+                            dataSize: dataSize,
+                            rentEpoch: rentEpoch
                         });
-                    } else {
-                        $('#freezeAuthority').attr('title', 'Freeze authority has been renounced (null)')
-                            .css('cursor', 'default').off('click');
                     }
 
-                    console.log('✅ FREEZE AUTHORITY DISPLAY:', {
-                        display: freezeAuth.text,
-                        status: freezeAuth.status,
-                        fullAddress: freezeAuth.raw_address,
-                        color: freezeAuth.color
-                    });
-                }
-
-                // 🎯 OVERALL OWNERSHIP STATUS - Professional UX Display
-                if (rugpullData.ownership_renounced) {
-                    $('#ownershipRenounced')
-                        .html(rugpullData.ownership_renounced.text || 'Unknown')
-                        .css('color', rugpullData.ownership_renounced.color || '#6b7280');
-
-                    console.log('✅ OWNERSHIP STATUS DISPLAY:', rugpullData.ownership_renounced.text);
-                }
-
-                // Update other metrics (unchanged)
-                $('#overallScore').text(rugpullData.overall_score || '0');
-                $('#volume24h').text(rugpullData.volume_24h || 'Unknown');
-
-                if (rugpullData.liquidity_locked) {
-                    $('#liquidityLocked').text(rugpullData.liquidity_locked.text || 'Unknown')
-                        .css('color', rugpullData.liquidity_locked.color || '#6b7280');
-                }
-
-                // 🎯 WARNING SIGNS with Enhanced Formatting
-                const $warnList = $('#rugPullWarningsList').empty();
-                if (rugpullData.warning_signs && rugpullData.warning_signs.length > 0) {
-                    rugpullData.warning_signs.forEach(sign => {
-                        $warnList.append(`<li class="warning-item">⚠️ ${sign}</li>`);
-                    });
                 } else {
-                    $warnList.append('<li class="safe-item">✅ No warning signs detected</li>');
+                    // Handle error case
+                    $('#accOwner').text('Error');
+                    $('#accExecutable').text('Unknown');
+                    $('#accDataSize').text('Unknown');
+                    $('#accRentEpoch').text('Unknown');
+                    console.error('❌ Account data error:', accountData?.error || 'Unknown error');
                 }
-
-                // 🎯 SAFE INDICATORS with Enhanced Formatting
-                const $safeList = $('#rugPullSafeIndicatorsList').empty();
-                if (rugpullData.safe_indicators && rugpullData.safe_indicators.length > 0) {
-                    rugpullData.safe_indicators.forEach(indicator => {
-                        $safeList.append(`<li class="safe-item">✅ ${indicator}</li>`);
-                    });
-                } else {
-                    $safeList.append('<li class="neutral-item">ℹ️ No safe indicators found</li>');
-                }
-
-                // Update token distribution chart (unchanged)
-                if (rugpullData.token_distribution && Array.isArray(rugpullData.token_distribution)) {
-                    updateTokenDistributionChart(rugpullData.token_distribution);
-
-                    // Update text list
-                    const $distList = $('#rugTokenDistribution').empty();
-                    rugpullData.token_distribution.forEach(item => {
-                        $distList.append(`
-                    <div class="distribution-item">
-                        <span class="dist-color" style="background-color: ${item.color}"></span>
-                        <span class="dist-label">${item.label}</span>
-                        <span class="dist-percentage">${item.percentage}%</span>
-                    </div>
-                `);
-                    });
-                }
-
-                // 🔥 LOG REAL SOLANA.FM DATA for verification
-                if (solanafmData && solanafmData.mint) {
-                    console.log('🎯 REAL SOLANA.FM AUTHORITY VERIFICATION:');
-                    console.log({
-                        tokenName: solanafmData.tokenList?.name || 'Unknown',
-                        tokenSymbol: solanafmData.tokenList?.symbol || 'Unknown',
-                        mintAuthority: solanafmData.mintAuthority || 'NULL (Renounced)',
-                        freezeAuthority: solanafmData.freezeAuthority || 'NULL (Renounced)',
-                        mintRenounced: solanafmData.mintAuthority === null,
-                        freezeRenounced: solanafmData.freezeAuthority === null,
-                        bothRenounced: solanafmData.mintAuthority === null && solanafmData.freezeAuthority === null,
-                        riskLevel: rugpullData.risk_level,
-                        riskPercentage: rugpullData.risk_percentage,
-                        displayFormat: 'PROFESSIONAL_UX_APPLIED'
-                    });
-
-                    // 🎯 DEMONSTRATE Professional UX Display in Console
-                    console.log('🎨 PROFESSIONAL UX VERIFICATION:');
-                    if (solanafmData.mintAuthority === null) {
-                        console.log('✅ Mint Authority Display: "Renounced ✓" (GREEN)');
-                    } else {
-                        const truncated = solanafmData.mintAuthority.substring(0,5) + '...' + solanafmData.mintAuthority.slice(-4);
-                        console.log('❌ Mint Authority Display: "Active: ' + truncated + '" (RED)');
-                    }
-
-                    if (solanafmData.freezeAuthority === null) {
-                        console.log('✅ Freeze Authority Display: "Renounced ✓" (GREEN)');
-                    } else {
-                        const truncated = solanafmData.freezeAuthority.substring(0,5) + '...' + solanafmData.freezeAuthority.slice(-4);
-                        console.log('❌ Freeze Authority Display: "Active: ' + truncated + '" (RED)');
-                    }
-
-                    // Overall status
-                    if (solanafmData.mintAuthority === null && solanafmData.freezeAuthority === null) {
-                        console.log('✅ Overall Status: "Fully Renounced ✓" (GREEN)');
-                    } else if (solanafmData.mintAuthority === null || solanafmData.freezeAuthority === null) {
-                        console.log('⚠️ Overall Status: "Partially Renounced ⚠️" (YELLOW)');
-                    } else {
-                        console.log('❌ Overall Status: "NOT Renounced ❌" (RED)');
-                    }
-                }
-
-                console.log('✅ Rug Pull Risk UI updated successfully with Professional UX Format');
 
             } catch (error) {
-                console.error('❌ Error updating Rug Pull Risk UI:', error);
+                console.error('❌ Error updating Account Details UI:', error);
+                // Reset to error state
+                $('#accOwner').text('Error');
+                $('#accExecutable').text('Error');
+                $('#accDataSize').text('Error');
+                $('#accRentEpoch').text('Error');
             }
         }
-
+// Note: Add the authority display CSS styles to your main.css file
         /**
          * Update the results UI with fetched data
          * ENHANCED: Now includes real Solana.fm Authority data integration

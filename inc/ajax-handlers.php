@@ -123,42 +123,19 @@ function solanawp_handle_save_api_settings() {
     ) );
 }
 
-/**
- * 🚀 ENHANCED MAIN PROCESSING FUNCTION - WITH SOLANA.FM INTEGRATION
- * KEEP ONLY THIS VERSION - REMOVED DUPLICATE
- */
 function solanawp_process_solana_address( $address ) {
-    // Cache check
-    $cache_key = "solana_analysis_{$address}";
-    $cached_result = solanawp_get_cache( $cache_key );
-    if ( $cached_result !== false ) {
-        return $cached_result;
-    }
+    // NO CACHING - Fresh data every time
+    error_log( "🚀 SolanaWP: Processing address (FRESH DATA): {$address}" );
 
-    error_log( "🚀 SolanaWP: Processing address with Solana.fm integration: {$address}" );
-
-    // 🥇 PRIMARY: DexScreener for token market data
+    // Get fresh data for each request
     $dexscreener_data = solanawp_fetch_dexscreener_data( $address );
-
-    // 🔥 CRITICAL: ALWAYS call Solana.fm API for REAL authority data
     $solanafm_data = solanawp_fetch_solanafm_token_data( $address );
-
-    if ( $solanafm_data ) {
-        error_log( "✅ Solana.fm data retrieved successfully for: {$address}" );
-    } else {
-        error_log( "⚠️ Solana.fm data NOT available for: {$address}" );
-    }
-
-    // Fetch other data
     $validation_data = solanawp_fetch_validation_data( $address );
     $balance_data = solanawp_fetch_balance_data( $address, $dexscreener_data );
     $transaction_data = solanawp_fetch_transaction_data( $address, $dexscreener_data );
     $account_data = solanawp_fetch_enhanced_account_data( $address, $solanafm_data );
     $security_data = solanawp_fetch_security_data( $address, $dexscreener_data );
-
-    // 🔥 ENHANCED: Rug pull analysis with REAL Solana.fm authority data
     $rugpull_data = solanawp_fetch_enhanced_rugpull_data( $address, $dexscreener_data, $account_data, $solanafm_data );
-
     $social_data = solanawp_fetch_social_data( $address, $dexscreener_data );
     $token_analytics = solanawp_extract_token_analytics( $dexscreener_data );
     $scores_data = solanawp_calculate_final_scores( $validation_data, $balance_data, $transaction_data, $security_data, $rugpull_data, $social_data );
@@ -174,35 +151,30 @@ function solanawp_process_solana_address( $address ) {
         'social' => $social_data,
         'scores' => $scores_data,
         'dexscreener_data' => $dexscreener_data,
-        'solanafm_data' => $solanafm_data, // 🔥 ENSURE this is included in response
+        'solanafm_data' => $solanafm_data,
         'token_analytics' => $token_analytics,
         'timestamp' => current_time( 'timestamp' )
     );
 
-    // Cache the result
-    solanawp_set_cache( $cache_key, $result );
-
-    error_log( "✅ SolanaWP: Analysis complete with Solana.fm data for: {$address}" );
-
+    // NO CACHING - Return fresh data immediately
+    error_log( "✅ SolanaWP: Fresh analysis complete for: {$address}" );
     return $result;
 }
 
 /**
- * 🔥 NEW: Fetch Token Data from Solana.fm API
- * Gets real mint authority, freeze authority, and token metadata
+ * 🔥 CORRECTED: Fetch Token Data from Solana.fm API
+ * Fixed to properly handle the actual JSON response structure
  */
 function solanawp_fetch_solanafm_token_data( $address ) {
     try {
         $url = "https://api.solana.fm/v1/tokens/{$address}";
 
         $args = array(
-            'timeout' => 20, // Increased timeout
+            'timeout' => 20,
             'headers' => array(
                 'User-Agent' => 'SolanaWP/1.0',
-                'Accept' => 'application/json',
-                'Content-Type' => 'application/json'
-            ),
-            'sslverify' => true
+                'Accept' => 'application/json'
+            )
         );
 
         error_log( "🔥 Solana.fm API: Calling {$url}" );
@@ -231,13 +203,13 @@ function solanawp_fetch_solanafm_token_data( $address ) {
             return null;
         }
 
-        // ✅ ENHANCED VALIDATION: Check for valid response structure
+        // ✅ CORRECTED VALIDATION: Check for valid response structure
         if ( !is_array( $data ) ) {
             error_log( 'Solana.fm: Response is not an array' );
             return null;
         }
 
-        // Check if we have the expected fields
+        // Check if we have the expected mint field
         if ( !isset( $data['mint'] ) ) {
             error_log( 'Solana.fm: No mint field in response. Available fields: ' . implode( ', ', array_keys( $data ) ) );
             return null;
@@ -249,17 +221,19 @@ function solanawp_fetch_solanafm_token_data( $address ) {
             return null;
         }
 
-        // 🔥 ENHANCED: Process authority data with detailed logging
+        // 🔥 EXTRACT AUTHORITIES from the correct simple structure
         $mint_authority = $data['mintAuthority'] ?? null;
         $freeze_authority = $data['freezeAuthority'] ?? null;
 
-        // Log the raw authority data
+        // Log the raw authority data for debugging
         error_log( "🔥 Solana.fm RAW AUTHORITY DATA:" );
         error_log( "- Token: " . $address );
         error_log( "- Mint Authority: " . ( $mint_authority ? $mint_authority : 'NULL (RENOUNCED)' ) );
         error_log( "- Freeze Authority: " . ( $freeze_authority ? $freeze_authority : 'NULL (RENOUNCED)' ) );
+        error_log( "- Decimals: " . ( $data['decimals'] ?? 'Unknown' ) );
+        error_log( "- Token Type: " . ( $data['tokenType'] ?? 'Unknown' ) );
 
-        // 🔥 ENHANCED: Add processed authority status for easier frontend use
+        // 🔥 ADD PROCESSED AUTHORITY STATUS for easier frontend use
         $data['mint_authority_renounced'] = ( $mint_authority === null );
         $data['freeze_authority_renounced'] = ( $freeze_authority === null );
         $data['both_authorities_renounced'] = ( $mint_authority === null && $freeze_authority === null );
@@ -284,257 +258,8 @@ function solanawp_fetch_solanafm_token_data( $address ) {
 }
 
 /**
- * 🔥 NEW: Get Real Solana Token Details via RPC (Fallback)
- * Based on your provided example code
- */
-function solanawp_get_real_solana_token_details( $tokenMintAddress, $rpcUrl = null ) {
-    if ( empty( $rpcUrl ) ) {
-        $rpcUrl = get_option( 'solanawp_solana_rpc_url', 'https://api.mainnet-beta.solana.com' );
-    }
-
-    // Construct the JSON RPC request body for getAccountInfo
-    $requestBody = array(
-        'jsonrpc' => '2.0',
-        'id' => 1,
-        'method' => 'getAccountInfo',
-        'params' => array(
-            $tokenMintAddress,
-            array(
-                'encoding' => 'jsonParsed',
-                'commitment' => 'confirmed'
-            ),
-        ),
-    );
-
-    try {
-        $response = solanawp_make_rpc_request( $rpcUrl, $requestBody );
-
-        // Validate the response structure and extract data
-        if ( isset( $response['result']['value'] ) && $response['result']['value'] !== null ) {
-            $accountInfo = $response['result']['value'];
-
-            // Check if it's a valid SPL token mint account
-            if ( isset( $accountInfo['owner'] ) &&
-                ( $accountInfo['owner'] === 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' ||
-                    $accountInfo['owner'] === 'TokenzQdBNbLqFMegL5EtgA5P9XPAbULoPSIbSNU5' ) && // Original SPL Token Program or Token-2022
-                isset( $accountInfo['data']['parsed']['type'] ) &&
-                $accountInfo['data']['parsed']['type'] === 'mint' &&
-                isset( $accountInfo['data']['parsed']['info'] ) ) {
-
-                $parsedInfo = $accountInfo['data']['parsed']['info'];
-
-                return array(
-                    'success' => true,
-                    'is_token' => true,
-                    'owner' => $accountInfo['owner'],
-                    'tokenMint' => $tokenMintAddress,
-                    'executable' => $accountInfo['executable'],
-                    'dataSize' => $accountInfo['data']['space'] ?? 'Unknown',
-                    'rentEpoch' => $accountInfo['rentEpoch'] ?? 'Unknown',
-                    'decimals' => $parsedInfo['decimals'] ?? 'Unknown',
-                    'supply' => $parsedInfo['supply'] ?? 'Unknown',
-                    'mintAuthority' => $parsedInfo['mintAuthority'] ?? null,
-                    'freezeAuthority' => $parsedInfo['freezeAuthority'] ?? null,
-                    'account_type' => 'Token Mint',
-                    'lamports' => $accountInfo['lamports'] ?? 0
-                );
-            } else {
-                // Not a token mint, return general account info
-                return array(
-                    'success' => true,
-                    'is_token' => false,
-                    'owner' => $accountInfo['owner'] ?? 'Unknown',
-                    'executable' => $accountInfo['executable'] ? 'Yes' : 'No',
-                    'dataSize' => $accountInfo['data']['space'] ?? 'Unknown',
-                    'rentEpoch' => $accountInfo['rentEpoch'] ?? 'Unknown',
-                    'account_type' => 'Wallet/Program Account',
-                    'lamports' => $accountInfo['lamports'] ?? 0,
-                    'mintAuthority' => null,
-                    'freezeAuthority' => null,
-                    'decimals' => 'N/A',
-                    'supply' => 'N/A'
-                );
-            }
-        } else {
-            return array(
-                'success' => false,
-                'error' => 'Account not found',
-                'is_token' => false
-            );
-        }
-
-    } catch ( Exception $e ) {
-        error_log( 'Solana RPC Error: ' . $e->getMessage() );
-        return array(
-            'success' => false,
-            'error' => $e->getMessage(),
-            'is_token' => false
-        );
-    }
-}
-
-/**
- * 🔥 ENHANCED: Account Data with Solana.fm Integration
- * Prioritizes Solana.fm data, falls back to RPC
- */
-function solanawp_fetch_enhanced_account_data( $address, $solanafm_data = null ) {
-    try {
-        // 🥇 PRIMARY: Use Solana.fm data if available (most accurate for tokens)
-        if ( $solanafm_data ) {
-            // Calculate human-readable supply if available
-            $humanReadableSupply = 'N/A';
-            if ( isset( $solanafm_data['decimals'] ) && is_numeric( $solanafm_data['decimals'] ) ) {
-                $decimals = intval( $solanafm_data['decimals'] );
-                $humanReadableSupply = "Token with {$decimals} decimals";
-            }
-
-            // Get basic RPC data for additional info
-            $rpc_data = solanawp_get_basic_rpc_account_info( $address );
-
-            return array(
-                'is_token' => true,
-                'owner' => 'Token Program',
-                'executable' => 'Token Program',
-                'lamports' => $rpc_data['lamports'] ?? 0,
-                'data_size' => $rpc_data['data_size'] ?? 'Unknown',
-                'rent_epoch' => $rpc_data['rent_epoch'] ?? 'Unknown',
-                'account_type' => 'Token Mint',
-                'decimals' => $solanafm_data['decimals'] ?? 'Unknown',
-                'supply' => $humanReadableSupply,
-                'mint_authority' => $solanafm_data['mintAuthority'],
-                'freeze_authority' => $solanafm_data['freezeAuthority'],
-                'mint_authority_renounced' => $solanafm_data['mint_authority_renounced'] ?? false,
-                'freeze_authority_renounced' => $solanafm_data['freeze_authority_renounced'] ?? false,
-                'token_name' => $solanafm_data['tokenList']['name'] ?? 'Unknown Token',
-                'token_symbol' => $solanafm_data['tokenList']['symbol'] ?? 'Unknown',
-                'token_image' => $solanafm_data['tokenList']['image'] ?? null,
-                'success' => true,
-                'data_source' => 'solana_fm_enhanced'
-            );
-        }
-
-        // 🥈 FALLBACK: Use RPC data if Solana.fm unavailable
-        $tokenDetails = solanawp_get_real_solana_token_details( $address );
-
-        if ( $tokenDetails['success'] ) {
-            // Calculate human-readable supply if it's a token
-            $humanReadableSupply = 'N/A';
-            if ( $tokenDetails['is_token'] &&
-                is_numeric( $tokenDetails['supply'] ) &&
-                is_numeric( $tokenDetails['decimals'] ) ) {
-                $rawSupply = floatval( $tokenDetails['supply'] );
-                $decimals = intval( $tokenDetails['decimals'] );
-                $humanReadableSupply = number_format( $rawSupply / ( 10 ** $decimals ), $decimals );
-            }
-
-            return array(
-                'is_token' => $tokenDetails['is_token'],
-                'owner' => $tokenDetails['owner'],
-                'executable' => $tokenDetails['is_token'] ? 'Token Program' : $tokenDetails['executable'],
-                'lamports' => $tokenDetails['lamports'],
-                'data_size' => $tokenDetails['dataSize'],
-                'rent_epoch' => $tokenDetails['rentEpoch'],
-                'account_type' => $tokenDetails['account_type'],
-                'decimals' => $tokenDetails['decimals'],
-                'supply' => $tokenDetails['is_token'] ? $humanReadableSupply : 'N/A',
-                'raw_supply' => $tokenDetails['supply'] ?? 'N/A',
-                'mint_authority' => $tokenDetails['mintAuthority'],
-                'freeze_authority' => $tokenDetails['freezeAuthority'],
-                'success' => true,
-                'data_source' => 'solana_rpc_fallback'
-            );
-        } else {
-            // Final fallback to basic validation
-            return array(
-                'is_token' => false,
-                'owner' => 'Unknown',
-                'executable' => 'Unknown',
-                'lamports' => 0,
-                'data_size' => 'Unknown',
-                'rent_epoch' => 'Unknown',
-                'account_type' => 'Unknown',
-                'decimals' => 'Unknown',
-                'supply' => 'Unknown',
-                'mint_authority' => null,
-                'freeze_authority' => null,
-                'success' => false,
-                'error' => $tokenDetails['error'] ?? 'Unable to fetch account data',
-                'data_source' => 'fallback'
-            );
-        }
-
-    } catch ( Exception $e ) {
-        error_log( 'Enhanced account data error: ' . $e->getMessage() );
-        return array(
-            'error' => $e->getMessage(),
-            'is_token' => false,
-            'owner' => 'Error',
-            'executable' => 'Unknown',
-            'data_size' => 0,
-            'rent_epoch' => 0,
-            'success' => false,
-            'data_source' => 'error'
-        );
-    }
-}
-
-/**
- * 🔥 NEW: Get Basic RPC Account Info
- */
-function solanawp_get_basic_rpc_account_info( $address ) {
-    try {
-        $rpcUrl = get_option( 'solanawp_solana_rpc_url', 'https://api.mainnet-beta.solana.com' );
-
-        $requestBody = array(
-            'jsonrpc' => '2.0',
-            'id' => 1,
-            'method' => 'getAccountInfo',
-            'params' => array(
-                $address,
-                array(
-                    'encoding' => 'base64',
-                    'commitment' => 'confirmed'
-                ),
-            ),
-        );
-
-        $response = solanawp_make_rpc_request( $rpcUrl, $requestBody );
-
-        if ( isset( $response['result']['value'] ) && $response['result']['value'] !== null ) {
-            $accountInfo = $response['result']['value'];
-
-            return array(
-                'owner' => $accountInfo['owner'] ?? 'Unknown',
-                'executable' => $accountInfo['executable'] ? 'Yes' : 'No',
-                'data_size' => $accountInfo['data']['space'] ?? 'Unknown',
-                'rent_epoch' => $accountInfo['rentEpoch'] ?? 'Unknown',
-                'lamports' => $accountInfo['lamports'] ?? 0
-            );
-        }
-
-        return array(
-            'owner' => 'Unknown',
-            'executable' => 'Unknown',
-            'data_size' => 'Unknown',
-            'rent_epoch' => 'Unknown',
-            'lamports' => 0
-        );
-
-    } catch ( Exception $e ) {
-        error_log( 'Basic RPC account info error: ' . $e->getMessage() );
-        return array(
-            'owner' => 'Error',
-            'executable' => 'Unknown',
-            'data_size' => 'Unknown',
-            'rent_epoch' => 'Unknown',
-            'lamports' => 0
-        );
-    }
-}
-
-/**
- * 🔥 ENHANCED: Rug Pull Data with REAL Solana.fm Authority Data
- * Uses real authority data from Solana.fm API for accurate risk assessment
+ * 🔥 CORRECTED: Enhanced Rug Pull Analysis using ONLY Solana.fm for authorities
+ * Updated to prioritize Solana.fm API data for authority extraction
  */
 function solanawp_fetch_enhanced_rugpull_data( $address, $dexscreener_data = null, $account_data = null, $solanafm_data = null ) {
     $rugpull_data = array(
@@ -556,12 +281,18 @@ function solanawp_fetch_enhanced_rugpull_data( $address, $dexscreener_data = nul
         $warning_signs = array();
         $safe_indicators = array();
 
-        // 🔥 REAL AUTHORITY ANALYSIS with Solana.fm Data
-        if ( $solanafm_data && isset( $solanafm_data['mint'] ) ) {
-            error_log( "🎯 Processing REAL authority data from Solana.fm for: {$address}" );
+        // 🔥 AUTHORITY ANALYSIS - ONLY use Solana.fm data for authorities
+        if ( $solanafm_data ) {
+            error_log( "🎯 Processing Solana.fm authority data for: {$address}" );
+            error_log( "🎯 Solana.fm data: " . json_encode( $solanafm_data ) );
 
+            // Extract authorities directly from Solana.fm response
             $mint_authority = $solanafm_data['mintAuthority'] ?? null;
             $freeze_authority = $solanafm_data['freezeAuthority'] ?? null;
+
+            error_log( "🎯 EXTRACTED FROM SOLANA.FM:" );
+            error_log( "- Mint Authority: " . ( $mint_authority ? $mint_authority : 'NULL (RENOUNCED)' ) );
+            error_log( "- Freeze Authority: " . ( $freeze_authority ? $freeze_authority : 'NULL (RENOUNCED)' ) );
 
             // 🎯 MINT AUTHORITY ANALYSIS with Professional UX Display
             if ( $mint_authority === null ) {
@@ -647,16 +378,18 @@ function solanawp_fetch_enhanced_rugpull_data( $address, $dexscreener_data = nul
                 );
             }
 
-            // Log the authority analysis for debugging
+            // Log the final authority analysis
             error_log( "🎯 AUTHORITY ANALYSIS COMPLETE:" );
-            error_log( "- Token: " . ($solanafm_data['tokenList']['name'] ?? 'Unknown') );
+            error_log( "- Token: " . ($solanafm_data['tokenList']['name'] ?? $address) );
             error_log( "- Mint Authority: " . ($mint_authority ? "ACTIVE ({$mint_authority})" : 'RENOUNCED') );
             error_log( "- Freeze Authority: " . ($freeze_authority ? "ACTIVE ({$freeze_authority})" : 'RENOUNCED') );
             error_log( "- Risk Score Impact: {$risk_score}" );
+            error_log( "- Data Source: Solana.fm API" );
 
         } else {
-            // Fallback when no Solana.fm data available
-            error_log( "⚠️ No Solana.fm data available for authority analysis" );
+            // When Solana.fm data is not available, show warning
+            error_log( "⚠️ NO SOLANA.FM DATA - Cannot verify token authorities for: {$address}" );
+
             $rugpull_data['mint_authority'] = array(
                 'text' => 'Unable to Verify',
                 'color' => '#f59e0b',
@@ -668,14 +401,14 @@ function solanawp_fetch_enhanced_rugpull_data( $address, $dexscreener_data = nul
                 'status' => 'unknown'
             );
             $rugpull_data['ownership_renounced'] = array(
-                'text' => 'Unknown Risk',
+                'text' => 'Unknown Risk ⚠️',
                 'color' => '#f59e0b'
             );
-            $warning_signs[] = 'Unable to verify token authorities - proceed with caution';
-            $risk_score += 25;
+            $warning_signs[] = 'Unable to verify token authorities - proceed with extreme caution';
+            $risk_score += 40; // High risk when we can't verify
         }
 
-        // 🔥 DEXSCREENER LIQUIDITY & VOLUME ANALYSIS (unchanged)
+        // 🔥 DEXSCREENER LIQUIDITY & VOLUME ANALYSIS
         if ( $dexscreener_data ) {
             $liquidity = $dexscreener_data['liquidity']['usd'] ?? 0;
             $volume_24h = $dexscreener_data['volume']['h24'] ?? 0;
@@ -721,8 +454,9 @@ function solanawp_fetch_enhanced_rugpull_data( $address, $dexscreener_data = nul
                 'mint_authority_raw' => $solanafm_data['mintAuthority'] ?? 'not_available',
                 'freeze_authority_raw' => $solanafm_data['freezeAuthority'] ?? 'not_available',
                 'calculated_risk_score' => $risk_score,
-                'data_source' => $solanafm_data ? 'solana_fm' : 'fallback',
-                'api_response_keys' => $solanafm_data ? array_keys( $solanafm_data ) : array()
+                'data_source' => $solanafm_data ? 'solana_fm_only' : 'no_data',
+                'solanafm_available' => $solanafm_data ? true : false,
+                'solanafm_mint_field' => isset( $solanafm_data['mint'] ) ? $solanafm_data['mint'] : 'missing'
             );
         }
 
@@ -734,8 +468,293 @@ function solanawp_fetch_enhanced_rugpull_data( $address, $dexscreener_data = nul
         return $rugpull_data;
     }
 }
+
 /**
- * 🔥 NEW: Make RPC Request Helper Function
+ * 🔥 FIXED: Get Real Solana Token Details via RPC
+ * Updated to properly extract mint and freeze authority from actual RPC response structure
+ */
+/**
+ * FIXED: Get Real Solana Token Details - Fresh RPC call each time
+ */
+function solanawp_get_real_solana_token_details( $tokenMintAddress, $rpcUrl = null ) {
+    if ( empty( $rpcUrl ) ) {
+        $rpcUrl = get_option( 'solanawp_solana_rpc_url', 'https://api.mainnet-beta.solana.com' );
+    }
+
+    error_log( "🔥 MAKING FRESH RPC CALL FOR: {$tokenMintAddress}" );
+
+    // Fresh RPC request for THIS specific address
+    $requestBody = array(
+        'jsonrpc' => '2.0',
+        'id' => rand(1, 1000), // Different ID each time to prevent any caching
+        'method' => 'getAccountInfo',
+        'params' => array(
+            $tokenMintAddress, // THIS specific address
+            array(
+                'encoding' => 'jsonParsed',
+                'commitment' => 'confirmed'
+            ),
+        ),
+    );
+
+    try {
+        $response = solanawp_make_rpc_request( $rpcUrl, $requestBody );
+        error_log( "🔥 RPC RESPONSE FOR {$tokenMintAddress}: " . substr(json_encode($response), 0, 500) );
+
+        if ( isset( $response['result']['value'] ) && $response['result']['value'] !== null ) {
+            $accountInfo = $response['result']['value'];
+
+            // Check if it's a valid SPL token mint account
+            if ( isset( $accountInfo['owner'] ) || isset( $accountInfo['data']['parsed'] ) &&
+                $accountInfo['data']['parsed']['program'] === 'spl-token' &&
+                isset( $accountInfo['data']['parsed']['info'] ) ) {
+
+                $parsedInfo = $accountInfo['data']['parsed']['info'];
+
+                $result = array(
+                    'success' => true,
+                    'is_token' => true,
+                    'owner' => $accountInfo['owner'],
+                    'tokenMint' => $tokenMintAddress,
+                    'executable' => $accountInfo['executable'],
+                    'dataSize' => $accountInfo['data']['space'] ?? 'Unknown',
+                    'rentEpoch' => $accountInfo['rentEpoch'] ?? 'Unknown',
+                    'decimals' => $parsedInfo['decimals'] ?? 'Unknown',
+                    'supply' => $parsedInfo['supply'] ?? 'Unknown',
+                    'mintAuthority' => $parsedInfo['mintAuthority'] ,
+                    'freezeAuthority' => $parsedInfo['freezeAuthority'] ,
+                    'account_type' => 'Token Mint',
+                    'lamports' => $accountInfo['lamports'] ?? 0,
+                    'isInitialized' => $parsedInfo['isInitialized'] ?? false,
+                    'data_source' => 'fresh_rpc',
+                    'address_checked' => $tokenMintAddress // Confirm which address was checked
+                );
+
+                error_log( "✅ TOKEN DATA FOR {$tokenMintAddress}: Owner={$result['owner']}, DataSize={$result['dataSize']}, RentEpoch={$result['rentEpoch']}" );
+                return $result;
+
+            } else {
+                // Not a token mint, return general account info
+                $result = array(
+                    'success' => true,
+                    'is_token' => false,
+                    'owner' => $accountInfo['owner'] ?? 'Unknown',
+                    'executable' => $accountInfo['executable'] ? 'Yes' : 'No',
+                    'dataSize' => $accountInfo['data']['space'] ?? 'Unknown',
+                    'rentEpoch' => $accountInfo['rentEpoch'] ?? 'Unknown',
+                    'account_type' => 'Wallet/Program Account',
+                    'lamports' => $accountInfo['lamports'] ?? 0,
+                    'mintAuthority' => 'N/A',
+                    'freezeAuthority' => 'N/A',
+                    'decimals' => 'N/A',
+                    'supply' => 'N/A',
+                    'data_source' => 'fresh_rpc_account',
+                    'address_checked' => $tokenMintAddress // Confirm which address was checked
+                );
+
+                error_log( "✅ ACCOUNT DATA FOR {$tokenMintAddress}: Owner={$result['owner']}, DataSize={$result['dataSize']}, RentEpoch={$result['rentEpoch']}" );
+                return $result;
+            }
+        } else {
+            error_log( "❌ NO ACCOUNT FOUND FOR: {$tokenMintAddress}" );
+            return array(
+                'success' => false,
+                'error' => 'Account not found',
+                'is_token' => false,
+                'address_checked' => $tokenMintAddress
+            );
+        }
+
+    } catch ( Exception $e ) {
+        error_log( "❌ RPC ERROR FOR {$tokenMintAddress}: " . $e->getMessage() );
+        return array(
+            'success' => false,
+            'error' => $e->getMessage(),
+            'is_token' => false,
+            'address_checked' => $tokenMintAddress
+        );
+    }
+}
+
+/**
+ * FIXED: Make RPC Request - No caching, fresh request each time
+ */
+function solanawp_make_rpc_request( $rpcUrl, $requestBody ) {
+    $jsonRequestBody = json_encode( $requestBody );
+    if ( $jsonRequestBody === false ) {
+        throw new Exception( 'Failed to encode JSON request body.' );
+    }
+
+    // Add timestamp to prevent any caching
+    $args = array(
+        'method' => 'POST',
+        'headers' => array(
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json',
+            'Cache-Control' => 'no-cache',
+            'X-Request-ID' => uniqid() // Unique request ID
+        ),
+        'body' => $jsonRequestBody,
+        'timeout' => 15
+    );
+
+    $response = wp_remote_request( $rpcUrl, $args );
+
+    if ( is_wp_error( $response ) ) {
+        throw new Exception( 'RPC Request failed: ' . $response->get_error_message() );
+    }
+
+    $httpCode = wp_remote_retrieve_response_code( $response );
+    if ( $httpCode !== 200 ) {
+        $body = wp_remote_retrieve_body( $response );
+        throw new Exception( "RPC HTTP Error: Status Code {$httpCode}, Response: " . substr($body, 0, 200) );
+    }
+
+    $body = wp_remote_retrieve_body( $response );
+    $data = json_decode( $body, true );
+
+    if ( json_last_error() !== JSON_ERROR_NONE ) {
+        throw new Exception( 'Invalid JSON response: ' . json_last_error_msg() );
+    }
+
+    return $data;
+}
+/**
+ * FIXED: Enhanced Account Data - Proper RPC calls for each address
+ */
+function solanawp_fetch_enhanced_account_data( $address, $solanafm_data = null ) {
+    error_log( "🔥 FETCHING ACCOUNT DATA FOR: {$address}" );
+
+    try {
+        // ALWAYS get fresh RPC data for THIS specific address
+        $rpc_data = solanawp_get_real_solana_token_details( $address );
+        error_log( "🔥 RPC DATA FOR {$address}: " . json_encode($rpc_data) );
+
+        if ( $rpc_data['success'] && $rpc_data['is_token'] ) {
+            // This is a TOKEN - show token-specific data
+            $result = array(
+                'is_token' => true,
+                'owner' => $rpc_data['owner'], // Real owner from RPC
+                'executable' => $rpc_data['executable'] ? 'Yes' : 'No',
+                'data_size' => $rpc_data['dataSize'],
+                'rent_epoch' => $rpc_data['rentEpoch'],
+                'account_type' => 'Token Mint',
+                'decimals' => $rpc_data['decimals'],
+                'supply' => $rpc_data['supply'],
+                'mint_authority' => $rpc_data['mintAuthority'],
+                'freeze_authority' => $rpc_data['freezeAuthority'],
+                'success' => true,
+                'data_source' => 'rpc_fresh'
+            );
+
+            // Enhance with Solana.fm data if available
+            if ( $solanafm_data ) {
+                $result['token_name'] = $solanafm_data['tokenList']['name'] ?? 'Unknown Token';
+                $result['token_symbol'] = $solanafm_data['tokenList']['symbol'] ?? 'Unknown';
+                $result['data_source'] = 'rpc_plus_solanafm';
+            }
+
+        } elseif ( $rpc_data['success'] && !$rpc_data['is_token'] ) {
+            // This is a WALLET/ACCOUNT - show account-specific data
+            $result = array(
+                'is_token' => false,
+                'owner' => $rpc_data['owner'],
+                'executable' => $rpc_data['executable'],
+                'data_size' => $rpc_data['dataSize'],
+                'rent_epoch' => $rpc_data['rentEpoch'],
+                'account_type' => 'Wallet/Account',
+                'success' => true,
+                'data_source' => 'rpc_account'
+            );
+
+        } else {
+            // RPC failed - return error
+            $result = array(
+                'is_token' => false,
+                'owner' => 'RPC Error',
+                'executable' => 'Unknown',
+                'data_size' => 'Unknown',
+                'rent_epoch' => 'Unknown',
+                'success' => false,
+                'error' => $rpc_data['error'] ?? 'RPC call failed',
+                'data_source' => 'error'
+            );
+        }
+
+        error_log( "✅ ACCOUNT RESULT FOR {$address}: " . json_encode($result) );
+        return $result;
+
+    } catch ( Exception $e ) {
+        error_log( "❌ ACCOUNT ERROR FOR {$address}: " . $e->getMessage() );
+        return array(
+            'is_token' => false,
+            'owner' => 'Error',
+            'executable' => 'Error',
+            'data_size' => 'Error',
+            'rent_epoch' => 'Error',
+            'success' => false,
+            'error' => $e->getMessage(),
+            'data_source' => 'exception'
+        );
+    }
+}
+
+/**
+ * 🔥 GET BASIC RPC ACCOUNT INFO
+ */
+function solanawp_get_basic_rpc_account_info( $address ) {
+    try {
+        $rpcUrl = get_option( 'solanawp_solana_rpc_url', 'https://api.mainnet-beta.solana.com' );
+
+        $requestBody = array(
+            'jsonrpc' => '2.0',
+            'id' => 1,
+            'method' => 'getAccountInfo',
+            'params' => array(
+                $address,
+                array(
+                    'encoding' => 'base64',
+                    'commitment' => 'confirmed'
+                ),
+            ),
+        );
+
+        $response = solanawp_make_rpc_request( $rpcUrl, $requestBody );
+
+        if ( isset( $response['result']['value'] ) && $response['result']['value'] !== null ) {
+            $accountInfo = $response['result']['value'];
+
+            return array(
+                'owner' => $accountInfo['owner'] ?? 'Unknown',
+                'executable' => $accountInfo['executable'] ? 'Yes' : 'No',
+                'data_size' => $accountInfo['data']['space'] ?? 'Unknown',
+                'rent_epoch' => $accountInfo['rentEpoch'] ?? 'Unknown',
+                'lamports' => $accountInfo['lamports'] ?? 0
+            );
+        }
+
+        return array(
+            'owner' => 'Unknown',
+            'executable' => 'Unknown',
+            'data_size' => 'Unknown',
+            'rent_epoch' => 'Unknown',
+            'lamports' => 0
+        );
+
+    } catch ( Exception $e ) {
+        error_log( 'Basic RPC account info error: ' . $e->getMessage() );
+        return array(
+            'owner' => 'Error',
+            'executable' => 'Unknown',
+            'data_size' => 'Unknown',
+            'rent_epoch' => 'Unknown',
+            'lamports' => 0
+        );
+    }
+}
+
+/**
+ * 🔥 MAKE RPC REQUEST HELPER FUNCTION
  */
 function solanawp_make_rpc_request( $rpcUrl, $requestBody ) {
     $jsonRequestBody = json_encode( $requestBody );
@@ -776,7 +795,7 @@ function solanawp_make_rpc_request( $rpcUrl, $requestBody ) {
 }
 
 /**
- * 🔥 NEW: Extract Token Analytics from DexScreener Data
+ * 🔥 EXTRACT TOKEN ANALYTICS FROM DEXSCREENER DATA
  */
 function solanawp_extract_token_analytics( $dexscreener_data ) {
     if ( !$dexscreener_data ) {
@@ -823,7 +842,7 @@ function solanawp_extract_token_analytics( $dexscreener_data ) {
 }
 
 /**
- * 🔥 Enhanced: Fetch DexScreener Data (PRIMARY SOURCE)
+ * 🔥 ENHANCED: FETCH DEXSCREENER DATA (PRIMARY SOURCE)
  */
 function solanawp_fetch_dexscreener_data( $address ) {
     try {
@@ -851,7 +870,7 @@ function solanawp_fetch_dexscreener_data( $address ) {
 }
 
 /**
- * 1️⃣ Address Validation (Fixed field names for frontend compatibility)
+ * 1️⃣ ADDRESS VALIDATION (Fixed field names for frontend compatibility)
  */
 function solanawp_fetch_validation_data( $address ) {
     // Remove whitespace
@@ -994,7 +1013,7 @@ function solanawp_check_dexscreener_token( $address ) {
 }
 
 /**
- * 2️⃣ Balance & Holdings (Fixed field names for frontend compatibility)
+ * 2️⃣ BALANCE & HOLDINGS (Fixed field names for frontend compatibility)
  */
 function solanawp_fetch_balance_data( $address, $dexscreener_data = null ) {
     $balance_data = array(
@@ -1069,8 +1088,7 @@ function solanawp_fetch_balance_data( $address, $dexscreener_data = null ) {
 }
 
 /**
- * 3️⃣ ENHANCED Transaction Analysis - DEXSCREENER ONLY FOR FIRST ACTIVITY
- * Completely removes Helius API from first activity date calculation
+ * 3️⃣ ENHANCED TRANSACTION ANALYSIS - DEXSCREENER ONLY FOR FIRST ACTIVITY
  */
 function solanawp_fetch_transaction_data( $address, $dexscreener_data = null ) {
     $transaction_data = array(
@@ -1168,7 +1186,7 @@ function solanawp_fetch_transaction_data( $address, $dexscreener_data = null ) {
 }
 
 /**
- * 5️⃣ Security Analysis (Fixed field names for frontend compatibility)
+ * 5️⃣ SECURITY ANALYSIS (Fixed field names for frontend compatibility)
  */
 function solanawp_fetch_security_data( $address, $dexscreener_data = null ) {
     $security_data = array(
@@ -1275,7 +1293,7 @@ function solanawp_fetch_security_data( $address, $dexscreener_data = null ) {
 }
 
 /**
- * 7️⃣ Website & Social (Fixed field names for frontend compatibility)
+ * 7️⃣ WEBSITE & SOCIAL (Fixed field names for frontend compatibility)
  */
 function solanawp_fetch_social_data( $address, $dexscreener_data = null ) {
     $social_data = array(
@@ -1304,7 +1322,7 @@ function solanawp_fetch_social_data( $address, $dexscreener_data = null ) {
     try {
         // 🥇 PRIMARY: DexScreener social and website data
         if ( $dexscreener_data ) {
-            // INSTRUCTION 3: Extract websites and get registration details via WHOIS
+            // Extract websites and get registration details via WHOIS
             if ( isset( $dexscreener_data['info']['websites'] ) && !empty( $dexscreener_data['info']['websites'] ) ) {
                 $primary_website = $dexscreener_data['info']['websites'][0]['url'] ?? $dexscreener_data['info']['websites'][0];
                 if ( is_string( $primary_website ) ) {
@@ -1331,7 +1349,7 @@ function solanawp_fetch_social_data( $address, $dexscreener_data = null ) {
                 }
             }
 
-            // INSTRUCTION 2: Extract social links from DexScreener API socials array
+            // Extract social links from DexScreener API socials array
             if ( isset( $dexscreener_data['info']['socials'] ) && !empty( $dexscreener_data['info']['socials'] ) ) {
                 foreach ( $dexscreener_data['info']['socials'] as $social ) {
                     $type = strtolower( $social['type'] ?? '' );
@@ -1339,24 +1357,21 @@ function solanawp_fetch_social_data( $address, $dexscreener_data = null ) {
 
                     switch ( $type ) {
                         case 'twitter':
-                            // FIXED: Use full URL for Twitter instead of parsing
+                            // Use full URL for Twitter instead of parsing
                             $social_data['twitterInfo']['handle'] = $url;
                             $social_data['twitterInfo']['verified'] = false;
                             $social_data['twitterInfo']['raw_url'] = $url;
                             break;
                         case 'telegram':
-                            // UNCHANGED: Keep existing extraction logic
                             $social_data['telegramInfo']['channel'] = solanawp_extract_telegram_handle( $url );
                             $social_data['telegramInfo']['raw_url'] = $url;
                             break;
                         case 'discord':
-                            // UNCHANGED: Keep existing extraction logic
                             $social_data['discordInfo']['invite'] = solanawp_extract_discord_invite( $url );
                             $social_data['discordInfo']['serverName'] = 'Discord Server';
                             $social_data['discordInfo']['raw_url'] = $url;
                             break;
                         case 'github':
-                            // UNCHANGED: Keep existing extraction logic
                             $social_data['githubInfo']['repository'] = solanawp_extract_github_handle( $url );
                             $social_data['githubInfo']['organization'] = solanawp_extract_github_org( $url ) ?? 'Unknown';
                             $social_data['githubInfo']['raw_url'] = $url;
@@ -1434,8 +1449,7 @@ function solanawp_fetch_social_data( $address, $dexscreener_data = null ) {
 }
 
 /**
- * FIXED: Get WHOIS registration data using hannisolwhois.vercel.app
- * Updated to use correct JSON structure: response['domain']['created_date']
+ * Get WHOIS registration data using hannisolwhois.vercel.app
  */
 function solanawp_get_whois_registration_data( $domain ) {
     try {
@@ -1450,7 +1464,7 @@ function solanawp_get_whois_registration_data( $domain ) {
             );
         }
 
-        // FIXED: Extract creation date from correct path: domain.created_date
+        // Extract creation date from correct path: domain.created_date
         $creation_date = null;
         if ( isset( $response['domain']['created_date'] ) && !empty( $response['domain']['created_date'] ) ) {
             $full_datetime = $response['domain']['created_date']; // "2023-04-26T18:42:30Z"
@@ -1600,7 +1614,7 @@ function solanawp_calculate_final_scores( $validation, $balance, $transactions, 
     );
 }
 
-// Include all the helper functions from the original file
+// HELPER FUNCTIONS
 function solanawp_extract_telegram_handle( $url ) {
     if ( preg_match( '/t\.me\/([a-zA-Z0-9_]+)/', $url, $matches ) ) {
         return '@' . $matches[1];
@@ -1794,18 +1808,10 @@ function solanawp_lamports_to_sol( $lamports ) {
 }
 
 function solanawp_get_cache( $key ) {
-    if ( ! get_option( 'solanawp_enable_caching', true ) ) {
-        return false;
-    }
-
-    return get_transient( 'solanawp_' . md5( $key ) );
+    return false; // NO CACHING
 }
 
 function solanawp_set_cache( $key, $data, $expiration = 300 ) {
-    if ( ! get_option( 'solanawp_enable_caching', true ) ) {
-        return false;
-    }
-
-    return set_transient( 'solanawp_' . md5( $key ), $data, $expiration );
+    return false; // NO CACHING
 }
 ?>

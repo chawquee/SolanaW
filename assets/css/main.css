@@ -697,7 +697,7 @@ a:hover,
 .clear:before, .clear:after, .entry-content:before, .entry-content:after, .comment-content:before, .comment-content:after, .site-header:before, .site-header:after, .site-content:before, .site-content:after, .site-footer:before, .site-footer:after { content: ""; display: table; table-layout: fixed; }
 .clear:after, .entry-content:after, .comment-content:after, .site-header:after, .site-content:after, .site-footer:after { clear: both; }
 
-//* === WEBSITE & SOCIAL ACCOUNTS SECTION STYLES === */
+/* === WEBSITE & SOCIAL ACCOUNTS SECTION STYLES === */
 .website-social-section {margin-bottom: 24px;}
 .website-social-section:last-child {margin-bottom: 0;}
 
@@ -863,97 +863,11 @@ a:hover,
 }
 
 /* =============================================================================
-   Solana Analyzer - Rug Pull Analysis Styling
-   Add this section at the END of your main.css file
-============================================================================= */
-
-/* Rug Pull Risk Analysis Item Styling */
-.warning-item {
-    color: #ef4444;
-    font-weight: 500;
-    padding: 2px 0;
-}
-
-.safe-item {
-    color: #10b981;
-    font-weight: 500;
-    padding: 2px 0;
-}
-
-.neutral-item {
-    color: #6b7280;
-    padding: 2px 0;
-}
-
-/* Token Distribution Styling */
-.distribution-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 6px;
-    padding: 4px 0;
-}
-
-.dist-color {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-
-.dist-label {
-    flex-grow: 1;
-    font-size: 14px;
-}
-
-.dist-percentage {
-    margin-left: auto;
-    font-weight: 600;
-    font-size: 14px;
-    color: #374151;
-}
-
-/* Improve risk factor lists */
-#rugPullWarningsList li,
-#rugPullSafeIndicatorsList li {
-    margin-bottom: 4px;
-    padding: 2px 0;
-    border-left: 3px solid transparent;
-    padding-left: 8px;
-}
-
-#rugPullWarningsList .warning-item {
-    border-left-color: #ef4444;
-    background-color: rgba(239, 68, 68, 0.05);
-}
-
-#rugPullSafeIndicatorsList .safe-item {
-    border-left-color: #10b981;
-    background-color: rgba(16, 185, 129, 0.05);
-}
+   🔥 ENHANCED AUTHORITY DISPLAY STYLING - Authority Display Enhancement
+   Applied from paste.txt updates
+   ============================================================================= */
 
 /* Authority Status Styling */
-.authority-status {
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 12px;
-    font-weight: 500;
-}
-
-.authority-active {
-    background-color: rgba(245, 158, 11, 0.1);
-    color: #f59e0b;
-}
-
-.authority-renounced {
-    background-color: rgba(16, 185, 129, 0.1);
-    color: #10b981;
-}
-
-.authority-unknown {
-    background-color: rgba(107, 114, 128, 0.1);
-    color: #6b7280;
-}
 .authority-status {
     padding: 4px 8px;
     border-radius: 6px;
@@ -1302,55 +1216,4 @@ a:hover,
     .safe-item:hover {
         transform: none;
     }
-}
-// 🔥 ADD CSS for enhanced authority display (add to your stylesheet)
-const additionalCSS = `
-.authority-active {
-    font-weight: 600;
-    background-color: rgba(239, 68, 68, 0.1);
-    padding: 2px 6px;
-    border-radius: 4px;
-}
-
-.authority-renounced {
-    font-weight: 600;
-    background-color: rgba(16, 185, 129, 0.1);
-    padding: 2px 6px;
-    border-radius: 4px;
-}
-
-.authority-unknown {
-    font-weight: 500;
-    background-color: rgba(245, 158, 11, 0.1);
-    padding: 2px 6px;
-    border-radius: 4px;
-}
-
-.copied-feedback {
-    background-color: rgba(16, 185, 129, 0.2) !important;
-    transition: background-color 0.3s ease;
-}
-
-.warning-item {
-    color: #dc2626;
-    margin-bottom: 4px;
-}
-
-.safe-item {
-    color: #059669;
-    margin-bottom: 4px;
-}
-
-.neutral-item {
-    color: #6b7280;
-    margin-bottom: 4px;
-}
-;
-
-// Inject CSS if not already present
-   if (!document.getElementById('solanawp-authority-styles')) {
-    const style = document.createElement('style');
-style.id = 'solanawp-authority-styles';
-style.textContent = additionalCSS;
-document.head.appendChild(style);
 }
