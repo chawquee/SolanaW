@@ -1,11 +1,14 @@
 /**
- * SolanaWP Main JavaScript File - ENHANCED WITH ALL 3 PHASES
+ * SolanaWP Main JavaScript File - ENHANCED WITH NEW RUG PULL LAYOUT & RUGCHECK API
  * File location: assets/js/main.js
  *
  * PHASE 1: Enhanced Account Details
- * PHASE 2: Authority Risk Analysis
- * PHASE 3: Token Distribution Analysis
- * Version: COMPLETE ROADMAP IMPLEMENTATION
+ * PHASE 2: Authority Risk Analysis (RugCheck API)
+ * PHASE 3: Token Distribution Analysis (Alchemy API - existing)
+ * NEW LAYOUT: Updated Rug Pull Risk Layout Structure with RugCheck integration
+ * REMOVED: Security Analysis section (deleted)
+ * UPDATED: Added Top Holders support from RugCheck API topHolders count
+ * Version: ENHANCED LAYOUT IMPLEMENTATION WITH RUGCHECK API + ALL NEW UPDATES
  */
 
 (function($) { // Use jQuery no-conflict wrapper
@@ -37,8 +40,8 @@
                         if (!$(this).children(':not(svg)').length) {
                             $(this).text('-');
                         }
-                    } else if (id === 'recentTransactionsList' || id === 'rugTokenDistribution' || id === 'communityCardContent') {
-                        $(this).empty().append('<p class="loading-initial-data">' + (typeof solanaWP_ajax_object !== 'undefined' ? solanaWP_ajax_object.loading_text || 'Loading...' : 'Loading...') + '</p>');
+                    } else if (id === 'recentTransactionsList' || id === 'rugTokenDistribution' || id === 'keyRiskIndicators' || id === 'creatorTokensContainer') {
+                        $(this).empty().append('<div class="loading-placeholder">' + (typeof solanaWP_ajax_object !== 'undefined' ? solanaWP_ajax_object.loading_text || 'Loading...' : 'Loading...') + '</div>');
                     }
                 }
             });
@@ -141,12 +144,10 @@
             console.log('Updating enhanced account details with:', accountData);
 
             try {
-                // PHASE 1: Update the 4 required fields from roadmap
                 $('#accOwner').text(accountData.owner || 'Unknown');
                 $('#accExecutable').text(accountData.executable || 'Unknown');
                 $('#accDataSize').text(accountData.data_size ? accountData.data_size + ' bytes' : 'Unknown');
                 $('#accRentEpoch').text(accountData.rent_epoch || 'Unknown');
-                $('#accAccountType').text(accountData.account_type || 'Unknown');
 
                 // Update metric labels based on account type
                 if (accountData.is_token) {
@@ -190,113 +191,68 @@
         }
 
         /**
-         * PHASE 2: Authority Analysis Update
+         * UPDATED: Token Distribution Analysis with RugCheck API totalHolders and topHoldersCount
+         * Keep existing Alchemy logic for Top 1, Top 5, Top 20 holders and Holder Distribution
          */
-        function updateAuthorityAnalysisUI(authorityData) {
-            if (!authorityData) {
-                console.log('No authority data available');
-                return;
-            }
-
-            console.log('Updating authority analysis with:', authorityData);
+        function updateTokenDistributionUI(distributionData, rugCheckData) {
+            console.log('Updating token distribution with distribution data:', distributionData);
+            console.log('Updating token distribution with RugCheck data:', rugCheckData);
 
             try {
-                // Update Mint Authority
-                if (authorityData.mint_authority) {
-                    const mintAuth = authorityData.mint_authority;
-
-                    const mintIcon = mintAuth.status === 'SAFE' ? '✅' : '🚨';
-                    $('#mintAuthorityIcon').text(mintIcon);
-
-                    $('#mintAuthorityText')
-                        .text(mintAuth.text || 'Unknown')
-                        .css('color', mintAuth.color || '#6b7280');
-
-                    $('#mintAuthorityExplanation').text(mintAuth.explanation || 'No explanation available');
-
-                    const $mintContainer = $('#mintAuthorityStatus');
-                    $mintContainer.removeClass('risk-low risk-medium risk-high');
-                    if (mintAuth.status === 'SAFE') {
-                        $mintContainer.addClass('risk-low');
-                    } else if (mintAuth.status === 'DANGER') {
-                        $mintContainer.addClass('risk-high');
-                    }
+                // NEW: Update Total Holders from RugCheck API
+                if (rugCheckData && typeof rugCheckData.totalHolders !== 'undefined') {
+                    $('#totalHoldersCount').text(rugCheckData.totalHolders || '0');
+                    console.log('Updated Total Holders from RugCheck:', rugCheckData.totalHolders);
+                } else {
+                    $('#totalHoldersCount').text('-');
                 }
 
-                // Update Freeze Authority
-                if (authorityData.freeze_authority) {
-                    const freezeAuth = authorityData.freeze_authority;
-
-                    const freezeIcon = freezeAuth.status === 'SAFE' ? '✅' : '🚨';
-                    $('#freezeAuthorityIcon').text(freezeIcon);
-
-                    $('#freezeAuthorityText')
-                        .text(freezeAuth.text || 'Unknown')
-                        .css('color', freezeAuth.color || '#6b7280');
-
-                    $('#freezeAuthorityExplanation').text(freezeAuth.explanation || 'No explanation available');
-
-                    const $freezeContainer = $('#freezeAuthorityStatus');
-                    $freezeContainer.removeClass('risk-low risk-medium risk-high');
-                    if (freezeAuth.status === 'SAFE') {
-                        $freezeContainer.addClass('risk-low');
-                    } else if (freezeAuth.status === 'DANGER') {
-                        $freezeContainer.addClass('risk-high');
-                    }
+                // NEW: Update Top Holders from RugCheck API topHolders array count
+                if (rugCheckData && typeof rugCheckData.topHoldersCount !== 'undefined') {
+                    $('#topHoldersCount').text(rugCheckData.topHoldersCount || '0');
+                    console.log('Updated Top Holders count from RugCheck:', rugCheckData.topHoldersCount);
+                } else {
+                    $('#topHoldersCount').text('-');
                 }
 
-                console.log('Authority analysis updated successfully');
+                // EXISTING: Update concentration metrics from Alchemy API (Keep existing IDs)
+                if (distributionData) {
+                    $('#concentrationTop1').text(distributionData.top_1_percentage ? distributionData.top_1_percentage + '%' : '-');
+                    $('#concentrationTop5').text(distributionData.top_5_percentage ? distributionData.top_5_percentage + '%' : '-');
+                    $('#concentrationTop20').text(distributionData.top_20_percentage ? distributionData.top_20_percentage + '%' : '-');
 
-            } catch (error) {
-                console.error('Error updating authority analysis:', error);
-            }
-        }
+                    // Update risk assessment
+                    if (distributionData.risk_assessment) {
+                        const riskAssessment = distributionData.risk_assessment;
 
-        /**
-         * PHASE 3: Token Distribution Analysis Update
-         */
-        function updateTokenDistributionUI(distributionData) {
-            if (!distributionData) {
-                console.log('No distribution data available');
-                return;
-            }
+                        // Update risk level text and color
+                        $('#distributionRiskLevel')
+                            .text(riskAssessment.level || 'Unknown')
+                            .css('color', riskAssessment.color || '#6b7280');
 
-            console.log('Updating token distribution with:', distributionData);
+                        // Update explanation
+                        $('#distributionRiskExplanation').text(riskAssessment.explanation || 'No risk assessment available');
 
-            try {
-                // Update concentration metrics
-                $('#top1HolderPercentage').text(distributionData.top_1_percentage ? distributionData.top_1_percentage + '%' : '-');
-                $('#top5HoldersPercentage').text(distributionData.top_5_percentage ? distributionData.top_5_percentage + '%' : '-');
-                $('#top20HoldersPercentage').text(distributionData.top_20_percentage ? distributionData.top_20_percentage + '%' : '-');
+                        // Apply risk styling to container
+                        const $riskContainer = $('#distributionRiskContainer');
+                        $riskContainer.removeClass('risk-low risk-medium risk-high');
 
-                // Update risk assessment
-                if (distributionData.risk_assessment) {
-                    const riskAssessment = distributionData.risk_assessment;
-
-                    $('#distributionRiskText')
-                        .text(riskAssessment.level || 'Unknown')
-                        .css('color', riskAssessment.color || '#6b7280');
-
-                    $('#distributionRiskExplanation').text(riskAssessment.explanation || 'No risk assessment available');
-
-                    const $riskContainer = $('#distributionRiskAssessment');
-                    $riskContainer.removeClass('risk-low risk-medium risk-high');
-
-                    if (riskAssessment.level && riskAssessment.level.includes('LOW RISK')) {
-                        $riskContainer.addClass('risk-low');
-                        $('#distributionRiskIcon').text('✅');
-                    } else if (riskAssessment.level && riskAssessment.level.includes('MEDIUM RISK')) {
-                        $riskContainer.addClass('risk-medium');
-                        $('#distributionRiskIcon').text('⚠️');
-                    } else if (riskAssessment.level && riskAssessment.level.includes('HIGH RISK')) {
-                        $riskContainer.addClass('risk-high');
-                        $('#distributionRiskIcon').text('🚨');
+                        if (riskAssessment.level && riskAssessment.level.includes('LOW RISK')) {
+                            $riskContainer.addClass('risk-low');
+                            $('#distributionRiskIcon').text('✅');
+                        } else if (riskAssessment.level && riskAssessment.level.includes('MEDIUM RISK')) {
+                            $riskContainer.addClass('risk-medium');
+                            $('#distributionRiskIcon').text('⚠️');
+                        } else if (riskAssessment.level && riskAssessment.level.includes('HIGH RISK')) {
+                            $riskContainer.addClass('risk-high');
+                            $('#distributionRiskIcon').text('🚨');
+                        }
                     }
-                }
 
-                // Update largest holders list if available
-                if (distributionData.largest_holders && distributionData.largest_holders.length > 0) {
-                    updateLargestHoldersList(distributionData.largest_holders);
+                    // Update largest holders list if available (Keep existing logic)
+                    if (distributionData.largest_holders && distributionData.largest_holders.length > 0) {
+                        updateLargestHoldersList(distributionData.largest_holders);
+                    }
                 }
 
                 console.log('Token distribution updated successfully');
@@ -307,7 +263,7 @@
         }
 
         /**
-         * Helper function to update largest holders list
+         * Helper function to update largest holders list (Keep existing logic)
          */
         function updateLargestHoldersList(holders) {
             const $distributionContainer = $('#rugTokenDistribution');
@@ -328,6 +284,502 @@
                     $distributionContainer.append($holderItem);
                 }
             });
+        }
+
+        /**
+         * ENHANCED: Update RugCheck Data with new layout and all new logic
+         */
+        function updateRugCheckAnalysisUI(rugCheckData) {
+            if (!rugCheckData) {
+                console.log('No RugCheck data available');
+                return;
+            }
+
+            console.log('Updating RugCheck analysis with enhanced layout:', rugCheckData);
+
+            try {
+                // Enhanced Risk Overview Section with all new logic
+                updateRiskOverviewSection(rugCheckData);
+
+                // Security & Liquidity Analysis
+                updateSecurityLiquiditySection(rugCheckData);
+
+                // Risk Indicators with "No Known Risks" logic
+                updateRiskIndicatorsSection(rugCheckData);
+
+                // Creator History
+                updateCreatorHistorySection(rugCheckData.creatorTokens || []);
+
+                // Enhanced Insider Networks Logic
+                updateInsiderNetworksSection(rugCheckData);
+
+                // Enhanced Lockers Logic
+                updateLockersSection(rugCheckData);
+
+                console.log('Enhanced RugCheck analysis updated successfully');
+
+            } catch (error) {
+                console.error('Error updating enhanced RugCheck analysis:', error);
+            }
+        }
+
+        /**
+         * UPDATED: Update Risk Overview Section with all new color and text logic
+         */
+        function updateRiskOverviewSection(rugCheckData) {
+            // Main Risk Score
+            const score = rugCheckData.score || rugCheckData.score_normalised || 0;
+            $('#rugOverallScore').text(score);
+
+            // NEW: Risks Score Logic - Check if risks array is empty
+            const risks = rugCheckData.risks || [];
+            if (risks.length === 0) {
+                $('#risksScore').text('No Known Risks').css('color', '#10b981'); // Green
+            } else {
+                // Calculate average risk score if risks exist
+                const avgRiskScore = risks.reduce((sum, risk) => sum + (risk.score || 0), 0) / risks.length;
+                $('#risksScore').text(Math.round(avgRiskScore)).css('color', '#dc2626'); // Red
+            }
+
+            // NEW: Risk Level Logic - Check if risks array is empty
+            let riskLevel = 'Unknown';
+            let riskClass = '';
+
+            if (risks.length === 0) {
+                riskLevel = 'No Known Risks';
+                riskClass = 'risk-low';
+                $('#rugRiskLevel').css('color', '#10b981'); // Green
+            } else {
+                // Calculate risk level based on score when risks exist
+                if (score <= 30) {
+                    riskLevel = 'Low Risk';
+                    riskClass = 'risk-low';
+                    $('#rugRiskLevel').css('color', '#10b981'); // Green
+                } else if (score <= 70) {
+                    riskLevel = 'Medium Risk';
+                    riskClass = 'risk-medium';
+                    $('#rugRiskLevel').css('color', '#f59e0b'); // Orange
+                } else {
+                    riskLevel = 'High Risk';
+                    riskClass = 'risk-high';
+                    $('#rugRiskLevel').css('color', '#dc2626'); // Red
+                }
+            }
+
+            const $riskLevelBadge = $('#rugRiskLevel');
+            $riskLevelBadge.text(riskLevel)
+                .removeClass('risk-low risk-medium risk-high')
+                .addClass(riskClass);
+
+            // NEW: Rugged Status Logic - false = "NO" (green), true = "Yes" (red)
+            if (rugCheckData.rugged === true) {
+                $('#ruggedStatus').text('Yes').css('color', '#dc2626'); // Red
+                if (rugCheckData.detectedAt) {
+                    const detectedDate = new Date(rugCheckData.detectedAt);
+                    $('#ruggedDate').text('Detected: ' + detectedDate.toLocaleDateString())
+                        .css('color', '#dc2626');
+                }
+            } else if (rugCheckData.rugged === false) {
+                $('#ruggedStatus').text('NO').css('color', '#10b981'); // Green
+                $('#ruggedDate').text('');
+            } else {
+                $('#ruggedStatus').text('-').css('color', '#6b7280'); // Gray for unknown
+                $('#ruggedDate').text('');
+            }
+
+            // NEW: Mutable Status Logic - true = "Yes" (red), false = "No" (green)
+            if (rugCheckData.tokenMeta?.mutable === true) {
+                $('#mutableStatus').text('Yes').css('color', '#dc2626'); // Red
+            } else if (rugCheckData.tokenMeta?.mutable === false) {
+                $('#mutableStatus').text('No').css('color', '#10b981'); // Green
+            } else {
+                $('#mutableStatus').text('-').css('color', '#6b7280'); // Gray for unknown
+            }
+        }
+
+        /**
+         * NEW: Update Insider Networks Section with enhanced logic
+         */
+        function updateInsiderNetworksSection(rugCheckData) {
+            const $container = $('#insiderNetworksContainer');
+            const $statusSpan = $('#insidersDetectedStatus');
+
+            // Check if there are insider networks
+            const insiderNetworks = rugCheckData.insiderNetworks || [];
+            const graphInsidersDetected = rugCheckData.graphInsidersDetected;
+
+            if (!insiderNetworks.length && (!graphInsidersDetected || graphInsidersDetected === 0)) {
+                // No insider networks found
+                $statusSpan.text('No Insider Networks').css('color', '#10b981'); // Green
+
+                $container.html(`
+                    <div class="no-risk-indicator">
+                        <span class="icon">✅</span>
+                        <span>No insider networks detected</span>
+                    </div>
+                `);
+            } else {
+                // Insider networks found
+                $statusSpan.text('Yes').css('color', '#dc2626'); // Red
+
+                $container.empty();
+
+                insiderNetworks.forEach((network, index) => {
+                    if (index < 3) { // Show max 3 networks
+                        const networkDiv = $('<div class="rug-network-item"></div>');
+
+                        networkDiv.html(`
+                            <p><strong>Network ID:</strong> ${network.id || 'Unknown'}</p>
+                            <p><strong>Network Type:</strong> ${network.type || 'Unknown'}</p>
+                            <p><strong>Number of Accounts:</strong> ${network.size || 0}</p>
+                            <p><strong>Active Accounts:</strong> ${network.activeAccounts || 0}</p>
+                            <p><strong>Amount of Held Tokens:</strong> ${network.tokenAmount ? formatNumber(network.tokenAmount) : '0'}</p>
+                        `);
+
+                        $container.append(networkDiv);
+                    }
+                });
+
+                if (insiderNetworks.length > 3) {
+                    $container.append(`
+                        <div style="color: #6b7280; font-size: 13px; padding: 8px; text-align: center; font-style: italic; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb;">
+                            ... and ${insiderNetworks.length - 3} more networks
+                        </div>
+                    `);
+                }
+            }
+        }
+
+        /**
+         * NEW: Update Lockers Section with enhanced logic
+         */
+        function updateLockersSection(rugCheckData) {
+            const $container = $('#lockersContainer');
+
+            // Check if there are lockers
+            const lockers = rugCheckData.lockers || {};
+            const lockerKeys = Object.keys(lockers);
+
+            if (lockerKeys.length === 0) {
+                // No lockers found
+                $container.html(`
+                    <div class="no-lockers-indicator">
+                        <span class="icon">🚨</span>
+                        <span>No Lockers</span>
+                    </div>
+                `);
+            } else {
+                // Lockers found
+                $container.empty();
+
+                lockerKeys.forEach((key, index) => {
+                    if (index < 2) { // Show max 2 lockers
+                        const locker = lockers[key];
+                        const lockerDiv = $('<div class="rug-locker-item"></div>');
+
+                        const unlockDate = locker.unlockDate ?
+                            (locker.unlockDate === 0 ? 'Never' : new Date(locker.unlockDate * 1000).toLocaleDateString()) :
+                            'Unknown';
+
+                        lockerDiv.html(`
+                            <p><strong>Owner:</strong> ${locker.owner || 'Unknown'}</p>
+                            <p><strong>Program ID:</strong> ${locker.programID || 'Unknown'}</p>
+                            <p><strong>Account of Locked Tokens:</strong> ${locker.tokenAccount || 'Unknown'}</p>
+                            <p><strong>Lock Type:</strong> ${locker.type || 'Unknown'}</p>
+                            <p><strong>Unlocking Date:</strong> ${unlockDate}</p>
+                            <p><strong>Locked Tokens in USDC:</strong> $${locker.usdcLocked ? formatNumber(locker.usdcLocked) : '0'}</p>
+                            ${locker.uri ? `<p><strong>More Info:</strong> <a href="${locker.uri}" target="_blank" style="color: #2563eb;">Link</a></p>` : ''}
+                        `);
+
+                        $container.append(lockerDiv);
+                    }
+                });
+
+                if (lockerKeys.length > 2) {
+                    $container.append(`
+                        <div style="color: #6b7280; font-size: 13px; padding: 8px; text-align: center; font-style: italic; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb;">
+                            ... and ${lockerKeys.length - 2} more lockers
+                        </div>
+                    `);
+                }
+            }
+        }
+
+        /**
+         * Update Security & Liquidity Section
+         */
+        function updateSecurityLiquiditySection(rugCheckData) {
+            // Liquidity Analysis
+            if (rugCheckData.markets && rugCheckData.markets.length > 0) {
+                const market = rugCheckData.markets[0];
+                const liquidityPct = market.lp?.lpLockedPct || 0;
+
+                updateSecurityMetric('liquidity', {
+                    percentage: liquidityPct,
+                    status: liquidityPct >= 80 ? 'High Locked' :
+                        liquidityPct >= 50 ? 'Partially Locked' : 'Low/No Lock',
+                    icon: liquidityPct >= 80 ? '🔒' :
+                        liquidityPct >= 50 ? '⚠️' : '🚨',
+                    color: liquidityPct >= 80 ? '#10b981' :
+                        liquidityPct >= 50 ? '#f59e0b' : '#ef4444',
+                    explanation: liquidityPct >= 80 ? 'High percentage of liquidity is locked, reducing rug pull risk.' :
+                        liquidityPct >= 50 ? 'Some liquidity is locked, but still poses moderate risk.' :
+                            'Most liquidity can be removed at any time - high risk!',
+                    percentageText: `${liquidityPct.toFixed(2)}% locked`
+                });
+            }
+
+            // Mint Authority
+            updateAuthorityMetric('mintAuthority', rugCheckData.mintAuthority, {
+                nullValue: 'Renounced',
+                nullIcon: '✅',
+                nullColor: '#10b981',
+                nullExplanation: 'Mint authority is renounced - no new tokens can be created.',
+                activeValue: 'Active',
+                activeIcon: '🚨',
+                activeColor: '#ef4444',
+                activeExplanation: 'Mint authority is active - creator can mint unlimited tokens!'
+            });
+
+            // Freeze Authority
+            updateAuthorityMetric('freezeAuthority', rugCheckData.freezeAuthority, {
+                nullValue: 'Renounced',
+                nullIcon: '✅',
+                nullColor: '#10b981',
+                nullExplanation: 'Freeze authority is renounced - tokens cannot be frozen.',
+                activeValue: 'Active',
+                activeIcon: '🚨',
+                activeColor: '#ef4444',
+                activeExplanation: 'Freeze authority is active - creator can freeze your tokens!'
+            });
+        }
+
+        /**
+         * Helper function to update security metrics
+         */
+        function updateSecurityMetric(type, data) {
+            const containerId = type + 'Container';
+            const statusId = type + 'Status';
+            const iconId = type + 'Icon';
+            const explanationId = type + 'Explanation';
+            const percentageId = type + 'Percentage';
+
+            $('#' + statusId).text(data.status).css('color', data.color);
+            $('#' + iconId).text(data.icon);
+            $('#' + explanationId).text(data.explanation);
+
+            if (data.percentageText && $('#' + percentageId).length) {
+                $('#' + percentageId).text(data.percentageText);
+            }
+        }
+
+        /**
+         * Helper function to update authority metrics
+         */
+        function updateAuthorityMetric(type, authority, config) {
+            const statusId = type + 'Status';
+            const iconId = type + 'Icon';
+            const explanationId = type + 'Explanation';
+
+            if (authority === null || authority === 'null') {
+                $('#' + statusId).text(config.nullValue).css('color', config.nullColor);
+                $('#' + iconId).text(config.nullIcon);
+                $('#' + explanationId).text(config.nullExplanation);
+            } else if (authority) {
+                $('#' + statusId).text(config.activeValue).css('color', config.activeColor);
+                $('#' + iconId).text(config.activeIcon);
+                $('#' + explanationId).text(config.activeExplanation);
+            } else {
+                $('#' + statusId).text('Unknown').css('color', '#6b7280');
+                $('#' + iconId).text('❓');
+                $('#' + explanationId).text('Unable to determine ' + type.replace(/([A-Z])/g, ' $1').toLowerCase() + ' status.');
+            }
+        }
+
+        /**
+         * UPDATED: Risk Indicators Section - Show "No Known Risks" when risks array is empty
+         */
+        function updateRiskIndicatorsSection(rugCheckData) {
+            const $container = $('#keyRiskIndicators');
+            $container.empty();
+
+            const risks = rugCheckData.risks || [];
+
+            if (risks.length === 0) {
+                $container.append(`
+                    <div class="no-risk-indicator">
+                        <span class="icon">✅</span>
+                        <span>No Known Risks</span>
+                    </div>
+                `);
+                return;
+            }
+
+            risks.forEach(risk => {
+                const riskDiv = $('<div class="risk-indicator-item"></div>');
+
+                let bgColor = '#f9fafb';
+                let textColor = '#374151';
+                let borderColor = '#e5e7eb';
+                let icon = 'ℹ️';
+
+                if (risk.level === 'High' || risk.level === 'CRITICAL') {
+                    bgColor = '#fef2f2';
+                    textColor = '#dc2626';
+                    borderColor = '#fecaca';
+                    icon = '🚨';
+                } else if (risk.level === 'Medium' || risk.level === 'WARNING') {
+                    bgColor = '#fefce8';
+                    textColor = '#d97706';
+                    borderColor = '#fed7aa';
+                    icon = '⚠️';
+                } else if (risk.level === 'Low' || risk.level === 'INFO') {
+                    bgColor = '#f0fdf4';
+                    textColor = '#059669';
+                    borderColor = '#bbf7d0';
+                    icon = '✅';
+                }
+
+                riskDiv.css({
+                    'background': bgColor,
+                    'color': textColor,
+                    'border': '2px solid ' + borderColor,
+                    'border-radius': '12px',
+                    'padding': '16px',
+                    'margin-bottom': '12px',
+                    'transition': 'all 0.3s ease'
+                });
+
+                riskDiv.html(`
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                        <span style="font-size: 18px;">${icon}</span>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 700; font-size: 15px; margin-bottom: 4px;">
+                                ${risk.name || 'Risk Factor'}
+                                ${risk.score ? `<span style="float: right; font-size: 13px; opacity: 0.8;">(${risk.score})</span>` : ''}
+                            </div>
+                            <div style="font-size: 14px; line-height: 1.4; opacity: 0.9;">
+                                ${risk.description || 'No description available'}
+                            </div>
+                            ${risk.value ? `<div style="font-size: 13px; margin-top: 6px; font-weight: 600; opacity: 0.8;">Value: ${risk.value}</div>` : ''}
+                        </div>
+                    </div>
+                `);
+
+                // Add hover effect
+                riskDiv.hover(
+                    function() {
+                        $(this).css('transform', 'translateY(-2px)').css('box-shadow', '0 4px 12px rgba(0, 0, 0, 0.15)');
+                    },
+                    function() {
+                        $(this).css('transform', 'translateY(0)').css('box-shadow', 'none');
+                    }
+                );
+
+                $container.append(riskDiv);
+            });
+        }
+
+        /**
+         * Update Creator History Section with enhanced styling
+         */
+        function updateCreatorHistorySection(creatorTokens) {
+            const $container = $('#creatorTokensContainer');
+            $container.empty();
+
+            if (!creatorTokens || creatorTokens.length === 0) {
+                $container.append(`
+                    <div style="display: flex; align-items: center; gap: 12px; padding: 16px; background: #f9fafb; border-radius: 10px; border: 1px solid #e5e7eb;">
+                        <span style="font-size: 18px;">👤</span>
+                        <span style="color: #6b7280; font-style: italic;">No other tokens found from this creator</span>
+                    </div>
+                `);
+                return;
+            }
+
+            creatorTokens.forEach((token, index) => {
+                if (index < 3) { // Show max 3 tokens
+                    const tokenDiv = $('<div class="creator-token-item"></div>');
+
+                    const createdDate = token.createdAt ? new Date(token.createdAt).toLocaleDateString() : 'Unknown';
+                    const marketCap = token.marketCap ? formatNumber(token.marketCap) : 'Unknown';
+
+                    tokenDiv.css({
+                        'margin-bottom': '12px',
+                        'padding': '16px',
+                        'background': 'white',
+                        'border': '2px solid #e5e7eb',
+                        'border-radius': '12px',
+                        'transition': 'all 0.3s ease'
+                    });
+
+                    tokenDiv.html(`
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                            <span style="font-size: 16px;">🪙</span>
+                            <span style="font-weight: 700; font-size: 15px; color: #374151;">Token #${index + 1}</span>
+                        </div>
+                        <div style="font-size: 13px; color: #6b7280; margin-bottom: 6px; line-height: 1.4;">
+                            <strong>Created:</strong> ${createdDate} | <strong>Market Cap:</strong> $${marketCap}
+                        </div>
+                        <div style="font-size: 11px; color: #9ca3af; word-break: break-all; background: #f9fafb; padding: 6px 8px; border-radius: 6px;">
+                            ${token.mint || 'Unknown Address'}
+                        </div>
+                    `);
+
+                    // Add hover effect
+                    tokenDiv.hover(
+                        function() {
+                            $(this).css({
+                                'border-color': '#3b82f6',
+                                'transform': 'translateY(-1px)',
+                                'box-shadow': '0 4px 12px rgba(59, 130, 246, 0.15)'
+                            });
+                        },
+                        function() {
+                            $(this).css({
+                                'border-color': '#e5e7eb',
+                                'transform': 'translateY(0)',
+                                'box-shadow': 'none'
+                            });
+                        }
+                    );
+
+                    $container.append(tokenDiv);
+                }
+            });
+
+            if (creatorTokens.length > 3) {
+                $container.append(`
+                    <div style="color: #6b7280; font-size: 13px; padding: 8px; text-align: center; font-style: italic; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb;">
+                        ... and ${creatorTokens.length - 3} more tokens
+                    </div>
+                `);
+            }
+        }
+
+        /**
+         * Initialize animated loading states when starting analysis
+         */
+        function initializeLoadingStates() {
+            // Show animated loading for insider networks
+            showAnimatedLoading('insiderNetworksContainer', 'Analyzing insider networks...');
+
+            // Show animated loading for lockers
+            showAnimatedLoading('lockersContainer', 'Loading locker information...');
+
+            // Show animated loading for key risk indicators
+            showAnimatedLoading('keyRiskIndicators', 'Analyzing risk factors...');
+
+            // Show animated loading for creator tokens
+            showAnimatedLoading('creatorTokensContainer', 'Analyzing creator history...');
+        }
+
+        /**
+         * Helper function to show animated loading for specific containers
+         */
+        function showAnimatedLoading(containerId, message) {
+            const $container = $('#' + containerId);
+            $container.html(`<div class="loading-placeholder animated-loading">${message}</div>`);
         }
 
         /**
@@ -390,63 +842,10 @@
         }
 
         /**
-         * Update token distribution chart
-         */
-        function updateTokenDistributionChart(data) {
-            if (!window.tokenDistributionChart || !Array.isArray(data)) {
-                console.log('Chart not available or invalid data');
-                return;
-            }
-
-            console.log('Updating token distribution chart with:', data);
-
-            try {
-                window.tokenDistributionChart.data.labels = data.map(d => d.label || 'Unknown');
-                window.tokenDistributionChart.data.datasets[0].data = data.map(d => d.percentage || 0);
-                window.tokenDistributionChart.data.datasets[0].backgroundColor = data.map(d => d.color || '#6b7280');
-                window.tokenDistributionChart.update();
-
-                console.log('Token distribution chart updated successfully');
-            } catch (error) {
-                console.error('Error updating token distribution chart:', error);
-            }
-        }
-
-        /**
-         * Helper function to update warning signs list
-         */
-        function updateWarningSignsList(warningSigns) {
-            const $warnList = $('#rugPullWarningsList').empty();
-
-            if (warningSigns && warningSigns.length > 0) {
-                warningSigns.forEach(sign => {
-                    $warnList.append(`<li class="warning-item">${sign}</li>`);
-                });
-            } else {
-                $warnList.append('<li class="safe-item">No major warning signs detected</li>');
-            }
-        }
-
-        /**
-         * Helper function to update safe indicators list
-         */
-        function updateSafeIndicatorsList(safeIndicators) {
-            const $safeList = $('#rugPullSafeIndicatorsList').empty();
-
-            if (safeIndicators && safeIndicators.length > 0) {
-                safeIndicators.forEach(indicator => {
-                    $safeList.append(`<li class="safe-item">${indicator}</li>`);
-                });
-            } else {
-                $safeList.append('<li class="neutral-item">Limited data available for safety assessment</li>');
-            }
-        }
-
-        /**
-         * ENHANCED: Main population function with all 3 phases
+         * UPDATED: Main population function with enhanced layout and all new updates
          */
         function populateResults(data) {
-            console.log('SolanaWP: Populating enhanced results with all phases:', data);
+            console.log('SolanaWP: Populating enhanced results with enhanced rug pull layout:', data);
 
             // Clear previous results
             $('.card').hide();
@@ -454,6 +853,9 @@
 
             // Show results section
             $('#resultsSection').show();
+
+            // Initialize animated loading states immediately
+            initializeLoadingStates();
 
             // 1. VALIDATION CARD - Always show first
             if (data.validation) {
@@ -506,133 +908,37 @@
                 $('#transactionAnalysisCard').show();
             }
 
-            // 5. ENHANCED ACCOUNT DETAILS & SECURITY ANALYSIS
-            let accountSecurityVisible = false;
+            // 5. ENHANCED ACCOUNT DETAILS (Keep existing)
+            let accountVisible = false;
 
             // PHASE 1: Enhanced Account Details
             if (data.account) {
                 updateEnhancedAccountDetailsUI(data.account);
-                accountSecurityVisible = true;
+                accountVisible = true;
             }
 
-            // Security Analysis (existing)
-            if (data.security) {
-                const sa = data.security;
-                $('#secRiskLevel').text(sa.risk_level || 'Unknown')
-                    .css('color', sa.risk_level === 'Low' ? '#10b981' :
-                        sa.risk_level === 'High' ? '#ef4444' : '#f59e0b');
-
-                $('#knownScamStatus').text(sa.known_scam.text || 'Unknown')
-                    .css('color', sa.known_scam.isScam ? '#ef4444' : '#10b981');
-
-                $('#suspiciousActivity').text(sa.suspicious_activity.text || 'Unknown')
-                    .css('color', sa.suspicious_activity.found ? '#ef4444' : '#10b981');
-
-                $('#securityAnalysisCard').show();
-                accountSecurityVisible = true;
-            }
-
-            // Show account/security grid if either has data
-            if (accountSecurityVisible) {
+            // Show account grid if has data (REMOVED SECURITY ANALYSIS)
+            if (accountVisible) {
                 $('#accountAndSecurityOuterGrid').css('display', 'grid');
             }
 
-            // 6. ENHANCED RUG PULL RISK CARD (All 3 Phases)
-            if (data.rugpull) {
-                const rp = data.rugpull;
-
-                // Update risk level with proper styling
-                $('#rugRiskLevel').text(rp.risk_level || 'Unknown');
-
-                // Apply color coding based on risk level
-                if (rp.risk_level === 'High') {
-                    $('#rugRiskLevel').css({
-                        'background': '#fee2e2',
-                        'color': '#dc2626'
-                    });
-                } else if (rp.risk_level === 'Medium') {
-                    $('#rugRiskLevel').css({
-                        'background': '#fef3c7',
-                        'color': '#d97706'
-                    });
-                } else if (rp.risk_level === 'Low') {
-                    $('#rugRiskLevel').css({
-                        'background': '#dcfce7',
-                        'color': '#16a34a'
-                    });
+            // 6. ENHANCED RUG PULL RISK CARD with new layout
+            if (data.rugpull || data.rugcheck_data) {
+                // UPDATED: Pass RugCheck data to distribution update for totalHolders and topHoldersCount
+                if (data.distribution_analysis || data.rugcheck_data) {
+                    updateTokenDistributionUI(data.distribution_analysis, data.rugcheck_data);
                 }
 
-                $('#rugOverallScore').text(rp.overall_score || '0');
-                $('#rugVolume24h').text(rp.volume_24h || 'Unknown');
-
-                // PHASE 2: Update authority-specific UI elements
-                if (rp.mint_authority) {
-                    $('#rugMintAuthority')
-                        .text(rp.mint_authority.text || 'Unknown')
-                        .css('color', rp.mint_authority.color || '#6b7280');
+                // Update enhanced RugCheck data
+                if (data.rugcheck_data) {
+                    updateRugCheckAnalysisUI(data.rugcheck_data);
                 }
 
-                if (rp.freeze_authority) {
-                    $('#rugFreezeAuthority')
-                        .text(rp.freeze_authority.text || 'Unknown')
-                        .css('color', rp.freeze_authority.color || '#6b7280');
-                }
-
-                // Update other existing fields
-                if (rp.liquidity_locked) {
-                    $('#rugLiquidityLocked')
-                        .text(rp.liquidity_locked.text || 'Unknown')
-                        .css('color', rp.liquidity_locked.color || '#6b7280');
-                }
-
-                if (rp.ownership_renounced) {
-                    $('#rugOwnershipRenounced')
-                        .text(rp.ownership_renounced.text || 'Unknown')
-                        .css('color', rp.ownership_renounced.color || '#6b7280');
-                }
-
-                // Update warning signs and safe indicators
-                updateWarningSignsList(rp.warning_signs || []);
-                updateSafeIndicatorsList(rp.safe_indicators || []);
-
-                // PHASE 3: Update token distribution chart with real data
-                if (rp.token_distribution && Array.isArray(rp.token_distribution)) {
-                    updateTokenDistributionChart(rp.token_distribution);
-
-                    // Also update the text list
-                    const $distList = $('#rugTokenDistribution').empty();
-                    rp.token_distribution.forEach(item => {
-                        $distList.append(`
-                            <div class="distribution-item">
-                                <span class="dist-color" style="background-color: ${item.color}"></span>
-                                <span class="dist-label">${item.label}</span>
-                                <span class="dist-percentage">${item.percentage}%</span>
-                            </div>
-                        `);
-                    });
-                }
-
-                // PHASE 3: Update concentration metrics if available
-                if (rp.concentration_metrics) {
-                    $('#top1HolderPercentage').text(rp.concentration_metrics.top_1_percentage + '%');
-                    $('#top5HoldersPercentage').text(rp.concentration_metrics.top_5_percentage + '%');
-                    $('#top20HoldersPercentage').text(rp.concentration_metrics.top_20_percentage + '%');
-                }
-
+                // Show the card
                 $('#rugPullRiskCard').show();
             }
 
-            // PHASE 2: Update authority analysis UI (if available)
-            if (data.authority_analysis) {
-                updateAuthorityAnalysisUI(data.authority_analysis);
-            }
-
-            // PHASE 3: Update distribution analysis UI (if available)
-            if (data.distribution_analysis) {
-                updateTokenDistributionUI(data.distribution_analysis);
-            }
-
-            // 7. WEBSITE & SOCIAL ACCOUNTS CARD
+            // 7. WEBSITE & SOCIAL ACCOUNTS CARD (Keep existing)
             if (data.social) {
                 const ws = data.social;
 
@@ -712,45 +1018,6 @@
             }, 500);
         }
 
-        /**
-         * Initialize charts
-         */
-        function initializeCharts() {
-            // Initialize token distribution chart if canvas exists
-            const tokenDistCanvas = document.getElementById('tokenDistributionChart');
-            if (tokenDistCanvas) {
-                const ctx = tokenDistCanvas.getContext('2d');
-                window.tokenDistributionChart = new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: [],
-                        datasets: [{
-                            data: [],
-                            backgroundColor: [],
-                            borderWidth: 2,
-                            borderColor: '#1f2937'
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    color: '#9ca3af',
-                                    padding: 10,
-                                    font: {
-                                        size: 12
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-        }
-
         // ===================================================================
         // EVENT LISTENER FOR THE CHECK BUTTON - ENHANCED API IMPLEMENTATION
         // ===================================================================
@@ -774,7 +1041,7 @@
                 setButtonLoading(true);
                 resetResultAreas();
 
-                console.log('SolanaWP: Making ENHANCED API call for address:', address);
+                console.log('SolanaWP: Making ENHANCED API call with RugCheck integration for address:', address);
 
                 if (typeof solanaWP_ajax_object === 'undefined') {
                     console.error('AJAX Error: solanaWP_ajax_object not found.');
@@ -786,7 +1053,7 @@
                     return;
                 }
 
-                // ENHANCED WORDPRESS AJAX CALL WITH ALL 3 PHASES
+                // ENHANCED WORDPRESS AJAX CALL WITH RUGCHECK API
                 $.ajax({
                     url: solanaWP_ajax_object.ajax_url,
                     type: 'POST',
@@ -798,15 +1065,15 @@
                     dataType: 'json',
                     timeout: 45000,
                     beforeSend: function() {
-                        console.log('SolanaWP: Sending enhanced AJAX request to backend...');
+                        console.log('SolanaWP: Sending enhanced AJAX request with RugCheck integration...');
                     },
                     success: function(response) {
-                        console.log('SolanaWP: Enhanced backend response received:', response);
+                        console.log('SolanaWP: Enhanced backend response with RugCheck received:', response);
 
                         if (response.success && response.data) {
-                            // Use the enhanced data with all 3 phases
+                            // Use the enhanced data with RugCheck integration
                             populateResults(response.data);
-                            console.log('SolanaWP: Enhanced blockchain data populated successfully');
+                            console.log('SolanaWP: Enhanced blockchain data with RugCheck populated successfully');
                         } else {
                             let errorMessage = 'Error processing address.';
                             if (response.data && response.data.message) {
@@ -863,9 +1130,6 @@
             }
         });
 
-        // Initialize charts
-        initializeCharts();
-
         // Add keyboard support
         $solanaAddressInput.on('keypress', function(e) {
             if (e.which === 13) { // Enter key
@@ -880,7 +1144,7 @@
         });
 
         // Debug info
-        console.log('SolanaWP: Enhanced Main JavaScript initialized with ALL 3 PHASES');
+        console.log('SolanaWP: Enhanced Main JavaScript initialized with ENHANCED RUG PULL LAYOUT + RUGCHECK API INTEGRATION + TOP HOLDERS + ALL NEW UPDATES');
         console.log('SolanaWP: AJAX object available:', typeof solanaWP_ajax_object !== 'undefined');
 
         if (typeof solanaWP_ajax_object !== 'undefined') {

@@ -524,6 +524,7 @@ a:hover,
 .text-green { color: #059669 !important; }
 .text-purple { color: #7c3aed !important; }
 .text-yellow { color: #d97706 !important; }
+.text-red { color: #dc2626 !important; }
 
 /* Specific card content styling */
 .validation-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px; }
@@ -553,45 +554,1246 @@ a:hover,
 .recent-transactions-list .tx-amount { font-weight: 600; text-align: right; flex-shrink: 0; }
 .recent-transactions-list .tx-time { font-size: 14px; color: #6b7280; text-align: right; flex-shrink: 0; }
 
-#accountAndSecurityOuterGrid.account-security-grid-wrapper { display: grid; grid-template-columns: 1fr; gap: 24px; margin-bottom: 24px; }
-.account-detail-item, .security-detail-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f1f5f9; font-size: 0.95em; }
-.account-detail-item:last-child, .security-detail-item:last-child { border-bottom: none; }
-.account-detail-item span:first-child, .security-detail-item span:first-child { color: #6b7280; margin-right: 10px; }
-.account-detail-item span:last-child, .security-detail-item span:last-child, .security-detail-item div[id^="sec"] { font-weight: 600; text-align: right; word-break: break-all; }
-.security-detail-item div[id^="sec"] { display: flex; align-items: center; gap: 8px; }
+/* === UPDATED ACCOUNT GRID (REMOVED SECURITY ANALYSIS) === */
+#accountAndSecurityOuterGrid.account-security-grid-wrapper {
+    display: grid;
+    grid-template-columns: 1fr; /* Only one column now since security analysis is removed */
+    gap: 24px;
+    margin-bottom: 24px;
+}
+.account-detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 0.95em;
+}
+.account-detail-item:last-child {
+    border-bottom: none;
+}
+.account-detail-item span:first-child {
+    color: #6b7280;
+    margin-right: 10px;
+}
+.account-detail-item span:last-child {
+    font-weight: 600;
+    text-align: right;
+    word-break: break-all;
+}
 
-#rugTokenDistribution .token-distribution-item > div:first-child {display: flex;justify-content: space-between;margin-bottom: 4px;}
-#rugTokenDistribution .progress-bar-bg {width: 100%;background-color: #e5e7eb;border-radius: 9999px;height: 8px;overflow: hidden;}
-#rugTokenDistribution .dist-bar {height: 8px;border-radius: 9999px;transition: width 0.5s ease-in-out;}
+/* =============================================================================
+   ENHANCED RUG PULL RISK ANALYSIS DASHBOARD STYLES WITH ANIMATED LOADING
+   Copycatting the design from Rug Pull Risk Analysis Dashboard.html
+   ============================================================================= */
 
-.community-stats-grid {display: grid;grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));gap: 16px;margin-bottom: 24px;}
-.community-stat-item {border-radius: 12px;padding: 16px;text-align: center;}
-.community-stat-item > div:nth-child(1) { font-size: 24px; font-weight: bold; }
-.community-stat-item > div:nth-child(2) { color: #6b7280; font-size: 14px; }
-.community-stat-item > div:nth-child(3) { font-size: 12px; }
-.community-stat-item.size { background: #eef2ff; } .community-stat-item.size > div:nth-child(1), .community-stat-item.size > div:nth-child(3) { color: #4f46e5; }
-.community-stat-item.engagement { background: #eff6ff; } .community-stat-item.engagement > div:nth-child(1), .community-stat-item.engagement > div:nth-child(3) { color: #2563eb; }
-.community-stat-item.growth { background: #f0fdf4; } .community-stat-item.growth > div:nth-child(1), .community-stat-item.growth > div:nth-child(3) { color: #059669; }
-.community-stat-item.sentiment { background: #fefce8; } .community-stat-item.sentiment > div:nth-child(1), .community-stat-item.sentiment > div:nth-child(3) { color: #d97706; }
-.community-engagement-grid {display: grid;grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));gap: 16px;margin-bottom: 24px;}
-.engagement-item {background: #f9fafb;border-radius: 8px;padding: 16px;display: flex;align-items: center;gap: 12px;}
-.engagement-icon-wrapper {padding: 8px;border-radius: 50%;flex-shrink: 0;}
-.engagement-item.likes .engagement-icon-wrapper { background: #dbeafe; } .engagement-item.likes .icon { color: #2563eb; }
-.engagement-item.comments .engagement-icon-wrapper { background: #e9d5ff; } .engagement-item.comments .icon { color: #7c3aed; }
-.engagement-item.shares .engagement-icon-wrapper { background: #dcfce7; } .engagement-item.shares .icon { color: #059669; }
-.engagement-item > div:last-child > div:first-child { font-size: 18px; font-weight: 600; }
-.engagement-item > div:last-child > div:last-child { font-size: 14px; color: #6b7280; }
-.sentiment-item {display: flex;justify-content: space-between;align-items: center;background: #f9fafb;border-radius: 8px;padding: 12px;margin-bottom: 8px;}
-.sentiment-item span:first-child { font-weight: 600; } .sentiment-item span:last-child { font-weight: bold; }
-.sentiment-item.positive span:first-child { color: #059669; } .sentiment-item.neutral span:first-child { color: #d97706; } .sentiment-item.negative span:first-child { color: #dc2626; }
-.sentiment-bar-container {width: 100%;height: 6px;background-color: #e5e7eb;border-radius: 3px;overflow: hidden;margin: 8px 0;}
-.sentiment-bar-inner {height: 100%;display: flex;} .sentiment-bar-inner > div {height: 100%;transition: width 0.5s ease-in-out;}
-.community-text-grid {display: grid;grid-template-columns: 1fr;gap: 16px;}
-.community-text-item {background: #f9fafb;border-radius: 8px;padding: 12px;}
-.community-text-item h5 {font-weight: 600;color: #374151;margin-bottom: 8px;font-size: 14px;}
-.community-text-item .mention-item {font-size: 12px;color: #6b7280;margin-bottom: 4px;}
-.keyword-tags-wrapper {display: flex;flex-wrap: wrap;gap: 4px;}
-.keyword-tag {background: #f3f4f6;color: #374151;padding: 4px 8px;border-radius: 4px;font-size: 12px;}
+/* NEW: Animated Loading States */
+@keyframes flash {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.05); opacity: 0.8; }
+}
+
+.animated-loading {
+    animation: flash 1.5s infinite;
+    color: #3b82f6;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    background: #eff6ff;
+    border-radius: 8px;
+    border: 1px solid #bfdbfe;
+}
+
+.animated-loading::before {
+    content: "⏳";
+    animation: pulse 1s infinite;
+}
+
+/* Section Title Icons */
+.section-title-with-icon {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+    margin: 30px 0 20px 0;
+}
+
+.section-title-with-icon .section-icon {
+    font-size: 1.3em;
+    opacity: 0.8;
+}
+
+/* Main Card Container Enhanced */
+#rugPullRiskCard {
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 25px;
+}
+
+#rugPullRiskCard .card-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #e5e5e5;
+}
+
+#rugPullRiskCard .card-header .icon {
+    font-size: 2rem;
+    margin-right: 10px;
+}
+
+#rugPullRiskCard .card-title {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #333;
+    margin: 0;
+}
+
+/* Main Risk Metrics Grid (Top Row) */
+.rug-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.rug-metric-card {
+    background: white;
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    padding: 25px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.rug-metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.rug-metric-value {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #333;
+}
+
+.rug-metric-label {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.rug-metric-sublabel {
+    font-size: 0.8rem;
+    color: #999;
+}
+
+/* Risk Level Styling */
+.rug-metric-card.risk-high {
+    background-color: #fee2e2;
+    color: #dc2626;
+}
+
+.rug-metric-card.risk-high .rug-metric-value {
+    color: #dc2626;
+}
+
+/* Explanations Grid */
+.rug-explanations-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.rug-explanation-box {
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    text-align: center;
+    transition: transform 0.2s ease;
+}
+
+.rug-explanation-box:hover {
+    transform: translateY(-1px);
+}
+
+.rug-explanation-blue {
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+
+.rug-explanation-red {
+    background-color: #fee2e2;
+    color: #dc2626;
+}
+
+.rug-explanation-yellow {
+    background-color: #fef3c7;
+    color: #d97706;
+}
+
+/* Token Distribution Analysis */
+.rug-section-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+    margin: 30px 0 20px 0;
+}
+
+.rug-distribution-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.rug-distribution-card {
+    background: #f9f9f9;
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.rug-distribution-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.rug-distribution-value {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.rug-distribution-label {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+/* Content Cards */
+.rug-content-card {
+    background: white;
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.rug-content-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.rug-card-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+/* Holder Distribution */
+.rug-holder-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.rug-holder-item:last-child {
+    border-bottom: none;
+}
+
+.rug-holder-info {
+    display: flex;
+    align-items: center;
+}
+
+.rug-holder-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.rug-dot-red {
+    background-color: #dc2626;
+}
+
+.rug-dot-yellow {
+    background-color: #d97706;
+}
+
+.rug-dot-green {
+    background-color: #10b981;
+}
+
+.rug-dist-label {
+    font-size: 14px;
+    color: #374151;
+}
+
+.rug-dist-percentage {
+    font-size: 0.8em;
+    color: #6b7280;
+}
+
+/* Risk Warning Box */
+.rug-risk-warning {
+    background-color: #fee2e2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 20px;
+}
+
+.rug-risk-warning h4 {
+    color: #dc2626;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.rug-risk-warning p {
+    color: #7f1d1d;
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+}
+
+.rug-risk-list {
+    list-style: none;
+    padding: 0;
+}
+
+.rug-risk-list li {
+    color: #dc2626;
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+    padding-left: 20px;
+    position: relative;
+}
+
+.rug-risk-list li:before {
+    content: "⚠️";
+    position: absolute;
+    left: 0;
+}
+
+/* Token Items (Creator's Other Tokens) */
+.rug-token-item {
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    transition: border-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.rug-token-item:hover {
+    border-color: #3b82f6;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.rug-token-info h4 {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.rug-token-info p {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.rug-token-stats {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.rug-token-stat {
+    text-align: center;
+}
+
+.rug-token-stat-label {
+    font-size: 0.7rem;
+    color: #666;
+    display: block;
+}
+
+.rug-token-stat-value {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #333;
+}
+
+/* Two Column Layout */
+.rug-two-column {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+    margin-bottom: 25px;
+}
+
+/* Info Boxes */
+.rug-info-box {
+    background-color: #f0f9ff;
+    border: 1px solid #bae6fd;
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 15px;
+}
+
+.rug-info-box h5 {
+    font-weight: 600;
+    color: #0369a1;
+    margin-bottom: 5px;
+}
+
+.rug-info-box p {
+    font-size: 0.8rem;
+    color: #075985;
+    margin-bottom: 8px;
+}
+
+.rug-warning-box {
+    background-color: #fffbeb;
+    border: 1px solid #fed7aa;
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 15px;
+}
+
+.rug-warning-box h5 {
+    font-weight: 600;
+    color: #d97706;
+    margin-bottom: 5px;
+}
+
+.rug-warning-box p {
+    font-size: 0.8rem;
+    color: #92400e;
+}
+
+.rug-danger-box {
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 15px;
+}
+
+.rug-danger-box h5 {
+    font-weight: 600;
+    color: #dc2626;
+    margin-bottom: 5px;
+}
+
+.rug-danger-box p {
+    font-size: 0.8rem;
+    color: #7f1d1d;
+}
+
+/* Authority Items */
+.rug-authority-item {
+    background-color: #f5f5f5;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 10px;
+}
+
+.rug-authority-label {
+    font-weight: 600;
+    color: #333;
+}
+
+.rug-status-locked {
+    color: #16a34a;
+    font-weight: 600;
+}
+
+.rug-status-unlocked {
+    color: #dc2626;
+    font-weight: 600;
+}
+
+.rug-status-neutral {
+    color: #666;
+}
+
+/* Indicators List */
+.rug-indicators-list {
+    list-style: none;
+    padding: 0;
+}
+
+.rug-indicators-list li {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 8px;
+    padding: 6px;
+    border-radius: 6px;
+}
+
+.rug-indicator-positive {
+    background-color: #f0fdf4;
+    border-left: 3px solid #16a34a;
+}
+
+.rug-indicator-negative {
+    background-color: #fef2f2;
+    border-left: 3px solid #dc2626;
+}
+
+.rug-indicator-icon {
+    margin-right: 8px;
+    font-size: 0.9rem;
+}
+
+.rug-indicator-text {
+    flex: 1;
+}
+
+.rug-indicator-title {
+    font-weight: 600;
+    margin-bottom: 2px;
+    font-size: 0.8rem;
+}
+
+.rug-indicator-positive .rug-indicator-title {
+    color: #16a34a;
+}
+
+.rug-indicator-negative .rug-indicator-title {
+    color: #dc2626;
+}
+
+.rug-indicator-description {
+    font-size: 0.7rem;
+    color: #666;
+    line-height: 1.3;
+}
+
+/* Locker Information */
+.rug-locker-item {
+    background: #f9f9f9;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.rug-locker-item p {
+    margin-bottom: 4px;
+    font-size: 0.9rem;
+}
+
+.rug-locker-item strong {
+    color: #333;
+}
+
+.rug-locker-item a {
+    color: #2563eb;
+    text-decoration: none;
+}
+
+.rug-locker-item a:hover {
+    text-decoration: underline;
+}
+
+/* NEW: No Lockers Indicator - RED COLOR */
+.no-lockers-indicator {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px;
+    background: #fee2e2;
+    border: 1px solid #fecaca;
+    border-radius: 10px;
+    color: #dc2626;
+    font-weight: 600;
+}
+
+.no-lockers-indicator .icon {
+    font-size: 18px;
+}
+
+/* NEW: No Risk Indicator - GREEN COLOR */
+.no-risk-indicator {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 10px;
+    color: #10b981;
+    font-weight: 600;
+}
+
+.no-risk-indicator .icon {
+    font-size: 18px;
+}
+
+/* Insider Network Information */
+.rug-network-item {
+    background: #f9f9f9;
+    padding: 12px;
+    border-radius: 8px;
+    margin: 15px 0;
+}
+
+.rug-network-item p {
+    margin-bottom: 4px;
+    font-size: 0.9rem;
+}
+
+/* Legacy Support for Existing IDs */
+#rugOverallScore,
+#rugRiskLevel,
+#ruggedStatus,
+#ruggedDate,
+#mutableStatus,
+#totalHoldersCount,
+#topHoldersCount,
+#concentrationTop1,
+#concentrationTop5,
+#concentrationTop20,
+#rugTokenDistribution,
+#distributionRiskContainer,
+#creatorTokensContainer,
+#keyRiskIndicators,
+#lockersContainer,
+#insiderNetworksContainer,
+#insidersDetectedStatus {
+    /* These IDs are used by JavaScript - keep compatible */
+}
+
+/* Risk Level Classes */
+.risk-high {
+    color: #ef4444 !important;
+    background: #fef2f2 !important;
+    border-color: #fecaca !important;
+}
+
+.risk-medium {
+    color: #f59e0b !important;
+    background: #fffbeb !important;
+    border-color: #fed7aa !important;
+}
+
+.risk-low {
+    color: #10b981 !important;
+    background: #f0fdf4 !important;
+    border-color: #bbf7d0 !important;
+}
+
+/* Loading States */
+.loading-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    color: #6b7280;
+    font-style: italic;
+}
+
+/* Animation for Enhanced Elements */
+@keyframes rugFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.rug-content-card,
+.rug-metric-card {
+    animation: rugFadeIn 0.3s ease-out;
+}
+
+/* Scrollbar Styling for Content Areas */
+#keyRiskIndicators,
+#creatorTokensContainer,
+#lockersContainer,
+#insiderNetworksContainer {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+#keyRiskIndicators::-webkit-scrollbar,
+#creatorTokensContainer::-webkit-scrollbar,
+#lockersContainer::-webkit-scrollbar,
+#insiderNetworksContainer::-webkit-scrollbar {
+    width: 6px;
+}
+
+#keyRiskIndicators::-webkit-scrollbar-track,
+#creatorTokensContainer::-webkit-scrollbar-track,
+#lockersContainer::-webkit-scrollbar-track,
+#insiderNetworksContainer::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+#keyRiskIndicators::-webkit-scrollbar-thumb,
+#creatorTokensContainer::-webkit-scrollbar-thumb,
+#lockersContainer::-webkit-scrollbar-thumb,
+#insiderNetworksContainer::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+#keyRiskIndicators::-webkit-scrollbar-thumb:hover,
+#creatorTokensContainer::-webkit-scrollbar-thumb:hover,
+#lockersContainer::-webkit-scrollbar-thumb:hover,
+#insiderNetworksContainer::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Enhanced Risk Overview Section */
+.risk-overview-section {
+    margin-bottom: 32px;
+    padding: 24px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+}
+
+.risk-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+.risk-metric-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    border: 2px solid #e5e7eb;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.risk-metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.risk-metric-card.primary-score {
+    border-color: #3b82f6;
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+}
+
+.risk-metric-card.risk-level {
+    border-color: #f59e0b;
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+}
+
+.risk-metric-card.rugged-status {
+    border-color: #ef4444;
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+}
+
+.risk-metric-card.mutable-status {
+    border-color: #8b5cf6;
+    background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+}
+
+.metric-icon {
+    font-size: 24px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.metric-content {
+    flex: 1;
+}
+
+.metric-range {
+    font-size: 12px;
+    color: #9ca3af;
+    font-style: italic;
+}
+
+.metric-sublabel {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 4px;
+    font-style: italic;
+}
+
+.risk-level-badge {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #f59e0b;
+}
+
+/* Risk Explanations */
+.risk-explanations {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 16px;
+}
+
+.explanation-card {
+    background: white;
+    padding: 16px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.explanation-card.score-explanation {
+    border-left: 4px solid #3b82f6;
+}
+
+.explanation-card.rugged-explanation {
+    border-left: 4px solid #ef4444;
+}
+
+.explanation-card.mutable-explanation {
+    border-left: 4px solid #f59e0b;
+}
+
+.explanation-icon {
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.explanation-text {
+    font-size: 13px;
+    color: #374151;
+    line-height: 1.4;
+}
+
+/* Main Analysis Grid */
+.main-analysis-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    margin-top: 24px;
+}
+
+.analysis-column {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* Analysis Sections */
+.analysis-section {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.analysis-section:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.section-header {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    padding: 20px 24px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.section-icon {
+    font-size: 20px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.section-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+}
+
+/* Security Metrics */
+.security-metrics {
+    padding: 24px;
+}
+
+.security-metric {
+    padding: 16px;
+    margin-bottom: 16px;
+    background: #f9fafb;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+}
+
+.security-metric:last-child {
+    margin-bottom: 0;
+}
+
+.security-metric:hover {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+    transform: translateY(-1px);
+}
+
+.metric-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.metric-icon-small {
+    font-size: 16px;
+    width: 24px;
+    text-align: center;
+}
+
+.metric-title {
+    font-weight: 600;
+    color: #374151;
+    flex: 1;
+}
+
+.metric-status {
+    font-weight: bold;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 14px;
+    background: #e5e7eb;
+    color: #6b7280;
+}
+
+.metric-description {
+    font-size: 14px;
+    color: #6b7280;
+    font-style: italic;
+    line-height: 1.4;
+}
+
+.metric-percentage {
+    font-size: 13px;
+    color: #059669;
+    font-weight: 500;
+    margin-top: 4px;
+}
+
+/* Risk Indicators */
+.risk-indicators-section .section-header {
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+}
+
+.risk-indicators-container {
+    padding: 24px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.risk-indicators-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.risk-indicators-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.risk-indicators-container::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.risk-indicators-container::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Distribution Section */
+.distribution-section .section-header {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+}
+
+.distribution-metrics {
+    padding: 24px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.distribution-metric {
+    background: #f8fafc;
+    padding: 16px;
+    border-radius: 10px;
+    text-align: center;
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+}
+
+.distribution-metric:hover {
+    background: #f1f5f9;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.distribution-label {
+    font-size: 13px;
+    color: #6b7280;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.distribution-value {
+    font-size: 20px;
+    font-weight: bold;
+    color: #1f2937;
+}
+
+/* Holder Distribution */
+.holder-distribution {
+    padding: 0 24px 24px 24px;
+}
+
+.holder-distribution .distribution-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.holder-distribution .distribution-item:last-child {
+    border-bottom: none;
+}
+
+.dist-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+}
+
+.dist-label {
+    flex-grow: 1;
+    font-size: 14px;
+    color: #374151;
+}
+
+.dist-percentage {
+    margin-left: auto;
+    font-weight: 600;
+    font-size: 14px;
+    color: #374151;
+}
+
+/* Distribution Risk Assessment */
+.distribution-risk-assessment {
+    margin: 0 24px 24px 24px;
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid #bbf7d0;
+    background: #f0fdf4;
+}
+
+.risk-assessment-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.risk-icon {
+    font-size: 16px;
+}
+
+.risk-title {
+    font-weight: 600;
+    color: #374151;
+}
+
+.risk-level {
+    font-weight: bold;
+    color: #10b981;
+}
+
+.risk-explanation {
+    font-size: 14px;
+    color: #6b7280;
+    font-style: italic;
+    line-height: 1.4;
+}
+
+/* Creator Section */
+.creator-section .section-header {
+    background: linear-gradient(135deg, #fefce8 0%, #fef3c7 100%);
+}
+
+.creator-tokens-container {
+    padding: 24px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.creator-tokens-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.creator-tokens-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.creator-tokens-container::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.creator-tokens-container::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Main Risk Metrics (Top Row) - Legacy Support */
+.main-risk-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+/* Concentration Metrics (Token Distribution - Keep Alchemy) */
+.concentration-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.concentration-metrics > div {
+    background: white;
+    padding: 12px;
+    border-radius: 8px;
+    text-align: center;
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+}
+
+.concentration-metrics > div:hover {
+    background: #f3f4f6;
+    transform: translateY(-1px);
+}
+
+/* New Layout Grid (Two Column) */
+.new-layout-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 24px;
+}
+
+/* RugCheck API Components Styling */
+#liquidityContainer,
+#mintAuthorityContainer,
+#freezeAuthorityContainer {
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    margin-bottom: 12px;
+    transition: all 0.3s ease;
+}
+
+#liquidityContainer:hover,
+#mintAuthorityContainer:hover,
+#freezeAuthorityContainer:hover {
+    background: #f9fafb;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Token Distribution (Alchemy API - Keep existing) */
+#rugTokenDistribution .distribution-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+#rugTokenDistribution .distribution-item:last-child {
+    border-bottom: none;
+}
+
+/* Distribution Risk Container */
+#distributionRiskContainer {
+    padding: 16px;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+#distributionRiskContainer:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Animation */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 
 /* =============================================================================
    DEACTIVATED: Community Section - Keep for future updates
@@ -774,6 +1976,32 @@ a:hover,
         max-width: calc(100vw - 80px);
         margin: 40px auto;
     }
+
+    /* Responsive updates for new layout */
+    .main-analysis-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .risk-metrics-grid {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 16px;
+    }
+
+    .distribution-metrics {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .rug-two-column {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .rug-distribution-grid {
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 12px;
+    }
 }
 
 @media (max-width: 768px) {
@@ -808,6 +2036,79 @@ a:hover,
         grid-template-columns: 1fr;
         gap: 12px;
     }
+
+    /* Mobile updates for enhanced rug pull layout */
+    .risk-overview-section {
+        padding: 16px;
+    }
+
+    .risk-metrics-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .risk-explanations {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .rug-explanations-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .main-analysis-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .distribution-metrics {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .risk-metric-card {
+        padding: 16px;
+        gap: 12px;
+    }
+
+    .metric-icon {
+        font-size: 20px;
+        width: 32px;
+        height: 32px;
+    }
+
+    .metric-value {
+        font-size: 24px;
+    }
+
+    .rug-metric-value {
+        font-size: 2rem;
+    }
+
+    .rug-distribution-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .rug-token-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .rug-token-stats {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    #rugPullRiskCard {
+        padding: 20px;
+    }
+
+    #rugPullRiskCard .card-title {
+        font-size: 1.5rem;
+    }
 }
 
 @media (max-width: 480px) {
@@ -818,6 +2119,41 @@ a:hover,
         width: calc(100vw - 20px);
         max-width: calc(100vw - 20px);
         margin: 10px auto;
+    }
+
+    .risk-metric-card {
+        flex-direction: column;
+        text-align: center;
+        gap: 8px;
+    }
+
+    .section-header {
+        padding: 16px 20px;
+    }
+
+    .security-metrics,
+    .distribution-metrics,
+    .risk-indicators-container,
+    .creator-tokens-container {
+        padding: 16px;
+    }
+
+    .rug-metrics-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .rug-distribution-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    #rugPullRiskCard {
+        padding: 16px;
+    }
+
+    .rug-metric-value {
+        font-size: 1.8rem;
     }
 }
 
@@ -855,172 +2191,4 @@ a:hover,
 /* Larger gap above Final Results section */
 #finalResultsCard {
     margin-top: 48px;
-}
-
-/* =============================================================================
-   Solana Analyzer - Rug Pull Analysis Styling (FINAL VERSION)
-   ============================================================================= */
-
-/* Risk Level Indicators */
-.risk-high {
-    color: #EF4444 !important;
-    background: #FEF2F2 !important;
-    border: 1px solid #FECACA !important;
-}
-
-.risk-medium {
-    color: #F59E0B !important;
-    background: #FFFBEB !important;
-    border: 1px solid #FED7AA !important;
-}
-
-.risk-low {
-    color: #10B981 !important;
-    background: #F0FDF4 !important;
-    border: 1px solid #BBF7D0 !important;
-}
-
-.explanation {
-    font-style: italic;
-    font-size: 0.9em;
-    margin-top: 4px;
-    display: block;
-}
-
-/* Factor Items */
-.factor-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 0;
-    border-bottom: 1px solid #f3f4f6;
-}
-
-.factor-item:last-child {
-    border-bottom: none;
-}
-
-/* Warning, Safe, and Neutral Items with Icons */
-.warning-item {
-    color: #ef4444;
-    padding: 4px 0;
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-}
-
-.warning-item:before {
-    content: "⚠️";
-    flex-shrink: 0;
-}
-
-.safe-item {
-    color: #10b981;
-    padding: 4px 0;
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-}
-
-.safe-item:before {
-    content: "✅";
-    flex-shrink: 0;
-}
-
-.neutral-item {
-    color: #6b7280;
-    padding: 4px 0;
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-}
-
-.neutral-item:before {
-    content: "ℹ️";
-    flex-shrink: 0;
-}
-
-/* Token Distribution Styling */
-.distribution-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 6px 0;
-    border-bottom: 1px solid #f3f4f6;
-}
-
-.distribution-item:last-child {
-    border-bottom: none;
-}
-
-.dist-color {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    display: inline-block;
-    margin-right: 8px;
-}
-
-.dist-label {
-    flex-grow: 1;
-    font-size: 14px;
-}
-
-.dist-percentage {
-    margin-left: auto;
-    font-weight: 600;
-    font-size: 14px;
-    color: #374151;
-}
-
-/* Enhanced risk factor lists with background highlighting */
-#rugPullWarningsList li,
-#rugPullSafeIndicatorsList li {
-    margin-bottom: 4px;
-    padding: 2px 0;
-    border-left: 3px solid transparent;
-    padding-left: 8px;
-}
-
-#rugPullWarningsList .warning-item {
-    border-left-color: #ef4444;
-    background-color: rgba(239, 68, 68, 0.05);
-}
-
-#rugPullSafeIndicatorsList .safe-item {
-    border-left-color: #10b981;
-    background-color: rgba(16, 185, 129, 0.05);
-}
-
-/* Authority Status Styling */
-.authority-status {
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 12px;
-    font-weight: 500;
-}
-
-.authority-active {
-    background-color: rgba(245, 158, 11, 0.1);
-    color: #f59e0b;
-}
-
-.authority-renounced {
-    background-color: rgba(16, 185, 129, 0.1);
-    color: #10b981;
-}
-
-.authority-unknown {
-    background-color: rgba(107, 114, 128, 0.1);
-    color: #6b7280;
-}
-
-/* Concentration Metrics Animation */
-.concentration-metrics {
-    animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
 }

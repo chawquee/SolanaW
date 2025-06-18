@@ -1,11 +1,14 @@
 <?php
 /**
- * AJAX Handlers for SolanaWP Theme - ENHANCED WITH ALL 3 PHASES
+ * AJAX Handlers for SolanaWP Theme - ENHANCED WITH RUGCHECK API INTEGRATION
  * PHASE 1: Enhanced Account Details with Alchemy API
- * PHASE 2: Authority Risk Analysis
- * PHASE 3: Token Distribution Analysis
+ * PHASE 2: Authority Risk Analysis with RugCheck API
+ * PHASE 3: Token Distribution Analysis with Alchemy API (existing)
+ * NEW: RugCheck API integration for enhanced rug pull analysis
+ * REMOVED: Security Analysis section (deleted)
  * DexScreener as PRIMARY source, Alchemy/Helius as SECONDARY fallback
  * Enhanced with Token Analytics support and X API integration for detailed Twitter data
+ * UPDATED: Added Top Holders extraction from RugCheck API topHolders array
  *
  * @package SolanaWP
  * @since SolanaWP 1.0.0
@@ -58,9 +61,9 @@ function solanawp_handle_address_check() {
     // 📊 Update rate limiting counter
     set_transient( $rate_limit_key, ($requests + 1), 3600 ); // 1 hour window
 
-    // 🔍 Process the Solana address with ENHANCED functionality
+    // 🔍 Process the Solana address with ENHANCED functionality + RugCheck
     try {
-        $result = solanawp_process_solana_address_enhanced( $address );
+        $result = solanawp_process_solana_address_enhanced_with_rugcheck( $address );
 
         // 📝 Log successful request (optional)
         solanawp_log_request( $address, $user_ip, 'success' );
@@ -121,7 +124,7 @@ function solanawp_handle_save_api_settings() {
 }
 
 // ============================================================================
-// X API INTEGRATION FUNCTIONS
+// X API INTEGRATION FUNCTIONS (Keep existing)
 // ============================================================================
 
 /**
@@ -287,15 +290,16 @@ function solanawp_setup_x_api_credentials() {
 }
 
 // ============================================================================
-// ENHANCED MAIN PROCESSING FUNCTIONS - ALL 3 PHASES
+// ENHANCED MAIN PROCESSING FUNCTIONS - WITH RUGCHECK API INTEGRATION
 // ============================================================================
 
 /**
- * ENHANCED MAIN PROCESSING FUNCTION - ALL 3 PHASES IMPLEMENTATION
+ * ENHANCED MAIN PROCESSING FUNCTION - WITH RUGCHECK API INTEGRATION
+ * REMOVED: Security Analysis (deleted section)
  */
-function solanawp_process_solana_address_enhanced( $address ) {
+function solanawp_process_solana_address_enhanced_with_rugcheck( $address ) {
     // 💾 Check cache first
-    $cache_key = "solana_analysis_enhanced_{$address}";
+    $cache_key = "solana_analysis_rugcheck_enhanced_{$address}";
     $cached_result = solanawp_get_cache( $cache_key );
 
     if ( $cached_result !== false ) {
@@ -309,29 +313,26 @@ function solanawp_process_solana_address_enhanced( $address ) {
     $validation_data = solanawp_fetch_validation_data( $address );
     $balance_data = solanawp_fetch_balance_data( $address, $dexscreener_data );
     $transaction_data = solanawp_fetch_transaction_data( $address, $dexscreener_data );
-    $security_data = solanawp_fetch_security_data( $address, $dexscreener_data );
     $social_data = solanawp_fetch_social_data( $address, $dexscreener_data );
 
-    // NEW: Enhanced data with all 3 phases
+    // PHASE 1: Enhanced Account Data (Alchemy API)
     $enhanced_account_data = solanawp_fetch_enhanced_account_data( $address );
-    $authority_risk_data = solanawp_fetch_authority_risk_data( $address );
+
+    // PHASE 3: Token Distribution Data (Alchemy API - keep existing)
     $distribution_data = solanawp_fetch_token_distribution_data( $address );
 
-    // Enhanced rug pull analysis incorporating all phases
-    $enhanced_rugpull_data = solanawp_fetch_enhanced_rugpull_data(
-        $address,
-        $dexscreener_data,
-        $authority_risk_data,
-        $distribution_data
-    );
+    // NEW: Enhanced RugCheck API Integration
+    $rugcheck_data = solanawp_fetch_enhanced_rugcheck_data( $address );
 
+    // Token Analytics
     $token_analytics = solanawp_extract_token_analytics( $dexscreener_data );
-    $scores_data = solanawp_calculate_final_scores(
+
+    // Calculate scores (REMOVED security_data parameter)
+    $scores_data = solanawp_calculate_final_scores_without_security_enhanced(
         $validation_data,
         $balance_data,
         $transaction_data,
-        $security_data,
-        $enhanced_rugpull_data,
+        $rugcheck_data,
         $social_data
     );
 
@@ -341,14 +342,13 @@ function solanawp_process_solana_address_enhanced( $address ) {
         'balance' => $balance_data,
         'transactions' => $transaction_data,
         'account' => $enhanced_account_data, // PHASE 1: Enhanced account details
-        'security' => $security_data,
-        'rugpull' => $enhanced_rugpull_data, // PHASE 2 & 3: Enhanced rug pull analysis
+        // REMOVED: 'security' => $security_data, (Security Analysis deleted)
+        'rugpull' => $rugcheck_data, // Legacy field for compatibility
+        'rugcheck_data' => $rugcheck_data, // NEW: Enhanced RugCheck API data
         'social' => $social_data,
         'scores' => $scores_data,
         'dexscreener_data' => $dexscreener_data,
         'token_analytics' => $token_analytics,
-        // NEW: Additional data from roadmap phases
-        'authority_analysis' => $authority_risk_data, // PHASE 2: Authority risk data
         'distribution_analysis' => $distribution_data, // PHASE 3: Token distribution data
         'timestamp' => current_time( 'timestamp' )
     );
@@ -360,7 +360,238 @@ function solanawp_process_solana_address_enhanced( $address ) {
 }
 
 /**
- * PHASE 1: Enhanced Account Details with Alchemy API
+ * ENHANCED: Fetch RugCheck Data from api.rugcheck.xyz with enhanced error handling
+ * UPDATED: Added extraction of totalHolders and topHolders count for frontend
+ */
+function solanawp_fetch_enhanced_rugcheck_data( $address ) {
+    try {
+        $rugcheck_url = "https://api.rugcheck.xyz/v1/tokens/{$address}/report";
+
+        error_log( "SolanaWP: Fetching enhanced RugCheck data from: {$rugcheck_url}" );
+
+        $response = wp_remote_get( $rugcheck_url, array(
+            'timeout' => 20, // Increased timeout for enhanced data
+            'headers' => array(
+                'User-Agent' => 'SolanaWP/2.0-Enhanced',
+                'Accept' => 'application/json',
+                'Accept-Encoding' => 'gzip, deflate'
+            )
+        ) );
+
+        if ( is_wp_error( $response ) ) {
+            error_log( 'SolanaWP: Enhanced RugCheck API request failed: ' . $response->get_error_message() );
+            return solanawp_get_enhanced_default_rugcheck_data();
+        }
+
+        $response_code = wp_remote_retrieve_response_code( $response );
+        if ( $response_code !== 200 ) {
+            error_log( "SolanaWP: Enhanced RugCheck API returned HTTP {$response_code}" );
+            return solanawp_get_enhanced_default_rugcheck_data();
+        }
+
+        $body = wp_remote_retrieve_body( $response );
+        $data = json_decode( $body, true );
+
+        if ( json_last_error() !== JSON_ERROR_NONE ) {
+            error_log( 'SolanaWP: Enhanced RugCheck API returned invalid JSON: ' . json_last_error_msg() );
+            return solanawp_get_enhanced_default_rugcheck_data();
+        }
+
+        if ( !$data || !is_array( $data ) ) {
+            error_log( 'SolanaWP: Enhanced RugCheck API returned empty or invalid data' );
+            return solanawp_get_enhanced_default_rugcheck_data();
+        }
+
+        // Enhanced data processing
+        $enhanced_data = solanawp_process_enhanced_rugcheck_data( $data );
+
+        error_log( 'SolanaWP: Successfully fetched and processed enhanced RugCheck data for: ' . $address );
+
+        return $enhanced_data;
+
+    } catch ( Exception $e ) {
+        error_log( 'SolanaWP: Enhanced RugCheck API exception: ' . $e->getMessage() );
+        return solanawp_get_enhanced_default_rugcheck_data();
+    }
+}
+
+/**
+ * Process and enhance RugCheck data for better frontend consumption
+ * UPDATED: Added extraction of totalHolders and topHolders count
+ */
+function solanawp_process_enhanced_rugcheck_data( $raw_data ) {
+    $processed_data = array(
+        'score' => $raw_data['score'] ?? 0,
+        'score_normalised' => $raw_data['score_normalised'] ?? 0,
+        'rugged' => $raw_data['rugged'] ?? false,
+        'detectedAt' => $raw_data['detectedAt'] ?? null,
+        'tokenMeta' => array(
+            'mutable' => $raw_data['tokenMeta']['mutable'] ?? null,
+            'name' => $raw_data['tokenMeta']['name'] ?? 'Unknown',
+            'symbol' => $raw_data['tokenMeta']['symbol'] ?? 'Unknown'
+        ),
+        'mintAuthority' => $raw_data['mintAuthority'] ?? null,
+        'freezeAuthority' => $raw_data['freezeAuthority'] ?? null,
+        'markets' => array(),
+        'risks' => array(),
+        'creatorTokens' => array(),
+        'insiderNetworks' => $raw_data['insiderNetworks'] ?? array(),
+        'lockers' => $raw_data['lockers'] ?? array(),
+        'topHolders' => $raw_data['topHolders'] ?? array(),
+        // NEW: Extract totalHolders and top holders count for frontend distribution display
+        'totalHolders' => $raw_data['totalHolders'] ?? 0,
+        'topHoldersCount' => is_array($raw_data['topHolders'] ?? null) ? count($raw_data['topHolders']) : 0,
+        'data_source' => 'rugcheck_enhanced',
+        'fetched_at' => time()
+    );
+
+    // Enhanced markets processing
+    if ( isset( $raw_data['markets'] ) && is_array( $raw_data['markets'] ) ) {
+        foreach ( $raw_data['markets'] as $market ) {
+            $processed_market = array(
+                'dex' => $market['dex'] ?? 'Unknown',
+                'pairAddress' => $market['pairAddress'] ?? null,
+                'lp' => array(
+                    'lpLockedPct' => $market['lp']['lpLockedPct'] ?? 0,
+                    'lpLocked' => $market['lp']['lpLocked'] ?? false,
+                    'lpBurned' => $market['lp']['lpBurned'] ?? false
+                ),
+                'liquidity' => array(
+                    'usd' => $market['liquidity']['usd'] ?? 0,
+                    'base' => $market['liquidity']['base'] ?? 0,
+                    'quote' => $market['liquidity']['quote'] ?? 0
+                )
+            );
+            $processed_data['markets'][] = $processed_market;
+        }
+    }
+
+    // Enhanced risks processing with categorization
+    if ( isset( $raw_data['risks'] ) && is_array( $raw_data['risks'] ) ) {
+        foreach ( $raw_data['risks'] as $risk ) {
+            $processed_risk = array(
+                'name' => $risk['name'] ?? 'Unknown Risk',
+                'description' => $risk['description'] ?? 'No description available',
+                'level' => solanawp_categorize_risk_level( $risk ),
+                'score' => $risk['score'] ?? null,
+                'value' => $risk['value'] ?? null,
+                'category' => solanawp_categorize_risk_type( $risk['name'] ?? '' )
+            );
+            $processed_data['risks'][] = $processed_risk;
+        }
+    }
+
+    // Enhanced creator tokens processing
+    if ( isset( $raw_data['creatorTokens'] ) && is_array( $raw_data['creatorTokens'] ) ) {
+        foreach ( $raw_data['creatorTokens'] as $token ) {
+            $processed_token = array(
+                'mint' => $token['mint'] ?? null,
+                'name' => $token['tokenMeta']['name'] ?? 'Unknown',
+                'symbol' => $token['tokenMeta']['symbol'] ?? 'Unknown',
+                'createdAt' => $token['createdAt'] ?? null,
+                'marketCap' => $token['marketCap'] ?? 0,
+                'rugged' => $token['rugged'] ?? false,
+                'score' => $token['score'] ?? 0
+            );
+            $processed_data['creatorTokens'][] = $processed_token;
+        }
+
+        // Sort by creation date (newest first)
+        usort( $processed_data['creatorTokens'], function( $a, $b ) {
+            return strtotime( $b['createdAt'] ?? '1970-01-01' ) - strtotime( $a['createdAt'] ?? '1970-01-01' );
+        } );
+    }
+
+    return $processed_data;
+}
+
+/**
+ * Categorize risk level based on risk data
+ */
+function solanawp_categorize_risk_level( $risk ) {
+    $score = $risk['score'] ?? 0;
+    $name = strtolower( $risk['name'] ?? '' );
+
+    // Critical risks
+    if ( strpos( $name, 'rug' ) !== false ||
+        strpos( $name, 'scam' ) !== false ||
+        strpos( $name, 'malicious' ) !== false ||
+        $score >= 80 ) {
+        return 'CRITICAL';
+    }
+
+    // High risks
+    if ( strpos( $name, 'authority' ) !== false ||
+        strpos( $name, 'mint' ) !== false ||
+        strpos( $name, 'freeze' ) !== false ||
+        $score >= 60 ) {
+        return 'High';
+    }
+
+    // Medium risks
+    if ( strpos( $name, 'liquidity' ) !== false ||
+        strpos( $name, 'concentration' ) !== false ||
+        $score >= 30 ) {
+        return 'Medium';
+    }
+
+    // Low risks
+    return 'Low';
+}
+
+/**
+ * Categorize risk type for better organization
+ */
+function solanawp_categorize_risk_type( $risk_name ) {
+    $name = strtolower( $risk_name );
+
+    if ( strpos( $name, 'liquidity' ) !== false ) {
+        return 'liquidity';
+    } elseif ( strpos( $name, 'authority' ) !== false || strpos( $name, 'mint' ) !== false || strpos( $name, 'freeze' ) !== false ) {
+        return 'authority';
+    } elseif ( strpos( $name, 'holder' ) !== false || strpos( $name, 'concentration' ) !== false ) {
+        return 'distribution';
+    } elseif ( strpos( $name, 'creator' ) !== false || strpos( $name, 'insider' ) !== false ) {
+        return 'creator';
+    } else {
+        return 'general';
+    }
+}
+
+/**
+ * Get enhanced default RugCheck data when API fails
+ * UPDATED: Added default values for totalHolders and topHoldersCount
+ */
+function solanawp_get_enhanced_default_rugcheck_data() {
+    return array(
+        'score' => 0,
+        'score_normalised' => 0,
+        'rugged' => false,
+        'detectedAt' => null,
+        'tokenMeta' => array(
+            'mutable' => null,
+            'name' => 'Unknown',
+            'symbol' => 'Unknown'
+        ),
+        'mintAuthority' => 'Unknown',
+        'freezeAuthority' => 'Unknown',
+        'markets' => array(),
+        'risks' => array(),
+        'creatorTokens' => array(),
+        'insiderNetworks' => array(),
+        'lockers' => array(),
+        'topHolders' => array(),
+        // NEW: Default values for new fields
+        'totalHolders' => 0,
+        'topHoldersCount' => 0,
+        'error' => 'Unable to fetch enhanced RugCheck data',
+        'data_source' => 'default_enhanced',
+        'fetched_at' => time()
+    );
+}
+
+/**
+ * PHASE 1: Enhanced Account Details with Alchemy API (Keep existing)
  */
 function solanawp_fetch_enhanced_account_data( $address ) {
     try {
@@ -422,124 +653,7 @@ function solanawp_fetch_enhanced_account_data( $address ) {
 }
 
 /**
- * PHASE 2: Authority Check with Risk Analysis
- */
-function solanawp_fetch_authority_risk_data( $address ) {
-    try {
-        $alchemy_url = 'https://solana-mainnet.g.alchemy.com/v2/7b0nzOAaomkkueSW09CGrMnl1VPMy6vY';
-
-        // API Call #2: getAccountInfo (Parsed)
-        $payload = json_encode( array(
-            'jsonrpc' => '2.0',
-            'id' => 1,
-            'method' => 'getAccountInfo',
-            'params' => array( $address, array( 'encoding' => 'jsonParsed' ) )
-        ) );
-
-        $response = solanawp_make_request( $alchemy_url, array(
-            'method' => 'POST',
-            'headers' => array( 'Content-Type' => 'application/json' ),
-            'body' => $payload,
-            'timeout' => 10
-        ) );
-
-        $authority_data = array(
-            'mint_authority' => array(
-                'value' => null,
-                'status' => 'Unknown',
-                'risk_level' => 'Unknown',
-                'color' => '#6b7280',
-                'explanation' => 'Unable to determine mint authority status'
-            ),
-            'freeze_authority' => array(
-                'value' => null,
-                'status' => 'Unknown',
-                'risk_level' => 'Unknown',
-                'color' => '#6b7280',
-                'explanation' => 'Unable to determine freeze authority status'
-            )
-        );
-
-        if ( isset( $response['result']['value']['data']['parsed']['info'] ) ) {
-            $parsed_info = $response['result']['value']['data']['parsed']['info'];
-
-            // PHASE 2: Mint Authority Analysis
-            if ( isset( $parsed_info['mintAuthority'] ) ) {
-                $mint_auth = $parsed_info['mintAuthority'];
-
-                if ( $mint_auth === null ) {
-                    // ✅ Safe (null) - SAFE
-                    $authority_data['mint_authority'] = array(
-                        'value' => 'null',
-                        'status' => 'SAFE',
-                        'risk_level' => 'Low',
-                        'color' => '#10B981',
-                        'explanation' => 'Token supply is fixed, no new tokens can be created to devalue existing holders'
-                    );
-                } else {
-                    // 🚨 Risk (address) - DANGER
-                    $authority_data['mint_authority'] = array(
-                        'value' => $mint_auth,
-                        'status' => 'DANGER',
-                        'risk_level' => 'High',
-                        'color' => '#EF4444',
-                        'explanation' => 'Creator can mint unlimited new tokens and crash the price instantly'
-                    );
-                }
-            }
-
-            // PHASE 2: Freeze Authority Analysis
-            if ( isset( $parsed_info['freezeAuthority'] ) ) {
-                $freeze_auth = $parsed_info['freezeAuthority'];
-
-                if ( $freeze_auth === null ) {
-                    // ✅ Safe (null) - SAFE
-                    $authority_data['freeze_authority'] = array(
-                        'value' => 'null',
-                        'status' => 'SAFE',
-                        'risk_level' => 'Low',
-                        'color' => '#10B981',
-                        'explanation' => 'Your tokens cannot be frozen or locked by anyone'
-                    );
-                } else {
-                    // 🚨 Risk (address) - DANGER
-                    $authority_data['freeze_authority'] = array(
-                        'value' => $freeze_auth,
-                        'status' => 'DANGER',
-                        'risk_level' => 'High',
-                        'color' => '#EF4444',
-                        'explanation' => 'Creator can freeze your tokens, preventing you from selling or transferring'
-                    );
-                }
-            }
-        }
-
-        return $authority_data;
-
-    } catch ( Exception $e ) {
-        error_log( 'Authority risk analysis error: ' . $e->getMessage() );
-        return array(
-            'mint_authority' => array(
-                'value' => 'Error',
-                'status' => 'Error',
-                'risk_level' => 'Unknown',
-                'color' => '#EF4444',
-                'explanation' => 'Error retrieving mint authority data'
-            ),
-            'freeze_authority' => array(
-                'value' => 'Error',
-                'status' => 'Error',
-                'risk_level' => 'Unknown',
-                'color' => '#EF4444',
-                'explanation' => 'Error retrieving freeze authority data'
-            ),
-            'error' => $e->getMessage()
-        );
-    }
-}
-
-/**
- * PHASE 3: Token Distribution Analysis
+ * PHASE 3: Token Distribution Analysis (Keep existing Alchemy implementation)
  */
 function solanawp_fetch_token_distribution_data( $address ) {
     try {
@@ -685,111 +799,7 @@ function solanawp_fetch_token_distribution_data( $address ) {
 }
 
 /**
- * Enhanced Rug Pull Analysis incorporating Authority and Distribution data
- */
-function solanawp_fetch_enhanced_rugpull_data( $address, $dexscreener_data = null, $authority_data = null, $distribution_data = null ) {
-    // Start with existing rug pull data structure
-    $rugpull_data = solanawp_fetch_rugpull_data( $address, $dexscreener_data );
-
-    // PHASE 2: Integrate Authority Analysis
-    if ( $authority_data ) {
-        $rugpull_data['mint_authority'] = array(
-            'text' => $authority_data['mint_authority']['status'] ?? 'Unknown',
-            'color' => $authority_data['mint_authority']['color'] ?? '#6b7280',
-            'explanation' => $authority_data['mint_authority']['explanation'] ?? 'Unknown'
-        );
-
-        $rugpull_data['freeze_authority'] = array(
-            'text' => $authority_data['freeze_authority']['status'] ?? 'Unknown',
-            'color' => $authority_data['freeze_authority']['color'] ?? '#6b7280',
-            'explanation' => $authority_data['freeze_authority']['explanation'] ?? 'Unknown'
-        );
-
-        // Adjust risk score based on authorities
-        if ( isset( $authority_data['mint_authority']['risk_level'] ) && $authority_data['mint_authority']['risk_level'] === 'High' ) {
-            $rugpull_data['overall_score'] = min( 100, $rugpull_data['overall_score'] + 25 );
-            $rugpull_data['warning_signs'][] = 'Mint authority not renounced - creator can mint new tokens';
-        }
-
-        if ( isset( $authority_data['freeze_authority']['risk_level'] ) && $authority_data['freeze_authority']['risk_level'] === 'High' ) {
-            $rugpull_data['overall_score'] = min( 100, $rugpull_data['overall_score'] + 20 );
-            $rugpull_data['warning_signs'][] = 'Freeze authority active - creator can freeze your tokens';
-        }
-    }
-
-    // PHASE 3: Integrate Distribution Analysis
-    if ( $distribution_data ) {
-        // Update token distribution with real data
-        $rugpull_data['token_distribution'] = array();
-
-        if ( !empty( $distribution_data['largest_holders'] ) ) {
-            foreach ( $distribution_data['largest_holders'] as $index => $holder ) {
-                $rugpull_data['token_distribution'][] = array(
-                    'label' => 'Top ' . ($index + 1) . ' Holder',
-                    'percentage' => $holder['percentage'],
-                    'color' => solanawp_get_distribution_color( $holder['percentage'] )
-                );
-
-                if ( $index >= 4 ) break; // Only show top 5 in chart
-            }
-        }
-
-        // Add concentration risk warnings
-        $top_1 = $distribution_data['top_1_percentage'] ?? 0;
-        $top_5 = $distribution_data['top_5_percentage'] ?? 0;
-        $top_20 = $distribution_data['top_20_percentage'] ?? 0;
-
-        if ( $top_1 > 40 ) {
-            $rugpull_data['overall_score'] = min( 100, $rugpull_data['overall_score'] + 30 );
-            $rugpull_data['warning_signs'][] = "Top holder owns {$top_1}% of total supply - extreme concentration risk";
-        }
-
-        if ( $top_5 > 80 ) {
-            $rugpull_data['overall_score'] = min( 100, $rugpull_data['overall_score'] + 20 );
-            $rugpull_data['warning_signs'][] = "Top 5 holders own {$top_5}% of total supply - high manipulation risk";
-        }
-
-        // Add distribution metrics to rugpull data for frontend display
-        $rugpull_data['concentration_metrics'] = array(
-            'top_1_percentage' => $top_1,
-            'top_5_percentage' => $top_5,
-            'top_20_percentage' => $top_20,
-            'risk_assessment' => $distribution_data['risk_assessment'] ?? array()
-        );
-    }
-
-    // Recalculate risk level based on enhanced score
-    $score = $rugpull_data['overall_score'];
-    if ( $score >= 70 ) {
-        $rugpull_data['risk_level'] = 'High';
-        $rugpull_data['risk_percentage'] = min( $score, 100 );
-    } elseif ( $score >= 40 ) {
-        $rugpull_data['risk_level'] = 'Medium';
-        $rugpull_data['risk_percentage'] = $score;
-    } else {
-        $rugpull_data['risk_level'] = 'Low';
-        $rugpull_data['risk_percentage'] = max( $score, 10 );
-    }
-
-    return $rugpull_data;
-}
-
-/**
- * Helper function to assign colors based on holder percentage
- */
-function solanawp_get_distribution_color( $percentage ) {
-    if ( $percentage > 30 ) return '#ef4444'; // Red for high concentration
-    if ( $percentage > 15 ) return '#f59e0b'; // Orange for medium
-    if ( $percentage > 5 ) return '#3b82f6';  // Blue for moderate
-    return '#10b981'; // Green for low/healthy
-}
-
-// ============================================================================
-// EXISTING FUNCTIONS (UNCHANGED - KEEPING ORIGINAL STRUCTURE)
-// ============================================================================
-
-/**
- * Extract Token Analytics from DexScreener Data
+ * Extract Token Analytics from DexScreener Data (Keep existing)
  */
 function solanawp_extract_token_analytics( $dexscreener_data ) {
     if ( !$dexscreener_data ) {
@@ -836,7 +846,222 @@ function solanawp_extract_token_analytics( $dexscreener_data ) {
 }
 
 /**
- * Fetch DexScreener Data (PRIMARY SOURCE)
+ * ENHANCED: Calculate final scores WITHOUT Security Analysis (removed) with enhanced RugCheck integration
+ */
+function solanawp_calculate_final_scores_without_security_enhanced( $validation, $balance, $transactions, $rugcheck, $social ) {
+    $trust_score = 50;
+    $activity_score = 50;
+    $overall_score = 50;
+    $recommendation = 'Analysis completed.';
+
+    try {
+        // Enhanced RugCheck scoring with more granular analysis
+        if ( isset( $rugcheck['score'] ) || isset( $rugcheck['score_normalised'] ) ) {
+            $rug_score = $rugcheck['score'] ?? $rugcheck['score_normalised'] ?? 0;
+
+            // More granular scoring based on RugCheck data
+            if ( $rug_score <= 20 ) {
+                $trust_score += 40; // Very low risk
+            } elseif ( $rug_score <= 40 ) {
+                $trust_score += 25; // Low risk
+            } elseif ( $rug_score <= 60 ) {
+                $trust_score += 10; // Medium-low risk
+            } elseif ( $rug_score <= 80 ) {
+                $trust_score -= 15; // Medium-high risk
+            } else {
+                $trust_score -= 40; // High risk
+            }
+
+            // Enhanced penalty system for confirmed issues
+            if ( isset( $rugcheck['rugged'] ) && $rugcheck['rugged'] ) {
+                $trust_score -= 60; // Severe penalty for confirmed rug pull
+            }
+
+            // Authority-based scoring
+            if ( isset( $rugcheck['mintAuthority'] ) ) {
+                if ( $rugcheck['mintAuthority'] === null || $rugcheck['mintAuthority'] === 'null' ) {
+                    $trust_score += 15; // Bonus for renounced mint authority
+                } else {
+                    $trust_score -= 25; // Penalty for active mint authority
+                }
+            }
+
+            if ( isset( $rugcheck['freezeAuthority'] ) ) {
+                if ( $rugcheck['freezeAuthority'] === null || $rugcheck['freezeAuthority'] === 'null' ) {
+                    $trust_score += 10; // Bonus for renounced freeze authority
+                } else {
+                    $trust_score -= 20; // Penalty for active freeze authority
+                }
+            }
+
+            // Liquidity lock scoring
+            if ( isset( $rugcheck['markets'] ) && !empty( $rugcheck['markets'] ) ) {
+                $market = $rugcheck['markets'][0];
+                $liquidityPct = $market['lp']['lpLockedPct'] ?? 0;
+
+                if ( $liquidityPct >= 80 ) {
+                    $trust_score += 20; // High liquidity lock
+                } elseif ( $liquidityPct >= 50 ) {
+                    $trust_score += 10; // Medium liquidity lock
+                } else {
+                    $trust_score -= 15; // Low/no liquidity lock
+                }
+            }
+
+            // Risk factors analysis
+            if ( isset( $rugcheck['risks'] ) && is_array( $rugcheck['risks'] ) ) {
+                foreach ( $rugcheck['risks'] as $risk ) {
+                    $level = $risk['level'] ?? 'Low';
+
+                    switch ( $level ) {
+                        case 'CRITICAL':
+                            $trust_score -= 30;
+                            break;
+                        case 'High':
+                            $trust_score -= 15;
+                            break;
+                        case 'Medium':
+                            $trust_score -= 8;
+                            break;
+                        case 'Low':
+                            $trust_score -= 3;
+                            break;
+                    }
+                }
+            }
+
+            // Creator history analysis
+            if ( isset( $rugcheck['creatorTokens'] ) && is_array( $rugcheck['creatorTokens'] ) ) {
+                $ruggedTokensCount = 0;
+                $totalTokensCount = count( $rugcheck['creatorTokens'] );
+
+                foreach ( $rugcheck['creatorTokens'] as $token ) {
+                    if ( isset( $token['rugged'] ) && $token['rugged'] ) {
+                        $ruggedTokensCount++;
+                    }
+                }
+
+                if ( $totalTokensCount > 0 ) {
+                    $ruggedRatio = $ruggedTokensCount / $totalTokensCount;
+
+                    if ( $ruggedRatio >= 0.5 ) {
+                        $trust_score -= 35; // High percentage of rugged tokens
+                    } elseif ( $ruggedRatio >= 0.25 ) {
+                        $trust_score -= 20; // Some rugged tokens
+                    } elseif ( $ruggedRatio > 0 ) {
+                        $trust_score -= 10; // Few rugged tokens
+                    }
+
+                    // Bonus for multiple successful tokens
+                    if ( $totalTokensCount >= 3 && $ruggedRatio === 0 ) {
+                        $trust_score += 15; // Experienced creator with clean record
+                    }
+                }
+            }
+        }
+
+        // Transaction activity scoring (enhanced)
+        if ( isset( $transactions['total_transactions'] ) ) {
+            $tx_count = $transactions['total_transactions'];
+            if ( $tx_count > 10000 ) {
+                $activity_score += 50; // Very high activity
+            } elseif ( $tx_count > 5000 ) {
+                $activity_score += 40; // High activity
+            } elseif ( $tx_count > 1000 ) {
+                $activity_score += 30; // Good activity
+            } elseif ( $tx_count > 100 ) {
+                $activity_score += 20; // Moderate activity
+            } elseif ( $tx_count > 10 ) {
+                $activity_score += 10; // Low activity
+            } else {
+                $activity_score -= 20; // Very low activity
+            }
+        }
+
+        // Balance activity scoring (enhanced)
+        if ( isset( $balance['token_count'] ) ) {
+            $token_count = $balance['token_count'];
+            if ( $token_count > 20 ) {
+                $activity_score += 15; // High token diversity
+            } elseif ( $token_count > 10 ) {
+                $activity_score += 10; // Good token diversity
+            } elseif ( $token_count > 5 ) {
+                $activity_score += 5; // Some token diversity
+            }
+        }
+
+        // Social presence scoring (enhanced)
+        $social_count = 0;
+        $verified_social = false;
+
+        if ( isset( $social['twitterInfo']['handle'] ) && $social['twitterInfo']['handle'] !== 'Not found' ) {
+            $social_count++;
+            if ( isset( $social['twitterInfo']['verified'] ) && $social['twitterInfo']['verified'] ) {
+                $verified_social = true;
+                $trust_score += 15; // Bonus for verified Twitter
+            }
+        }
+        if ( isset( $social['telegramInfo']['channel'] ) && $social['telegramInfo']['channel'] !== 'Not found' ) {
+            $social_count++;
+        }
+        if ( isset( $social['webInfo']['website'] ) && $social['webInfo']['website'] !== 'Not found' ) {
+            $social_count++;
+        }
+        if ( isset( $social['discordInfo']['invite'] ) && $social['discordInfo']['invite'] !== 'Not found' ) {
+            $social_count++;
+        }
+        if ( isset( $social['githubInfo']['repository'] ) && $social['githubInfo']['repository'] !== 'Not found' ) {
+            $social_count++;
+        }
+
+        // Social scoring
+        $trust_score += ( $social_count * 6 ); // Base social presence bonus
+
+        if ( $verified_social ) {
+            $trust_score += 10; // Additional verified social bonus
+        }
+
+        // Calculate overall score with weighted average
+        $overall_score = round( ( $trust_score * 0.7 + $activity_score * 0.3 ) );
+
+        // Normalize scores
+        $trust_score = max( 0, min( 100, $trust_score ) );
+        $activity_score = max( 0, min( 100, $activity_score ) );
+        $overall_score = max( 0, min( 100, $overall_score ) );
+
+        // Enhanced recommendation based on multiple factors
+        if ( isset( $rugcheck['rugged'] ) && $rugcheck['rugged'] ) {
+            $recommendation = '🚨 CRITICAL WARNING: This token has been confirmed as a rug pull. Do not interact under any circumstances.';
+        } elseif ( $overall_score >= 85 ) {
+            $recommendation = '✅ EXCELLENT: This address shows exceptional indicators of legitimacy and strong activity. Considered very safe for interaction.';
+        } elseif ( $overall_score >= 70 ) {
+            $recommendation = '✅ GOOD: This address shows strong indicators of legitimacy and good activity. Generally safe for interaction with standard precautions.';
+        } elseif ( $overall_score >= 55 ) {
+            $recommendation = '⚠️ MODERATE: This address shows mixed indicators. Exercise caution and conduct additional research before significant interactions.';
+        } elseif ( $overall_score >= 40 ) {
+            $recommendation = '⚠️ CONCERNING: This address has several risk factors. Proceed with extreme caution and limited exposure.';
+        } else {
+            $recommendation = '🚨 HIGH RISK: This address shows multiple concerning indicators. Strongly recommend avoiding interaction.';
+        }
+
+    } catch ( Exception $e ) {
+        error_log( 'Enhanced score calculation error: ' . $e->getMessage() );
+    }
+
+    return array(
+        'trust_score' => $trust_score,
+        'activity_score' => $activity_score,
+        'overall_score' => $overall_score,
+        'recommendation' => $recommendation
+    );
+}
+
+// ============================================================================
+// EXISTING FUNCTIONS (UNCHANGED - KEEPING ORIGINAL STRUCTURE)
+// ============================================================================
+
+/**
+ * Fetch DexScreener Data (PRIMARY SOURCE) - Keep existing
  */
 function solanawp_fetch_dexscreener_data( $address ) {
     try {
@@ -860,7 +1085,7 @@ function solanawp_fetch_dexscreener_data( $address ) {
 }
 
 /**
- * Address Validation
+ * Address Validation - Keep existing
  */
 function solanawp_fetch_validation_data( $address ) {
     $address = trim( $address );
@@ -956,7 +1181,7 @@ function solanawp_check_dexscreener_token( $address ) {
 }
 
 /**
- * Balance & Holdings
+ * Balance & Holdings - Keep existing
  */
 function solanawp_fetch_balance_data( $address, $dexscreener_data = null ) {
     $balance_data = array(
@@ -1025,7 +1250,7 @@ function solanawp_fetch_balance_data( $address, $dexscreener_data = null ) {
 }
 
 /**
- * Transaction Analysis
+ * Transaction Analysis - Keep existing
  */
 function solanawp_fetch_transaction_data( $address, $dexscreener_data = null ) {
     $transaction_data = array(
@@ -1102,207 +1327,7 @@ function solanawp_fetch_transaction_data( $address, $dexscreener_data = null ) {
 }
 
 /**
- * Security Analysis
- */
-function solanawp_fetch_security_data( $address, $dexscreener_data = null ) {
-    $security_data = array(
-        'risk_level' => 'Unknown',
-        'risk_score' => 0,
-        'known_scam' => array( 'text' => 'Unknown', 'isScam' => false ),
-        'suspicious_activity' => array( 'text' => 'Unknown', 'found' => false ),
-        'checks' => array()
-    );
-
-    try {
-        $risk_factors = array();
-
-        if ( $dexscreener_data ) {
-            if ( isset( $dexscreener_data['pairCreatedAt'] ) ) {
-                $creation_timestamp = $dexscreener_data['pairCreatedAt'] / 1000;
-                $age_days = ( time() - $creation_timestamp ) / 86400;
-
-                if ( $age_days < 1 ) {
-                    $risk_factors[] = 'Very new token (< 1 day old)';
-                    $security_data['age_risk'] = 'High';
-                    $security_data['known_scam']['text'] = 'Very New Token';
-                    $security_data['known_scam']['isScam'] = true;
-                } elseif ( $age_days < 7 ) {
-                    $risk_factors[] = 'New token (< 1 week old)';
-                    $security_data['age_risk'] = 'Medium';
-                    $security_data['known_scam']['text'] = 'New Token';
-                } else {
-                    $security_data['age_risk'] = 'Low';
-                    $security_data['known_scam']['text'] = 'Established Token';
-                }
-
-                $security_data['token_age_days'] = round( $age_days, 1 );
-            }
-
-            $liquidity = $dexscreener_data['liquidity']['usd'] ?? 0;
-            if ( $liquidity < 1000 ) {
-                $risk_factors[] = 'Very low liquidity (< $1,000)';
-                $security_data['liquidity_risk'] = 'High';
-                $security_data['suspicious_activity']['text'] = 'Low Liquidity Detected';
-                $security_data['suspicious_activity']['found'] = true;
-            } elseif ( $liquidity < 10000 ) {
-                $risk_factors[] = 'Low liquidity (< $10,000)';
-                $security_data['liquidity_risk'] = 'Medium';
-                $security_data['suspicious_activity']['text'] = 'Moderate Liquidity';
-            } else {
-                $security_data['liquidity_risk'] = 'Low';
-                $security_data['suspicious_activity']['text'] = 'Good Liquidity';
-            }
-
-            $volume_24h = $dexscreener_data['volume']['h24'] ?? 0;
-            if ( $volume_24h < 100 ) {
-                $risk_factors[] = 'Very low trading volume';
-                $security_data['volume_risk'] = 'High';
-            } elseif ( $volume_24h < 1000 ) {
-                $security_data['volume_risk'] = 'Medium';
-            } else {
-                $security_data['volume_risk'] = 'Low';
-            }
-        } else {
-            $security_data['known_scam']['text'] = 'No Token Data';
-            $security_data['suspicious_activity']['text'] = 'No Activity Data';
-        }
-
-        $high_risk_count = 0;
-        $medium_risk_count = 0;
-
-        foreach ( array( 'age_risk', 'liquidity_risk', 'volume_risk' ) as $risk_type ) {
-            if ( isset( $security_data[$risk_type] ) ) {
-                if ( $security_data[$risk_type] === 'High' ) $high_risk_count++;
-                elseif ( $security_data[$risk_type] === 'Medium' ) $medium_risk_count++;
-            }
-        }
-
-        if ( $high_risk_count >= 2 ) {
-            $security_data['risk_level'] = 'High';
-            $security_data['risk_score'] = 80 + ( $high_risk_count * 5 );
-        } elseif ( $high_risk_count >= 1 || $medium_risk_count >= 2 ) {
-            $security_data['risk_level'] = 'Medium';
-            $security_data['risk_score'] = 40 + ( $high_risk_count * 15 ) + ( $medium_risk_count * 10 );
-        } else {
-            $security_data['risk_level'] = 'Low';
-            $security_data['risk_score'] = $medium_risk_count * 15;
-        }
-
-        $security_data['risk_factors'] = $risk_factors;
-        $security_data['checks'] = array(
-            'Age Check' => isset( $security_data['token_age_days'] ) ? 'Completed' : 'No data',
-            'Liquidity Check' => isset( $security_data['liquidity_risk'] ) ? 'Completed' : 'No data',
-            'Volume Check' => isset( $security_data['volume_risk'] ) ? 'Completed' : 'No data'
-        );
-
-    } catch ( Exception $e ) {
-        error_log( 'Security analysis error: ' . $e->getMessage() );
-        $security_data['error'] = $e->getMessage();
-    }
-
-    return $security_data;
-}
-
-/**
- * Rug Pull Risk
- */
-function solanawp_fetch_rugpull_data( $address, $dexscreener_data = null ) {
-    $rugpull_data = array(
-        'risk_level' => 'Unknown',
-        'risk_percentage' => 0,
-        'overall_score' => 0,
-        'warning_signs' => array(),
-        'safe_indicators' => array(),
-        'volume_24h' => 'Unknown',
-        'liquidity_locked' => array( 'text' => 'Unknown', 'color' => '#6b7280' ),
-        'ownership_renounced' => array( 'text' => 'Unknown', 'color' => '#6b7280' ),
-        'mint_authority' => array( 'text' => 'Unknown', 'color' => '#6b7280' ),
-        'freeze_authority' => array( 'text' => 'Unknown', 'color' => '#6b7280' ),
-        'token_distribution' => array()
-    );
-
-    try {
-        $risk_score = 0;
-        $warning_signs = array();
-        $safe_indicators = array();
-
-        if ( $dexscreener_data ) {
-            $liquidity = $dexscreener_data['liquidity']['usd'] ?? 0;
-            $volume_24h = $dexscreener_data['volume']['h24'] ?? 0;
-
-            $rugpull_data['volume_24h'] = '$' . number_format( $volume_24h, 2 );
-
-            if ( $liquidity < 5000 ) {
-                $risk_score += 25;
-                $warning_signs[] = 'Very low liquidity makes exit difficult';
-                $rugpull_data['liquidity_locked']['text'] = 'Low Liquidity';
-                $rugpull_data['liquidity_locked']['color'] = '#ef4444';
-            } elseif ( $liquidity < 25000 ) {
-                $risk_score += 15;
-                $warning_signs[] = 'Moderate liquidity risk';
-                $rugpull_data['liquidity_locked']['text'] = 'Moderate Liquidity';
-                $rugpull_data['liquidity_locked']['color'] = '#f59e0b';
-            } else {
-                $safe_indicators[] = 'Good liquidity levels';
-                $rugpull_data['liquidity_locked']['text'] = 'Good Liquidity';
-                $rugpull_data['liquidity_locked']['color'] = '#10b981';
-            }
-
-            if ( $liquidity > 0 ) {
-                $volume_liquidity_ratio = $volume_24h / $liquidity;
-                if ( $volume_liquidity_ratio > 5 ) {
-                    $risk_score += 20;
-                    $warning_signs[] = 'Unusually high volume relative to liquidity';
-                } elseif ( $volume_liquidity_ratio < 0.1 && $volume_24h > 0 ) {
-                    $risk_score += 10;
-                    $warning_signs[] = 'Very low trading activity';
-                } else {
-                    $safe_indicators[] = 'Reasonable trading volume';
-                }
-            }
-
-            $rugpull_data['ownership_renounced']['text'] = 'Unable to verify';
-            $rugpull_data['ownership_renounced']['color'] = '#f59e0b';
-
-            $rugpull_data['mint_authority']['text'] = 'Unable to verify';
-            $rugpull_data['mint_authority']['color'] = '#f59e0b';
-
-            $rugpull_data['freeze_authority']['text'] = 'Unable to verify';
-            $rugpull_data['freeze_authority']['color'] = '#f59e0b';
-
-            $rugpull_data['token_distribution'] = array(
-                array( 'label' => 'Public', 'percentage' => 60, 'color' => '#10b981' ),
-                array( 'label' => 'Team', 'percentage' => 20, 'color' => '#f59e0b' ),
-                array( 'label' => 'Marketing', 'percentage' => 15, 'color' => '#3b82f6' ),
-                array( 'label' => 'Reserved', 'percentage' => 5, 'color' => '#6b7280' )
-            );
-        }
-
-        if ( $risk_score >= 60 ) {
-            $rugpull_data['risk_level'] = 'High';
-            $rugpull_data['risk_percentage'] = min( $risk_score, 100 );
-        } elseif ( $risk_score >= 30 ) {
-            $rugpull_data['risk_level'] = 'Medium';
-            $rugpull_data['risk_percentage'] = $risk_score;
-        } else {
-            $rugpull_data['risk_level'] = 'Low';
-            $rugpull_data['risk_percentage'] = max( $risk_score, 10 );
-        }
-
-        $rugpull_data['overall_score'] = min( $risk_score, 100 );
-        $rugpull_data['warning_signs'] = !empty( $warning_signs ) ? $warning_signs : array( 'No major warning signs detected' );
-        $rugpull_data['safe_indicators'] = !empty( $safe_indicators ) ? $safe_indicators : array( 'Limited data available for safety assessment' );
-
-    } catch ( Exception $e ) {
-        error_log( 'Rug pull analysis error: ' . $e->getMessage() );
-        $rugpull_data['error'] = $e->getMessage();
-    }
-
-    return $rugpull_data;
-}
-
-/**
- * Website & Social with X API Integration
+ * Website & Social with X API Integration - Keep existing
  */
 function solanawp_fetch_social_data( $address, $dexscreener_data = null ) {
     $social_data = array(
@@ -1419,7 +1444,7 @@ function solanawp_fetch_social_data( $address, $dexscreener_data = null ) {
 }
 
 // ============================================================================
-// HELPER FUNCTIONS
+// HELPER FUNCTIONS (Keep existing)
 // ============================================================================
 
 function solanawp_format_number( $number ) {
@@ -1482,103 +1507,6 @@ function solanawp_get_whois_registration_data( $domain ) {
             'registrar' => array( 'name' => 'Unknown', 'country' => 'Unknown' )
         );
     }
-}
-
-function solanawp_calculate_final_scores( $validation, $balance, $transactions, $security, $rugpull, $social ) {
-    $trust_score = 50;
-    $activity_score = 50;
-    $overall_score = 50;
-    $recommendation = 'Analysis completed.';
-
-    try {
-        if ( isset( $security['risk_level'] ) ) {
-            switch ( $security['risk_level'] ) {
-                case 'Low':
-                    $trust_score += 30;
-                    break;
-                case 'Medium':
-                    $trust_score += 10;
-                    break;
-                case 'High':
-                    $trust_score -= 20;
-                    break;
-            }
-        }
-
-        if ( isset( $rugpull['risk_level'] ) ) {
-            switch ( $rugpull['risk_level'] ) {
-                case 'Low':
-                    $trust_score += 20;
-                    break;
-                case 'Medium':
-                    $trust_score -= 10;
-                    break;
-                case 'High':
-                    $trust_score -= 30;
-                    break;
-            }
-        }
-
-        if ( isset( $transactions['total_transactions'] ) ) {
-            $tx_count = $transactions['total_transactions'];
-            if ( $tx_count > 1000 ) {
-                $activity_score += 40;
-            } elseif ( $tx_count > 100 ) {
-                $activity_score += 20;
-            } elseif ( $tx_count > 10 ) {
-                $activity_score += 10;
-            } else {
-                $activity_score -= 20;
-            }
-        }
-
-        if ( isset( $balance['token_count'] ) ) {
-            $token_count = $balance['token_count'];
-            if ( $token_count > 5 ) {
-                $activity_score += 10;
-            } elseif ( $token_count > 0 ) {
-                $activity_score += 5;
-            }
-        }
-
-        $social_count = 0;
-        if ( isset( $social['twitterInfo']['handle'] ) && $social['twitterInfo']['handle'] !== 'Not found' ) {
-            $social_count++;
-        }
-        if ( isset( $social['telegramInfo']['channel'] ) && $social['telegramInfo']['channel'] !== 'Not found' ) {
-            $social_count++;
-        }
-        if ( isset( $social['webInfo']['website'] ) && $social['webInfo']['website'] !== 'Not found' ) {
-            $social_count++;
-        }
-
-        $trust_score += ( $social_count * 5 );
-        $overall_score = round( ( $trust_score + $activity_score ) / 2 );
-
-        $trust_score = max( 0, min( 100, $trust_score ) );
-        $activity_score = max( 0, min( 100, $activity_score ) );
-        $overall_score = max( 0, min( 100, $overall_score ) );
-
-        if ( $overall_score >= 80 ) {
-            $recommendation = 'This address shows strong indicators of legitimacy and activity. Generally considered safe for interaction.';
-        } elseif ( $overall_score >= 60 ) {
-            $recommendation = 'This address shows moderate signs of legitimacy. Exercise standard caution when interacting.';
-        } elseif ( $overall_score >= 40 ) {
-            $recommendation = 'This address has mixed indicators. Proceed with caution and do additional research.';
-        } else {
-            $recommendation = 'This address shows concerning indicators. Exercise extreme caution or avoid interaction.';
-        }
-
-    } catch ( Exception $e ) {
-        error_log( 'Score calculation error: ' . $e->getMessage() );
-    }
-
-    return array(
-        'trust_score' => $trust_score,
-        'activity_score' => $activity_score,
-        'overall_score' => $overall_score,
-        'recommendation' => $recommendation
-    );
 }
 
 function solanawp_extract_twitter_handle( $url ) {
