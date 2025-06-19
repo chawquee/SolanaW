@@ -1,7 +1,7 @@
 <?php
 /**
  * AJAX Handlers for SolanaWP Theme - ENHANCED WITH RUGCHECK API INTEGRATION
- * PHASE 1: Enhanced Account Details with Alchemy API
+ * PHASE 1: Enhanced Account Details with Free Solana RPC API
  * PHASE 2: Authority Risk Analysis with RugCheck API
  * PHASE 3: Token Distribution Analysis with Alchemy API (existing)
  * NEW: RugCheck API integration for enhanced rug pull analysis
@@ -9,6 +9,7 @@
  * DexScreener as PRIMARY source, Alchemy/Helius as SECONDARY fallback
  * Enhanced with Token Analytics support and X API integration for detailed Twitter data
  * UPDATED: Added Top Holders extraction from RugCheck API topHolders array
+ * UPDATED: Free Solana RPC API endpoint for Account Details
  *
  * @package SolanaWP
  * @since SolanaWP 1.0.0
@@ -315,7 +316,7 @@ function solanawp_process_solana_address_enhanced_with_rugcheck( $address ) {
     $transaction_data = solanawp_fetch_transaction_data( $address, $dexscreener_data );
     $social_data = solanawp_fetch_social_data( $address, $dexscreener_data );
 
-    // PHASE 1: Enhanced Account Data (Alchemy API)
+    // PHASE 1: Enhanced Account Data (Free Solana RPC)
     $enhanced_account_data = solanawp_fetch_enhanced_account_data( $address );
 
     // PHASE 3: Token Distribution Data (Alchemy API - keep existing)
@@ -421,7 +422,7 @@ function solanawp_fetch_enhanced_rugcheck_data( $address ) {
  */
 function solanawp_process_enhanced_rugcheck_data( $raw_data ) {
     $processed_data = array(
-        'score' => $raw_data['score'] ?? 0,
+        'score' => $raw_data['score_normalised'] ?? 0, // Use score_normalised for Rug Risk Score display
         'score_normalised' => $raw_data['score_normalised'] ?? 0,
         'rugged' => $raw_data['rugged'] ?? false,
         'detectedAt' => $raw_data['detectedAt'] ?? null,
@@ -591,65 +592,123 @@ function solanawp_get_enhanced_default_rugcheck_data() {
 }
 
 /**
- * PHASE 1: Enhanced Account Details with Alchemy API (Keep existing)
+ * PHASE 1: Enhanced Account Details with Free Solana RPC API (UPDATED)
+ * Updated to use free Solana RPC endpoint: https://api.mainnet-beta.solana.com
  */
 function solanawp_fetch_enhanced_account_data( $address ) {
     try {
-        // Use Alchemy endpoint from roadmap
-        $alchemy_url = 'https://solana-mainnet.g.alchemy.com/v2/7b0nzOAaomkkueSW09CGrMnl1VPMy6vY';
+        // Use free Solana RPC endpoint
+        $solana_rpc_url = 'https://api.mainnet-beta.solana.com';
 
-        // API Call #1: getAccountInfo (Basic)
+        // Prepare JSON-RPC payload as specified
         $payload = json_encode( array(
             'jsonrpc' => '2.0',
             'id' => 1,
             'method' => 'getAccountInfo',
-            'params' => array( $address, array( 'encoding' => 'base64' ) )
+            'params' => array(
+                $address,
+                array(
+                    'encoding' => 'base64'
+                )
+            )
         ) );
 
-        $response = solanawp_make_request( $alchemy_url, array(
-            'method' => 'POST',
-            'headers' => array( 'Content-Type' => 'application/json' ),
-            'body' => $payload,
-            'timeout' => 10
+        error_log( "SolanaWP: Requesting Free Solana RPC: {$solana_rpc_url}" );
+        error_log( "SolanaWP: JSON-RPC Payload: {$payload}" );
+
+        // Make POST request
+        $response = wp_remote_post( $solana_rpc_url, array(
+            'timeout' => 15,
+            'headers' => array(
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json'
+            ),
+            'body' => $payload
         ) );
 
-        if ( isset( $response['result']['value'] ) && $response['result']['value'] !== null ) {
-            $account_info = $response['result']['value'];
-
-            $is_token = ( $account_info['owner'] === 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' );
-
-            return array(
-                'is_token' => $is_token,
-                // PHASE 1 REQUIREMENTS:
-                'owner' => $account_info['owner'] ?? 'Unknown',                    // OWNER
-                'executable' => $account_info['executable'] ? 'Yes' : 'No',       // EXECUTABLES
-                'data_size' => isset( $account_info['data'][0] ) ? strlen( $account_info['data'][0] ) : 0, // DATA SIZE
-                'rent_epoch' => $account_info['rentEpoch'] ?? 0,                  // RENT EPOCH
-                'lamports' => $account_info['lamports'] ?? 0,
-                'account_type' => $is_token ? 'Token Mint' : 'Wallet Account'
-            );
+        if ( is_wp_error( $response ) ) {
+            error_log( 'SolanaWP: Free Solana RPC request failed: ' . $response->get_error_message() );
+            return solanawp_get_default_account_data();
         }
 
-        return array(
-            'is_token' => false,
-            'owner' => 'Unknown',
-            'executable' => 'No',
-            'data_size' => 0,
-            'rent_epoch' => 0,
-            'account_type' => 'Unknown',
-            'error' => 'Account not found'
-        );
+        $response_code = wp_remote_retrieve_response_code( $response );
+        $body = wp_remote_retrieve_body( $response );
+
+        error_log( "SolanaWP: Free Solana RPC Response Code: {$response_code}" );
+        error_log( "SolanaWP: Free Solana RPC Response Body: " . substr($body, 0, 500) );
+
+        if ( $response_code !== 200 ) {
+            error_log( "SolanaWP: Free Solana RPC returned HTTP {$response_code}, Body: {$body}" );
+            return solanawp_get_default_account_data();
+        }
+
+        $data = json_decode( $body, true );
+
+        if ( json_last_error() !== JSON_ERROR_NONE ) {
+            error_log( 'SolanaWP: Free Solana RPC returned invalid JSON: ' . json_last_error_msg() . ', Body: ' . $body );
+            return solanawp_get_default_account_data();
+        }
+
+        if ( !$data || !is_array( $data ) ) {
+            error_log( 'SolanaWP: Free Solana RPC returned empty or invalid data: ' . print_r($data, true) );
+            return solanawp_get_default_account_data();
+        }
+
+        // Process JSON-RPC response
+        if ( isset( $data['result']['value'] ) && $data['result']['value'] !== null ) {
+            $account_info = $data['result']['value'];
+
+            error_log( 'SolanaWP: Free Solana RPC Success - Account Info: ' . print_r($account_info, true) );
+
+            $owner = $account_info['owner'] ?? null;
+            $executable = $account_info['executable'] ?? null;
+            $data_size = isset( $account_info['data'][0] ) ? strlen( $account_info['data'][0] ) : 0;
+            $rent_epoch = $account_info['rentEpoch'] ?? null;
+            $lamports = $account_info['lamports'] ?? 0;
+
+            // Determine if it's a token based on owner
+            $is_token = ( $owner === 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' );
+
+            $result = array(
+                'is_token' => $is_token,
+                // PHASE 1 REQUIREMENTS using Free Solana RPC response fields:
+                'owner' => $owner ?: 'Unknown',                                    // OWNER
+                'executable' => $executable !== null ? ($executable ? 'Yes' : 'No') : 'Unknown',  // EXECUTABLE
+                'data_size' => $data_size ?: 0,                                   // DATA SIZE
+                'rent_epoch' => $rent_epoch ?: 0,                                 // RENT EPOCH
+                'lamports' => $lamports,                                           // LAMPORTS
+                'account_type' => $is_token ? 'Token Mint' : 'Wallet Account',
+                'data' => $account_info['data'] ?? null,                          // Store raw data field if needed
+                'api_source' => 'free_solana_rpc'
+            );
+
+            error_log( 'SolanaWP: Free Solana RPC Final Result: ' . print_r($result, true) );
+            return $result;
+
+        } else {
+            error_log( 'SolanaWP: Free Solana RPC - No account found or null value' );
+            return solanawp_get_default_account_data();
+        }
 
     } catch ( Exception $e ) {
-        return array(
-            'error' => $e->getMessage(),
-            'is_token' => false,
-            'owner' => 'Error',
-            'executable' => 'Unknown',
-            'data_size' => 0,
-            'rent_epoch' => 0
-        );
+        error_log( 'SolanaWP: Free Solana RPC exception: ' . $e->getMessage() );
+        return solanawp_get_default_account_data();
     }
+}
+
+/**
+ * Helper function to return default account data when API fails
+ */
+function solanawp_get_default_account_data() {
+    return array(
+        'is_token' => false,
+        'owner' => 'Unknown',
+        'executable' => 'Unknown',
+        'data_size' => 0,
+        'rent_epoch' => 0,
+        'account_type' => 'Unknown',
+        'error' => 'Unable to fetch account data'
+    );
 }
 
 /**
@@ -857,7 +916,7 @@ function solanawp_calculate_final_scores_without_security_enhanced( $validation,
     try {
         // Enhanced RugCheck scoring with more granular analysis
         if ( isset( $rugcheck['score'] ) || isset( $rugcheck['score_normalised'] ) ) {
-            $rug_score = $rugcheck['score'] ?? $rugcheck['score_normalised'] ?? 0;
+            $rug_score = $rugcheck['score_normalised'] ?? 0;
 
             // More granular scoring based on RugCheck data
             if ( $rug_score <= 20 ) {
