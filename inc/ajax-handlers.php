@@ -467,13 +467,13 @@ function solanawp_process_enhanced_rugcheck_data( $raw_data ) {
         }
     }
 
-    // Enhanced risks processing with categorization
+    // Enhanced risks processing with original level preservation
     if ( isset( $raw_data['risks'] ) && is_array( $raw_data['risks'] ) ) {
         foreach ( $raw_data['risks'] as $risk ) {
             $processed_risk = array(
                 'name' => $risk['name'] ?? 'Unknown Risk',
                 'description' => $risk['description'] ?? 'No description available',
-                'level' => solanawp_categorize_risk_level( $risk ),
+                'level' => $risk['level'] ?? 'Unknown',
                 'score' => $risk['score'] ?? null,
                 'value' => $risk['value'] ?? null,
                 'category' => solanawp_categorize_risk_type( $risk['name'] ?? '' )

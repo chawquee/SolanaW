@@ -8,6 +8,7 @@
  * NEW LAYOUT: Updated Rug Pull Risk Layout Structure with RugCheck integration
  * REMOVED: Security Analysis section (deleted)
  * UPDATED: Added Top Holders support from RugCheck API topHolders count
+ * UPDATED: Combined Risks Score and Risk Level into "Risks" section
  * Version: ENHANCED LAYOUT IMPLEMENTATION WITH RUGCHECK API + ALL NEW UPDATES
  */
 
@@ -597,7 +598,8 @@
         }
 
         /**
-         * UPDATED: Risk Indicators Section - Show "No Known Risks" when risks array is empty
+         * UPDATED: Risk Indicators Section - Combined Risks Score and Risk Level into "Risks"
+         * Displays risks array with name, description, and level formatting
          */
         function updateRiskIndicatorsSection(rugCheckData) {
             const $container = $('#keyRiskIndicators');
@@ -618,31 +620,39 @@
             risks.forEach(risk => {
                 const riskDiv = $('<div class="risk-indicator-item"></div>');
 
+                // Determine level display and styling
+                let levelDisplay = risk.level || 'Unknown';
+                let levelColor = '#374151';
+                let levelIcon = 'ℹ️';
                 let bgColor = '#f9fafb';
-                let textColor = '#374151';
                 let borderColor = '#e5e7eb';
-                let icon = 'ℹ️';
 
-                if (risk.level === 'High' || risk.level === 'CRITICAL') {
+                // Special handling for 'warn' level
+                if (risk.level === 'warn') {
+                    levelDisplay = 'Warning';
+                    levelColor = '#dc2626'; // Red color
+                    levelIcon = '⚠️'; // Warning sign
                     bgColor = '#fef2f2';
-                    textColor = '#dc2626';
                     borderColor = '#fecaca';
-                    icon = '🚨';
-                } else if (risk.level === 'Medium' || risk.level === 'WARNING') {
+                } else if (risk.level === 'high' || risk.level === 'High' || risk.level === 'CRITICAL') {
+                    bgColor = '#fef2f2';
+                    borderColor = '#fecaca';
+                    levelIcon = '🚨';
+                    levelColor = '#dc2626';
+                } else if (risk.level === 'medium' || risk.level === 'Medium' || risk.level === 'WARNING') {
                     bgColor = '#fefce8';
-                    textColor = '#d97706';
                     borderColor = '#fed7aa';
-                    icon = '⚠️';
-                } else if (risk.level === 'Low' || risk.level === 'INFO') {
+                    levelIcon = '⚠️';
+                    levelColor = '#d97706';
+                } else if (risk.level === 'low' || risk.level === 'Low' || risk.level === 'INFO') {
                     bgColor = '#f0fdf4';
-                    textColor = '#059669';
                     borderColor = '#bbf7d0';
-                    icon = '✅';
+                    levelIcon = '✅';
+                    levelColor = '#059669';
                 }
 
                 riskDiv.css({
                     'background': bgColor,
-                    'color': textColor,
                     'border': '2px solid ' + borderColor,
                     'border-radius': '12px',
                     'padding': '16px',
@@ -651,17 +661,19 @@
                 });
 
                 riskDiv.html(`
-                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
-                        <span style="font-size: 18px;">${icon}</span>
+                    <div style="display: flex; align-items: flex-start; gap: 12px;">
+                        <span style="font-size: 18px; margin-top: 2px;">${levelIcon}</span>
                         <div style="flex: 1;">
-                            <div style="font-weight: 700; font-size: 15px; margin-bottom: 4px;">
-                                ${risk.name || 'Risk Factor'}
-                                ${risk.score ? `<span style="float: right; font-size: 13px; opacity: 0.8;">(${risk.score})</span>` : ''}
+                            <div style="font-weight: 700; font-size: 15px; margin-bottom: 8px; color: #1f2937;">
+                                ${risk.name || 'Unknown Risk'}
                             </div>
-                            <div style="font-size: 14px; line-height: 1.4; opacity: 0.9;">
+                            <div style="font-size: 14px; line-height: 1.4; color: #374151; margin-bottom: 8px;">
                                 ${risk.description || 'No description available'}
                             </div>
-                            ${risk.value ? `<div style="font-size: 13px; margin-top: 6px; font-weight: 600; opacity: 0.8;">Value: ${risk.value}</div>` : ''}
+                            <div style="font-size: 13px; font-weight: 600;">
+                                <span style="color: #6b7280;">Level: </span>
+                                <span style="color: ${levelColor}; font-weight: 700;">${levelDisplay}</span>
+                            </div>
                         </div>
                     </div>
                 `);
@@ -1144,7 +1156,7 @@
         });
 
         // Debug info
-        console.log('SolanaWP: Enhanced Main JavaScript initialized with ENHANCED RUG PULL LAYOUT + RUGCHECK API INTEGRATION + TOP HOLDERS + ALL NEW UPDATES');
+        console.log('SolanaWP: Enhanced Main JavaScript initialized with ENHANCED RUG PULL LAYOUT + RUGCHECK API INTEGRATION + TOP HOLDERS + ALL NEW UPDATES + COMBINED RISKS SECTION');
         console.log('SolanaWP: AJAX object available:', typeof solanaWP_ajax_object !== 'undefined');
 
         if (typeof solanaWP_ajax_object !== 'undefined') {
