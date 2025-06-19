@@ -2192,3 +2192,30 @@ a:hover,
 #finalResultsCard {
     margin-top: 48px;
 }
+
+/* === COMBINED RISKS SECTION STYLES === */
+.rug-metric-value .risk-indicator-item {
+    margin-bottom: 8px;
+    padding: 12px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+.no-risk-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    color: #166534;
+}
+.no-risk-indicator .icon {
+    font-size: 16px;
+}
+.loading-placeholder {
+    color: #6b7280;
+    font-style: italic;
+    text-align: center;
+    padding: 20px;
+}
