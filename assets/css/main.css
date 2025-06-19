@@ -2219,3 +2219,12 @@ a:hover,
     text-align: center;
     padding: 20px;
 }
+
+/* === HIDE SPECIFIC SECTIONS === */
+/* Hide Risk Indicators Section */
+#riskIndicatorsCard,
+.risk-indicators-card,
+.risk-indicators-section,
+#keyRiskIndicators {
+    display: none !important;
+}

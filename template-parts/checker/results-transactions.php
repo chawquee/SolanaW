@@ -36,22 +36,24 @@ if ( ! defined( 'ABSPATH' ) ) {
             </div>
         </div>
 
-        <h4><?php esc_html_e( 'Recent Transactions', 'solanawp' ); ?></h4> <?php // Text from hannisolsvelte.html - h4 styling in main.css ?>
-        <div class="recent-transactions-list" id="recentTransactionsList"> <?php // JS Target. Class for styling. ?>
-            <?php // Hidden template for a single transaction item, to be cloned by JS ?>
+        <?php // REMOVED: Recent Transactions section ?>
+        <?php /*
+        <h4><?php esc_html_e( 'Recent Transactions', 'solanawp' ); ?></h4>
+        <div class="recent-transactions-list" id="recentTransactionsList">
             <div class="recent-transaction-item-template" style="display:none;">
-                <div> <?php // Inner flex container from main.css based on HTML structure ?>
+                <div>
                     <div>
-                        <div class="tx-type"></div> <?php // JS Target for type ?>
-                        <div class="tx-signature"></div> <?php // JS Target for signature ?>
+                        <div class="tx-type"></div>
+                        <div class="tx-signature"></div>
                     </div>
                     <div>
-                        <div class="tx-amount"></div> <?php // JS Target for amount ?>
-                        <div class="tx-time"></div> <?php // JS Target for time ?>
+                        <div class="tx-amount"></div>
+                        <div class="tx-time"></div>
                     </div>
                 </div>
             </div>
             <p class="no-transactions-message" style="display:none;"><?php esc_html_e( 'No recent transactions found or data unavailable.', 'solanawp' ); ?></p>
         </div>
+        */ ?>
     </div>
 </div>
