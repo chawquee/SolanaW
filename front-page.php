@@ -1,7 +1,7 @@
 <?php
 /**
  * Enhanced front-page.php with Token Analytics section added
- * Version 10: Added Token Analytics between validation and balance sections
+ * Version 11: Added standalone Token Distribution Analysis section after rugpull section
  * File location: front-page.php (root directory)
  *
  * @package SolanaWP
@@ -39,6 +39,10 @@ get_header(); // Includes header.php
                     </div>
 
                     <?php get_template_part( 'template-parts/checker/results-rugpull' ); ?>
+
+                    <?php // NEW: Standalone Token Distribution Analysis section ?>
+                    <?php get_template_part( 'template-parts/checker/results-token-distribution' ); ?>
+
                     <?php get_template_part( 'template-parts/checker/results-website-social' ); ?>
                     <?php /* DEACTIVATED: Community section - Keep for future updates
                     get_template_part( 'template-parts/checker/results-community' );

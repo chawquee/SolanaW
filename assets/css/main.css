@@ -747,6 +747,11 @@ a:hover,
     color: #d97706;
 }
 
+.rug-explanation-green {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
 /* Token Distribution Analysis */
 .rug-section-title {
     font-size: 1.5rem;
@@ -951,11 +956,19 @@ a:hover,
 }
 
 /* Two Column Layout */
-.rug-two-column {
+.rug-two-column,
+.two-column {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 25px;
     margin-bottom: 25px;
+}
+
+.left-column,
+.right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
 
 /* Info Boxes */
@@ -1427,7 +1440,8 @@ a:hover,
 }
 
 /* Analysis Sections */
-.analysis-section {
+.analysis-section,
+.section-card {
     background: white;
     border-radius: 16px;
     border: 1px solid #e5e7eb;
@@ -1436,7 +1450,8 @@ a:hover,
     transition: all 0.3s ease;
 }
 
-.analysis-section:hover {
+.analysis-section:hover,
+.section-card:hover {
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
@@ -1496,6 +1511,13 @@ a:hover,
     display: flex;
     align-items: center;
     gap: 10px;
+    margin-bottom: 8px;
+}
+
+.metric-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
     margin-bottom: 8px;
 }
 
@@ -1571,7 +1593,7 @@ a:hover,
 .distribution-metrics {
     padding: 24px;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 16px;
     margin-bottom: 20px;
 }
@@ -1643,7 +1665,8 @@ a:hover,
 }
 
 /* Distribution Risk Assessment */
-.distribution-risk-assessment {
+.distribution-risk-assessment,
+.risk-assessment {
     margin: 0 24px 24px 24px;
     padding: 16px;
     border-radius: 12px;
@@ -1651,7 +1674,8 @@ a:hover,
     background: #f0fdf4;
 }
 
-.risk-assessment-header {
+.risk-assessment-header,
+.risk-header {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -1680,32 +1704,177 @@ a:hover,
 }
 
 /* Creator Section */
-.creator-section .section-header {
+.creator-section .section-header,
+.creator-history-section .section-header {
     background: linear-gradient(135deg, #fefce8 0%, #fef3c7 100%);
 }
 
-.creator-tokens-container {
+.creator-tokens-container,
+.creator-history-container {
     padding: 24px;
     max-height: 300px;
     overflow-y: auto;
 }
 
-.creator-tokens-container::-webkit-scrollbar {
+.creator-tokens-container::-webkit-scrollbar,
+.creator-history-container::-webkit-scrollbar {
     width: 6px;
 }
 
-.creator-tokens-container::-webkit-scrollbar-track {
+.creator-tokens-container::-webkit-scrollbar-track,
+.creator-history-container::-webkit-scrollbar-track {
     background: #f1f1f1;
     border-radius: 3px;
 }
 
-.creator-tokens-container::-webkit-scrollbar-thumb {
+.creator-tokens-container::-webkit-scrollbar-thumb,
+.creator-history-container::-webkit-scrollbar-thumb {
     background: #c1c1c1;
     border-radius: 3px;
 }
 
-.creator-tokens-container::-webkit-scrollbar-thumb:hover {
+.creator-tokens-container::-webkit-scrollbar-thumb:hover,
+.creator-history-container::-webkit-scrollbar-thumb:hover {
     background: #a8a8a8;
+}
+
+/* =============================================================================
+   NEW: STANDALONE TOKEN DISTRIBUTION ANALYSIS STYLES
+   ============================================================================= */
+
+/* Token Distribution Section Styles */
+.token-distribution-section {
+    margin-bottom: 32px;
+    padding: 0;
+}
+
+.token-distribution-section .section-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 20px;
+    padding: 0 24px;
+    border-bottom: 2px solid #e5e7eb;
+    padding-bottom: 12px;
+}
+
+/* Holders Growth Analysis Grid */
+.holders-growth-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 16px;
+    padding: 24px;
+}
+
+.growth-metric-card {
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.growth-metric-card:hover {
+    background: #f8fafc;
+    border-color: #3b82f6;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.15);
+}
+
+.growth-period {
+    font-size: 14px;
+    font-weight: 600;
+    color: #6b7280;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.growth-change {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 4px;
+    color: #1f2937;
+}
+
+.growth-percentage {
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* Holders Categories Grid */
+.holders-categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 16px;
+    padding: 24px;
+}
+
+.category-metric-card {
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.category-metric-card:hover {
+    background: #f8fafc;
+    border-color: #10b981;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.15);
+}
+
+.category-icon {
+    font-size: 32px;
+    margin-bottom: 12px;
+    display: block;
+}
+
+.category-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+}
+
+.category-count {
+    font-size: 24px;
+    font-weight: bold;
+    color: #1f2937;
+}
+
+/* Distribution Chart Styles */
+.distribution-chart {
+    padding: 24px;
+    background: #f9fafb;
+    border-radius: 12px;
+    margin: 0 24px 24px 24px;
+    border: 1px solid #e5e7eb;
+}
+
+.distribution-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+}
+
+.distribution-item:last-child {
+    border-bottom: none;
+}
+
+.distribution-item:hover {
+    background: #f3f4f6;
+    border-radius: 8px;
+    padding-left: 8px;
+    padding-right: 8px;
 }
 
 /* Main Risk Metrics (Top Row) - Legacy Support */
@@ -1719,7 +1888,7 @@ a:hover,
 /* Concentration Metrics (Token Distribution - Keep Alchemy) */
 .concentration-metrics {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 12px;
     animation: fadeIn 0.5s ease-in-out;
 }
@@ -1989,16 +2158,27 @@ a:hover,
     }
 
     .distribution-metrics {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
         gap: 12px;
     }
 
-    .rug-two-column {
+    .rug-two-column,
+    .two-column {
         grid-template-columns: 1fr;
         gap: 20px;
     }
 
     .rug-distribution-grid {
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 12px;
+    }
+
+    .holders-growth-grid {
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 12px;
+    }
+
+    .holders-categories-grid {
         grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
         gap: 12px;
     }
@@ -2109,6 +2289,16 @@ a:hover,
     #rugPullRiskCard .card-title {
         font-size: 1.5rem;
     }
+
+    .holders-growth-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .holders-categories-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -2154,6 +2344,21 @@ a:hover,
 
     .rug-metric-value {
         font-size: 1.8rem;
+    }
+
+    .holders-growth-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .holders-categories-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .distribution-metrics {
+        grid-template-columns: 1fr;
+        gap: 8px;
     }
 }
 

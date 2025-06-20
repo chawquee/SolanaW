@@ -1,8 +1,10 @@
 <?php
 /**
- * Template part for displaying the ENHANCED "Rug Pull Risk Analysis" card - DASHBOARD LAYOUT
- * UPDATED: Enhanced with icons, better status handling, and animated loading states
- * NEW UPDATES: Rugged/Mutable color logic, Risk Score improvements, Insider Networks enhancements
+ * Template part for displaying the "Rug Pull Risk Analysis" card for the Solana Checker.
+ * Called by template-address-checker.php or front-page.php.
+ * Structure and classes from hannisolsvelte.html.
+ *
+ * UPDATED: Token Distribution section removed and moved to standalone results-token-distribution.php
  *
  * @package SolanaWP
  * @since SolanaWP 1.0.0
@@ -15,42 +17,40 @@ if ( ! defined( 'ABSPATH' ) ) {
 ?>
 <div class="card" id="rugPullRiskCard" style="display:none;">
     <div class="card-header">
-        <span style="font-size: 2rem;">⚠️</span>
-        <h1 class="card-title"><?php esc_html_e( '🔍 Rug Pull Risk Analysis', 'solanawp' ); ?></h1>
+        <span style="font-size: 1.5rem;">⚠️</span>
+        <h2 class="card-title"><?php esc_html_e( 'Rug Pull Risk Analysis', 'solanawp' ); ?></h2>
     </div>
     <div class="card-content">
 
-        <!-- Main Risk Metrics Grid -->
+        <!-- Main Risk Metrics (Top Row) -->
         <div class="rug-metrics-grid">
             <div class="rug-metric-card">
-                <div class="rug-metric-label"><?php esc_html_e( 'Rug Risk Score', 'solanawp' ); ?></div>
-                <div class="rug-metric-value risk-high" id="rugOverallScore">-</div>
-                <div class="rug-metric-sublabel"><?php esc_html_e( '(0-100)', 'solanawp' ); ?></div>
+                <div class="rug-metric-value text-yellow" id="rugOverallScore">-</div>
+                <div class="rug-metric-label"><?php esc_html_e( 'Overall Score', 'solanawp' ); ?></div>
+                <div class="rug-metric-sublabel">(0-100)</div>
             </div>
-
             <div class="rug-metric-card">
+                <div class="rug-metric-value text-green" id="rugRiskLevel">-</div>
+                <div class="rug-metric-label"><?php esc_html_e( 'Risk Level', 'solanawp' ); ?></div>
+            </div>
+            <div class="rug-metric-card">
+                <div class="rug-metric-value text-red" id="ruggedStatus">-</div>
                 <div class="rug-metric-label"><?php esc_html_e( 'Rugged Status', 'solanawp' ); ?></div>
-                <div class="rug-metric-value" id="ruggedStatus">-</div>
                 <div class="rug-metric-sublabel" id="ruggedDate"></div>
             </div>
-
             <div class="rug-metric-card">
+                <div class="rug-metric-value text-purple" id="mutableStatus">-</div>
                 <div class="rug-metric-label"><?php esc_html_e( 'Mutable', 'solanawp' ); ?></div>
-                <div class="rug-metric-value" id="mutableStatus">-</div>
-            </div>
-
-            <div class="rug-metric-card">
-                <div class="rug-metric-label"><?php esc_html_e( 'Risks', 'solanawp' ); ?></div>
-                <div class="rug-metric-value" style="font-size: 1rem; text-align: left; max-height: 200px; overflow-y: auto;" id="keyRiskIndicators">
-                    <div class="loading-placeholder"><?php esc_html_e( 'Loading risks...', 'solanawp' ); ?></div>
-                </div>
             </div>
         </div>
 
-        <!-- Explanations -->
+        <!-- Risk Explanations -->
         <div class="rug-explanations-grid">
             <div class="rug-explanation-box rug-explanation-blue">
-                <?php esc_html_e( 'A score from 0 (low risk) to 100 (high risk) based on multiple factors.', 'solanawp' ); ?>
+                <strong><?php esc_html_e( 'Score:', 'solanawp' ); ?></strong> <?php esc_html_e( 'Lower scores indicate safer investments.', 'solanawp' ); ?>
+            </div>
+            <div class="rug-explanation-box rug-explanation-green">
+                <strong><?php esc_html_e( 'Good:', 'solanawp' ); ?></strong> <?php esc_html_e( 'Low risk levels and renounced authorities reduce rug pull risk.', 'solanawp' ); ?>
             </div>
             <div class="rug-explanation-box rug-explanation-red">
                 <strong><?php esc_html_e( 'Warning:', 'solanawp' ); ?></strong> <?php esc_html_e( 'A "Yes" indicates the project has been identified as a rug pull.', 'solanawp' ); ?>
@@ -58,65 +58,13 @@ if ( ! defined( 'ABSPATH' ) ) {
             <div class="rug-explanation-box rug-explanation-yellow">
                 <strong><?php esc_html_e( 'Warning:', 'solanawp' ); ?></strong> <?php esc_html_e( '"Yes" means metadata can be changed, potentially misleading investors.', 'solanawp' ); ?>
             </div>
-            <div class="rug-explanation-box rug-explanation-blue">
-                <?php esc_html_e( 'Provides a quick, at-a-glance summary of the overall risk score.', 'solanawp' ); ?>
-            </div>
         </div>
 
         <!-- TWO-COLUMN LAYOUT -->
         <div class="two-column">
 
-            <!-- LEFT COLUMN: Token Distribution + Security & Liquidity -->
+            <!-- LEFT COLUMN: Security & Liquidity -->
             <div class="left-column">
-
-                <!-- Token Distribution Section -->
-                <div class="distribution-section section-card">
-                    <div class="section-header">
-                        <span style="font-size: 1.5rem;">📊</span>
-                        <h3 class="section-title"><?php esc_html_e( 'Token Distribution Analysis', 'solanawp' ); ?></h3>
-                    </div>
-
-                    <!-- Distribution Metrics Grid -->
-                    <div class="distribution-metrics">
-                        <div class="distribution-metric">
-                            <div class="distribution-label"><?php esc_html_e( 'Total Holders', 'solanawp' ); ?></div>
-                            <div class="distribution-value" id="totalHoldersCount">-</div>
-                        </div>
-                        <div class="distribution-metric">
-                            <div class="distribution-label"><?php esc_html_e( 'Top Holders', 'solanawp' ); ?></div>
-                            <div class="distribution-value" id="topHoldersCount">-</div>
-                        </div>
-                        <div class="distribution-metric">
-                            <div class="distribution-label"><?php esc_html_e( 'Top 1 Holder', 'solanawp' ); ?></div>
-                            <div class="distribution-value" id="concentrationTop1">-</div>
-                        </div>
-                        <div class="distribution-metric">
-                            <div class="distribution-label"><?php esc_html_e( 'Top 5 Holders', 'solanawp' ); ?></div>
-                            <div class="distribution-value" id="concentrationTop5">-</div>
-                        </div>
-                        <div class="distribution-metric">
-                            <div class="distribution-label"><?php esc_html_e( 'Top 20 Holders', 'solanawp' ); ?></div>
-                            <div class="distribution-value" id="concentrationTop20">-</div>
-                        </div>
-                    </div>
-
-                    <!-- Risk Assessment -->
-                    <div class="risk-assessment" id="distributionRiskContainer">
-                        <div class="risk-header">
-                            <span class="risk-icon" id="distributionRiskIcon">⚠️</span>
-                            <span class="risk-level" id="distributionRiskLevel"><?php esc_html_e( 'Analyzing...', 'solanawp' ); ?></span>
-                        </div>
-                        <p class="risk-explanation" id="distributionRiskExplanation"><?php esc_html_e( 'Analyzing token distribution risks...', 'solanawp' ); ?></p>
-                    </div>
-
-                    <!-- Holder Distribution Chart -->
-                    <div class="holder-distribution">
-                        <h4><?php esc_html_e( 'Top Holders Distribution', 'solanawp' ); ?></h4>
-                        <div class="distribution-chart" id="rugTokenDistribution">
-                            <div class="loading-placeholder"><?php esc_html_e( 'Loading distribution data...', 'solanawp' ); ?></div>
-                        </div>
-                    </div>
-                </div>
 
                 <!-- Security & Liquidity Section -->
                 <div class="security-liquidity-section section-card">
@@ -125,29 +73,29 @@ if ( ! defined( 'ABSPATH' ) ) {
                         <h3 class="section-title"><?php esc_html_e( 'Security & Liquidity Analysis', 'solanawp' ); ?></h3>
                     </div>
 
-                    <!-- Authority Analysis -->
-                    <div class="authority-analysis">
-                        <div class="security-metric" id="mintAuthorityContainer">
-                            <div class="metric-header">
-                                <span class="metric-icon-small" id="mintAuthorityIcon">🔑</span>
+                    <!-- Security Metrics -->
+                    <div class="security-metrics">
+                        <div class="risk-metric-card" id="mintAuthorityContainer">
+                            <div class="metric-info">
+                                <span class="metric-icon" id="mintAuthorityIcon">🔨</span>
                                 <div class="metric-title"><?php esc_html_e( 'Mint Authority', 'solanawp' ); ?></div>
                                 <div class="metric-status" id="mintAuthorityStatus"><?php esc_html_e( 'Checking...', 'solanawp' ); ?></div>
                             </div>
                             <div class="metric-description" id="mintAuthorityExplanation"><?php esc_html_e( 'Analyzing mint authority status...', 'solanawp' ); ?></div>
                         </div>
 
-                        <div class="security-metric" id="freezeAuthorityContainer">
-                            <div class="metric-header">
-                                <span class="metric-icon-small" id="freezeAuthorityIcon">❄️</span>
+                        <div class="risk-metric-card" id="freezeAuthorityContainer">
+                            <div class="metric-info">
+                                <span class="metric-icon" id="freezeAuthorityIcon">🧊</span>
                                 <div class="metric-title"><?php esc_html_e( 'Freeze Authority', 'solanawp' ); ?></div>
                                 <div class="metric-status" id="freezeAuthorityStatus"><?php esc_html_e( 'Checking...', 'solanawp' ); ?></div>
                             </div>
                             <div class="metric-description" id="freezeAuthorityExplanation"><?php esc_html_e( 'Analyzing freeze authority status...', 'solanawp' ); ?></div>
                         </div>
 
-                        <div class="security-metric" id="liquidityContainer">
-                            <div class="metric-header">
-                                <span class="metric-icon-small" id="liquidityIcon">💧</span>
+                        <div class="risk-metric-card" id="liquidityContainer">
+                            <div class="metric-info">
+                                <span class="metric-icon" id="liquidityIcon">💧</span>
                                 <div class="metric-title"><?php esc_html_e( 'Liquidity Lock', 'solanawp' ); ?></div>
                                 <div class="metric-status" id="liquidityStatus"><?php esc_html_e( 'Checking...', 'solanawp' ); ?></div>
                             </div>
