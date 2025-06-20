@@ -1170,12 +1170,50 @@ a:hover,
     font-size: 18px;
 }
 
+/* NEW: Dedicated Risks Section Styling */
+.risks-section {
+    margin-bottom: 24px;
+}
+
+.risks-container {
+    padding: 24px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.risks-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.risks-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.risks-container::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.risks-container::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+.risk-item {
+    margin-bottom: 12px;
+    transition: all 0.3s ease;
+}
+
+.risk-item:last-child {
+    margin-bottom: 0;
+}
+
 /* Insider Network Information */
 .rug-network-item {
     background: #f9f9f9;
     padding: 12px;
     border-radius: 8px;
-    margin: 15px 0;
+    margin: 15px 8px;
 }
 
 .rug-network-item p {
@@ -1186,6 +1224,7 @@ a:hover,
 /* Legacy Support for Existing IDs */
 #rugOverallScore,
 #rugRiskLevel,
+#rugRisksLevel, /* NEW: Added for "Risks" subsection */
 #ruggedStatus,
 #ruggedDate,
 #mutableStatus,
@@ -1200,7 +1239,8 @@ a:hover,
 #keyRiskIndicators,
 #lockersContainer,
 #insiderNetworksContainer,
-#insidersDetectedStatus {
+#insidersDetectedStatus,
+#rugCheckRisksContainer { /* NEW: Added for dedicated risks container */
     /* These IDs are used by JavaScript - keep compatible */
 }
 
@@ -1254,7 +1294,8 @@ a:hover,
 #keyRiskIndicators,
 #creatorTokensContainer,
 #lockersContainer,
-#insiderNetworksContainer {
+#insiderNetworksContainer,
+#rugCheckRisksContainer { /* NEW: Added rugCheckRisksContainer */
     max-height: 300px;
     overflow-y: auto;
 }
@@ -1262,14 +1303,16 @@ a:hover,
 #keyRiskIndicators::-webkit-scrollbar,
 #creatorTokensContainer::-webkit-scrollbar,
 #lockersContainer::-webkit-scrollbar,
-#insiderNetworksContainer::-webkit-scrollbar {
+#insiderNetworksContainer::-webkit-scrollbar,
+#rugCheckRisksContainer::-webkit-scrollbar { /* NEW: Added rugCheckRisksContainer */
     width: 6px;
 }
 
 #keyRiskIndicators::-webkit-scrollbar-track,
 #creatorTokensContainer::-webkit-scrollbar-track,
 #lockersContainer::-webkit-scrollbar-track,
-#insiderNetworksContainer::-webkit-scrollbar-track {
+#insiderNetworksContainer::-webkit-scrollbar-track,
+#rugCheckRisksContainer::-webkit-scrollbar-track { /* NEW: Added rugCheckRisksContainer */
     background: #f1f1f1;
     border-radius: 3px;
 }
@@ -1277,7 +1320,8 @@ a:hover,
 #keyRiskIndicators::-webkit-scrollbar-thumb,
 #creatorTokensContainer::-webkit-scrollbar-thumb,
 #lockersContainer::-webkit-scrollbar-thumb,
-#insiderNetworksContainer::-webkit-scrollbar-thumb {
+#insiderNetworksContainer::-webkit-scrollbar-thumb,
+#rugCheckRisksContainer::-webkit-scrollbar-thumb { /* NEW: Added rugCheckRisksContainer */
     background: #c1c1c1;
     border-radius: 3px;
 }
@@ -1285,7 +1329,8 @@ a:hover,
 #keyRiskIndicators::-webkit-scrollbar-thumb:hover,
 #creatorTokensContainer::-webkit-scrollbar-thumb:hover,
 #lockersContainer::-webkit-scrollbar-thumb:hover,
-#insiderNetworksContainer::-webkit-scrollbar-thumb:hover {
+#insiderNetworksContainer::-webkit-scrollbar-thumb:hover,
+#rugCheckRisksContainer::-webkit-scrollbar-thumb:hover { /* NEW: Added rugCheckRisksContainer */
     background: #a8a8a8;
 }
 
@@ -1903,6 +1948,56 @@ a:hover,
 }
 
 /* =============================================================================
+   NEW: CLICKABLE SOCIAL LINKS STYLING
+   ============================================================================= */
+
+/* Social Links - Enhanced Clickable Styling */
+.web-info-value a,
+.twitter-info-value a,
+.telegram-info-value a,
+.discord-info-value a,
+.github-info-value a {
+    color: #3b82f6 !important;
+    text-decoration: none !important;
+    font-weight: 600 !important;
+    transition: all 0.3s ease !important;
+    border-bottom: 1px solid transparent !important;
+    display: inline-block !important;
+}
+
+.web-info-value a:hover,
+.twitter-info-value a:hover,
+.telegram-info-value a:hover,
+.discord-info-value a:hover,
+.github-info-value a:hover {
+    color: #1d4ed8 !important;
+    border-bottom-color: #3b82f6 !important;
+    transform: translateY(-1px) !important;
+    text-shadow: 0 1px 2px rgba(59, 130, 246, 0.1) !important;
+}
+
+/* Social Links - Active State */
+.web-info-value a:active,
+.twitter-info-value a:active,
+.telegram-info-value a:active,
+.discord-info-value a:active,
+.github-info-value a:active {
+    transform: translateY(0) !important;
+    color: #1e40af !important;
+}
+
+/* Social Links - Focus State for Accessibility */
+.web-info-value a:focus,
+.twitter-info-value a:focus,
+.telegram-info-value a:focus,
+.discord-info-value a:focus,
+.github-info-value a:focus {
+    outline: 2px solid #3b82f6 !important;
+    outline-offset: 2px !important;
+    border-radius: 4px !important;
+}
+
+/* =============================================================================
    NEW: INFORMATIONAL BANNERS - MATCHING UPDATE BANNER.JPG STYLE
    ============================================================================= */
 
@@ -2402,98 +2497,39 @@ a:hover,
         grid-template-columns: repeat(2, 1fr);
         gap: 12px;
     }
-}
 
+}
 @media (max-width: 480px) {
     .main-container {
         padding: 8px 10px; /* Minimal mobile spacing */
     }
-    .content-area-banner {
-        width: calc(100vw - 20px);
-        max-width: calc(100vw - 20px);
-        margin: 10px auto;
-    }
+}
+/* =============================================================================
+   FIX: Insider Networks Layout Adjustments
+   ============================================================================= */
 
-    .risk-metric-card {
-        flex-direction: column;
-        text-align: center;
-        gap: 8px;
-    }
-
-    .section-header {
-        padding: 16px 20px;
-    }
-
-    .security-metrics,
-    .distribution-metrics,
-    .risk-indicators-container,
-    .creator-tokens-container {
-        padding: 16px;
-    }
-
-    .rug-metrics-grid {
-        grid-template-columns: 1fr;
-        gap: 10px;
-    }
-
-    .rug-distribution-grid {
-        grid-template-columns: 1fr;
-        gap: 8px;
-    }
-
-    #rugPullRiskCard {
-        padding: 16px;
-    }
-
-    .rug-metric-value {
-        font-size: 1.8rem;
-    }
-
-    .holders-growth-grid {
-        grid-template-columns: 1fr;
-        gap: 10px;
-    }
-
-    .holders-categories-grid {
-        grid-template-columns: 1fr;
-        gap: 10px;
-    }
-
-    .distribution-metrics {
-        grid-template-columns: 1fr;
-        gap: 8px;
-    }
+/*
+ * 1. This adds horizontal padding to the "Insiders Detected:" status line,
+ * pushing the text away from the card's edges.
+*/
+.insider-status {
+    padding-left: 24px;
+    padding-right: 24px;
 }
 
-/* === EDGE-TO-EDGE OPTIMIZATION === */
-@media (min-width: 1600px) {
-    .main-container {
-        grid-template-columns: 320px 1fr 320px;
-        gap: 28px;
-        padding: 28px 140px; /* Enhanced spacing for large screens */
-    }
-    .ad-banner { height: 160px; }
-    .ad-banner.small { height: 100px; }
-    .content-area-banner {
-        width: calc(100vw - 280px);
-        max-width: calc(100vw - 280px);
-        margin: 140px auto;
-    }
+/*
+ * 2. This adds padding to the main results container. Any content that appears
+ * inside (like the green banner or a list of networks) will now be neatly
+ * inset from the card's edges, solving the second part of your request.
+*/
+.insider-networks-container {
+    padding: 16px 24px 24px 24px; /* Top, Right, Bottom, Left */
 }
 
-@media (min-width: 2000px) {
-    .main-container {
-        grid-template-columns: 400px 1fr 400px;
-        gap: 32px;
-        padding: 32px 180px; /* Maximum spacing for ultra-wide screens */
-    }
-    .ad-banner { height: 180px; }
-    .ad-banner.small { height: 120px; }
-    .content-area-banner {
-        width: calc(100vw - 360px);
-        max-width: calc(100vw - 360px);
-        margin: 180px auto;
-    }
+/*
+ * 3. This ensures that when a "no risk" banner appears, it doesn't have
+ * extra top margin, since the container now has padding.
+*/
+.insider-networks-container .no-risk-indicator {
+    margin-top: 0;
 }
-
-/* Larger gap above Final Results section */

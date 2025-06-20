@@ -1,6 +1,12 @@
 /**
- * SolanaWP Main JavaScript File - FIXED VERSION
+ * SolanaWP Main JavaScript File - ENHANCED VERSION
  * File location: assets/js/main.js
+ *
+ * UPDATES:
+ * - Made social links clickable (Website, X/Twitter, Telegram, Discord, GitHub)
+ * - Changed "Not Found"/"Unknown" to "Unavailable"
+ * - Added dedicated "Risks" subsection from RugCheck API
+ * - Enhanced Risk Indicators with Security & Liquidity issues
  */
 
 (function($) {
@@ -29,9 +35,9 @@
                 if (id && id !== 'resultsSection' && !$(this).is('input, button, h2, h3, h4, div.affiliate-title')) {
                     if ($(this).is('span:not(.dist-label):not(.dist-percentage), div.metric-value, div.score-value, div.risk-level-indicator, p#finalSummaryText') || $(this).hasClass('value-placeholder')) {
                         if (!$(this).children(':not(svg)').length) {
-                            $(this).text('-');
+                            $(this).text('Unavailable'); // UPDATED: Changed from '-' to 'Unavailable'
                         }
-                    } else if (id === 'recentTransactionsList' || id === 'rugTokenDistribution' || id === 'keyRiskIndicators' || id === 'creatorTokensContainer' || id === 'tokenDistributionChart') {
+                    } else if (id === 'recentTransactionsList' || id === 'rugTokenDistribution' || id === 'keyRiskIndicators' || id === 'creatorTokensContainer' || id === 'tokenDistributionChart' || id === 'rugCheckRisksContainer') { // UPDATED: Added rugCheckRisksContainer
                         $(this).empty().append('<div class="loading-placeholder">' + (typeof solanaWP_ajax_object !== 'undefined' ? solanaWP_ajax_object.loading_text || 'Loading...' : 'Loading...') + '</div>');
                     }
                 }
@@ -44,9 +50,9 @@
             const $validationCard = $('#addressValidationCard');
 
             $('#validationStatus').text(isValid ? 'Valid' : 'Invalid');
-            $('#validationFormat').text(validation.format || 'Unknown');
-            $('#validationLength').text(validation.length || 'Unknown');
-            $('#validationType').text(validation.type || 'Unknown');
+            $('#validationFormat').text(validation.format || 'Unavailable'); // UPDATED
+            $('#validationLength').text(validation.length || 'Unavailable'); // UPDATED
+            $('#validationType').text(validation.type || 'Unavailable'); // UPDATED
 
             $validationCard.show();
 
@@ -64,6 +70,74 @@
             }
         }
 
+        // UPDATED: Helper function to create clickable social links
+        function createClickableLink(text, rawUrl, linkType) {
+            // If text is "Unavailable" or similar, return as plain text
+            if (!text || text === 'Unavailable' || text === 'Not found' || text === 'Unknown' || text === '-') {
+                return 'Unavailable';
+            }
+
+            // If we have the raw URL, use it for the link
+            let href = rawUrl || '';
+
+            // Handle different link types
+            switch(linkType) {
+                case 'website':
+                    // Ensure website URL has protocol
+                    if (href && !href.startsWith('http')) {
+                        href = 'https://' + href;
+                    }
+                    break;
+                case 'twitter':
+                    // Convert Twitter handle to full URL if needed
+                    if (text.startsWith('@')) {
+                        const username = text.substring(1);
+                        href = href || `https://x.com/${username}`;
+                    } else if (href && (href.includes('twitter.com') || href.includes('x.com'))) {
+                        // Use provided URL
+                    } else {
+                        href = `https://x.com/${text}`;
+                    }
+                    break;
+                case 'telegram':
+                    // Convert Telegram handle to full URL if needed
+                    if (text.startsWith('@')) {
+                        const username = text.substring(1);
+                        href = href || `https://t.me/${username}`;
+                    } else if (href && href.includes('t.me')) {
+                        // Use provided URL
+                    } else {
+                        href = `https://t.me/${text}`;
+                    }
+                    break;
+                case 'discord':
+                    // Discord invite links
+                    if (text.startsWith('discord.gg/')) {
+                        href = href || `https://${text}`;
+                    } else if (href && (href.includes('discord.gg') || href.includes('discord.com'))) {
+                        // Use provided URL
+                    } else {
+                        href = `https://discord.gg/${text}`;
+                    }
+                    break;
+                case 'github':
+                    // GitHub repository links
+                    if (href && href.includes('github.com')) {
+                        // Use provided URL
+                    } else {
+                        href = `https://github.com/${text}`;
+                    }
+                    break;
+            }
+
+            // Return clickable link if we have a valid href
+            if (href) {
+                return `<a href="${href}" target="_blank" rel="noopener noreferrer" style="color: #3b82f6; text-decoration: none; font-weight: 600;">${text}</a>`;
+            }
+
+            return text;
+        }
+
         // Update Token Analytics UI
         function updateTokenAnalyticsUI(tokenData, dexscreenerData) {
             if (!dexscreenerData) {
@@ -75,28 +149,28 @@
 
             try {
                 // Price Information
-                $('#tokenPriceUsd').text(dexscreenerData.priceUsd ? '$' + parseFloat(dexscreenerData.priceUsd).toFixed(6) : '-');
-                $('#tokenPriceNative').text(dexscreenerData.priceNative ? parseFloat(dexscreenerData.priceNative).toFixed(6) + ' SOL' : '-');
+                $('#tokenPriceUsd').text(dexscreenerData.priceUsd ? '$' + parseFloat(dexscreenerData.priceUsd).toFixed(6) : 'Unavailable');
+                $('#tokenPriceNative').text(dexscreenerData.priceNative ? parseFloat(dexscreenerData.priceNative).toFixed(6) + ' SOL' : 'Unavailable');
 
                 // Liquidity and Market Cap
                 const liquidity = dexscreenerData.liquidity?.usd || 0;
-                $('#tokenLiquidity').text(liquidity ? '$' + formatNumber(liquidity) : '-');
+                $('#tokenLiquidity').text(liquidity ? '$' + formatNumber(liquidity) : 'Unavailable');
 
                 const marketCap = dexscreenerData.fdv || dexscreenerData.marketCap || 0;
-                $('#tokenMarketCap').text(marketCap ? '$' + formatNumber(marketCap) : '-');
+                $('#tokenMarketCap').text(marketCap ? '$' + formatNumber(marketCap) : 'Unavailable');
 
                 // Volume Information
                 const volume24h = dexscreenerData.volume?.h24 || 0;
                 const volume6h = dexscreenerData.volume?.h6 || 0;
                 const volume1h = dexscreenerData.volume?.h1 || 0;
 
-                $('#tokenVolume24h').text(volume24h ? '$' + formatNumber(volume24h) : '-');
-                $('#tokenVolume6h').text(volume6h ? '$' + formatNumber(volume6h) : '-');
-                $('#tokenVolume1h').text(volume1h ? '$' + formatNumber(volume1h) : '-');
+                $('#tokenVolume24h').text(volume24h ? '$' + formatNumber(volume24h) : 'Unavailable');
+                $('#tokenVolume6h').text(volume6h ? '$' + formatNumber(volume6h) : 'Unavailable');
+                $('#tokenVolume1h').text(volume1h ? '$' + formatNumber(volume1h) : 'Unavailable');
 
                 // Transaction counts
                 const txns24h = (dexscreenerData.txns?.h24?.buys || 0) + (dexscreenerData.txns?.h24?.sells || 0);
-                $('#tokenTransactions24h').text(txns24h || '-');
+                $('#tokenTransactions24h').text(txns24h || 'Unavailable');
 
                 // Price Changes with color coding
                 updatePriceChange('#tokenPriceChange5m', dexscreenerData.priceChange?.m5);
@@ -105,12 +179,12 @@
                 updatePriceChange('#tokenPriceChange24h', dexscreenerData.priceChange?.h24);
 
                 // Trading Activity
-                $('#tokenBuys24h').text(dexscreenerData.txns?.h24?.buys || '-');
-                $('#tokenSells24h').text(dexscreenerData.txns?.h24?.sells || '-');
-                $('#tokenBuys6h').text(dexscreenerData.txns?.h6?.buys || '-');
-                $('#tokenSells6h').text(dexscreenerData.txns?.h6?.sells || '-');
-                $('#tokenBuys1h').text(dexscreenerData.txns?.h1?.buys || '-');
-                $('#tokenSells1h').text(dexscreenerData.txns?.h1?.sells || '-');
+                $('#tokenBuys24h').text(dexscreenerData.txns?.h24?.buys || 'Unavailable');
+                $('#tokenSells24h').text(dexscreenerData.txns?.h24?.sells || 'Unavailable');
+                $('#tokenBuys6h').text(dexscreenerData.txns?.h6?.buys || 'Unavailable');
+                $('#tokenSells6h').text(dexscreenerData.txns?.h6?.sells || 'Unavailable');
+                $('#tokenBuys1h').text(dexscreenerData.txns?.h1?.buys || 'Unavailable');
+                $('#tokenSells1h').text(dexscreenerData.txns?.h1?.sells || 'Unavailable');
 
                 $('#tokenAnalyticsCard').show();
 
@@ -131,10 +205,10 @@
             console.log('Updating enhanced account details with:', accountData);
 
             try {
-                $('#accOwner').text(accountData.owner || 'Unknown');
-                $('#accExecutable').text(accountData.executable || 'Unknown');
-                $('#accDataSize').text(accountData.data_size ? accountData.data_size + ' bytes' : 'Unknown');
-                $('#accRentEpoch').text(accountData.rent_epoch || 'Unknown');
+                $('#accOwner').text(accountData.owner || 'Unavailable');
+                $('#accExecutable').text(accountData.executable || 'Unavailable');
+                $('#accDataSize').text(accountData.data_size ? accountData.data_size + ' bytes' : 'Unavailable');
+                $('#accRentEpoch').text(accountData.rent_epoch || 'Unavailable');
 
                 // Update metric labels based on account type
                 if (accountData.is_token) {
@@ -204,27 +278,27 @@
                 // Fallback to RugCheck API if Moralis not available
                 $('#totalHoldersCount').text(rugCheckData.totalHolders || '0');
             } else {
-                $('#totalHoldersCount').text('-');
+                $('#totalHoldersCount').text('Unavailable');
             }
 
             // Concentration metrics from Alchemy API (existing)
             if (distributionData) {
-                $('#concentrationTop1').text(distributionData.top_1_percentage ? distributionData.top_1_percentage + '%' : '-');
-                $('#concentrationTop5').text(distributionData.top_5_percentage ? distributionData.top_5_percentage + '%' : '-');
-                $('#concentrationTop20').text(distributionData.top_20_percentage ? distributionData.top_20_percentage + '%' : '-');
+                $('#concentrationTop1').text(distributionData.top_1_percentage ? distributionData.top_1_percentage + '%' : 'Unavailable');
+                $('#concentrationTop5').text(distributionData.top_5_percentage ? distributionData.top_5_percentage + '%' : 'Unavailable');
+                $('#concentrationTop20').text(distributionData.top_20_percentage ? distributionData.top_20_percentage + '%' : 'Unavailable');
             }
 
             // Enhanced concentration metrics from Moralis API
             if (moralisData && moralisData.concentration) {
-                $('#concentrationTop50').text(moralisData.concentration.top_50_percentage ? moralisData.concentration.top_50_percentage + '%' : '-');
-                $('#concentrationTop100').text(moralisData.concentration.top_100_percentage ? moralisData.concentration.top_100_percentage + '%' : '-');
-                $('#concentrationTop250').text(moralisData.concentration.top_250_percentage ? moralisData.concentration.top_250_percentage + '%' : '-');
-                $('#concentrationTop500').text(moralisData.concentration.top_500_percentage ? moralisData.concentration.top_500_percentage + '%' : '-');
+                $('#concentrationTop50').text(moralisData.concentration.top_50_percentage ? moralisData.concentration.top_50_percentage + '%' : 'Unavailable');
+                $('#concentrationTop100').text(moralisData.concentration.top_100_percentage ? moralisData.concentration.top_100_percentage + '%' : 'Unavailable');
+                $('#concentrationTop250').text(moralisData.concentration.top_250_percentage ? moralisData.concentration.top_250_percentage + '%' : 'Unavailable');
+                $('#concentrationTop500').text(moralisData.concentration.top_500_percentage ? moralisData.concentration.top_500_percentage + '%' : 'Unavailable');
             } else {
-                $('#concentrationTop50').text('-');
-                $('#concentrationTop100').text('-');
-                $('#concentrationTop250').text('-');
-                $('#concentrationTop500').text('-');
+                $('#concentrationTop50').text('Unavailable');
+                $('#concentrationTop100').text('Unavailable');
+                $('#concentrationTop250').text('Unavailable');
+                $('#concentrationTop500').text('Unavailable');
             }
 
             // Risk Assessment
@@ -232,7 +306,7 @@
                 const riskAssessment = distributionData.risk_assessment;
 
                 $('#distributionRiskLevel')
-                    .text(riskAssessment.level || 'Unknown')
+                    .text(riskAssessment.level || 'Unavailable')
                     .css('color', riskAssessment.color || '#6b7280');
 
                 $('#distributionRiskExplanation').text(riskAssessment.explanation || 'No risk assessment available');
@@ -268,7 +342,7 @@
                                 <span class="dist-label">Rank ${holder.rank}: ${holder.percentage}%</span>
                             </div>
                             <span class="dist-percentage" style="font-size: 0.8em; color: #6b7280;">
-                                ${holder.address ? holder.address.substring(0, 6) + '...' : 'Unknown'}
+                                ${holder.address ? holder.address.substring(0, 6) + '...' : 'Unavailable'}
                             </span>
                         `);
                         $container.append($holderItem);
@@ -295,8 +369,8 @@
                 // Set default values
                 const periods = ['5m', '1h', '6h', '24h', '3d', '7d', '30d'];
                 periods.forEach(period => {
-                    $(`#holdersChange${period}`).text('-');
-                    $(`#holdersChangePercent${period}`).text('-');
+                    $(`#holdersChange${period}`).text('Unavailable');
+                    $(`#holdersChangePercent${period}`).text('Unavailable');
                     $(`#holdersStatus${period}`).text('').removeClass('holders-joined holders-left');
                 });
             }
@@ -342,7 +416,7 @@
                     $statusElement.text('').removeClass('holders-joined holders-left');
                 }
             } else {
-                $changeElement.text('-').css('color', '#6b7280');
+                $changeElement.text('Unavailable').css('color', '#6b7280');
                 $statusElement.text('').removeClass('holders-joined holders-left');
             }
 
@@ -358,7 +432,7 @@
                     $percentElement.css('color', '#6b7280'); // Gray for neutral
                 }
             } else {
-                $percentElement.text('-').css('color', '#6b7280');
+                $percentElement.text('Unavailable').css('color', '#6b7280');
             }
         }
 
@@ -375,11 +449,14 @@
                 // Enhanced Risk Overview Section with all new logic
                 updateRiskOverviewSection(rugCheckData);
 
+                // NEW: Dedicated Risks Section from RugCheck API
+                updateRugCheckRisksSection(rugCheckData);
+
                 // Security & Liquidity Analysis
                 updateSecurityLiquiditySection(rugCheckData);
 
-                // Risk Indicators with "No Known Risks" logic
-                updateRiskIndicatorsSection(rugCheckData);
+                // ENHANCED: Risk Indicators with Security & Liquidity issues
+                updateEnhancedRiskIndicatorsSection(rugCheckData);
 
                 // Creator History
                 updateCreatorHistorySection(rugCheckData.creatorTokens || []);
@@ -402,45 +479,13 @@
             const score = rugCheckData.score || rugCheckData.score_normalised || 0;
             $('#rugOverallScore').text(score);
 
-            // Risks Score Logic - Check if risks array is empty
+            // UPDATED: Risks display - show count of risks or "No Known Risks"
             const risks = rugCheckData.risks || [];
             if (risks.length === 0) {
-                $('#risksScore').text('No Known Risks').css('color', '#10b981'); // Green
+                $('#rugRisksLevel').text('No Known Risks').css('color', '#10b981'); // Green
             } else {
-                // Calculate average risk score if risks exist
-                const avgRiskScore = risks.reduce((sum, risk) => sum + (risk.score || 0), 0) / risks.length;
-                $('#risksScore').text(Math.round(avgRiskScore)).css('color', '#dc2626'); // Red
+                $('#rugRisksLevel').text(`${risks.length} Risk${risks.length !== 1 ? 's' : ''}`).css('color', '#dc2626'); // Red
             }
-
-            // Risk Level Logic - Check if risks array is empty
-            let riskLevel = 'Unknown';
-            let riskClass = '';
-
-            if (risks.length === 0) {
-                riskLevel = 'No Known Risks';
-                riskClass = 'risk-low';
-                $('#rugRiskLevel').css('color', '#10b981'); // Green
-            } else {
-                // Calculate risk level based on score when risks exist
-                if (score <= 30) {
-                    riskLevel = 'Low Risk';
-                    riskClass = 'risk-low';
-                    $('#rugRiskLevel').css('color', '#10b981'); // Green
-                } else if (score <= 70) {
-                    riskLevel = 'Medium Risk';
-                    riskClass = 'risk-medium';
-                    $('#rugRiskLevel').css('color', '#f59e0b'); // Orange
-                } else {
-                    riskLevel = 'High Risk';
-                    riskClass = 'risk-high';
-                    $('#rugRiskLevel').css('color', '#dc2626'); // Red
-                }
-            }
-
-            const $riskLevelBadge = $('#rugRiskLevel');
-            $riskLevelBadge.text(riskLevel)
-                .removeClass('risk-low risk-medium risk-high')
-                .addClass(riskClass);
 
             // Rugged Status Logic - false = "NO" (green), true = "Yes" (red)
             if (rugCheckData.rugged === true) {
@@ -454,7 +499,7 @@
                 $('#ruggedStatus').text('NO').css('color', '#10b981'); // Green
                 $('#ruggedDate').text('');
             } else {
-                $('#ruggedStatus').text('-').css('color', '#6b7280'); // Gray for unknown
+                $('#ruggedStatus').text('Unavailable').css('color', '#6b7280'); // Gray for unknown
                 $('#ruggedDate').text('');
             }
 
@@ -464,110 +509,69 @@
             } else if (rugCheckData.tokenMeta?.mutable === false) {
                 $('#mutableStatus').text('No').css('color', '#10b981'); // Green
             } else {
-                $('#mutableStatus').text('-').css('color', '#6b7280'); // Gray for unknown
+                $('#mutableStatus').text('Unavailable').css('color', '#6b7280'); // Gray for unknown
             }
         }
 
-        function updateInsiderNetworksSection(rugCheckData) {
-            const $container = $('#insiderNetworksContainer');
-            const $statusSpan = $('#insidersDetectedStatus');
+        // NEW: Dedicated Risks Section from RugCheck API
+        function updateRugCheckRisksSection(rugCheckData) {
+            const $container = $('#rugCheckRisksContainer');
+            $container.empty();
 
-            // Check if there are insider networks
-            const insiderNetworks = rugCheckData.insiderNetworks || [];
-            const graphInsidersDetected = rugCheckData.graphInsidersDetected;
+            const risks = rugCheckData.risks || [];
 
-            if (!insiderNetworks.length && (!graphInsidersDetected || graphInsidersDetected === 0)) {
-                // No insider networks found
-                $statusSpan.text('No Insider Networks').css('color', '#10b981'); // Green
-
-                $container.html(`
+            if (risks.length === 0) {
+                $container.append(`
                     <div class="no-risk-indicator">
                         <span class="icon">✅</span>
-                        <span>No insider networks detected</span>
+                        <span>No Known Risks</span>
                     </div>
                 `);
-            } else {
-                // Insider networks found
-                $statusSpan.text('Yes').css('color', '#dc2626'); // Red
+                return;
+            }
 
-                $container.empty();
+            risks.forEach(risk => {
+                const riskDiv = $('<div class="risk-item"></div>');
 
-                insiderNetworks.forEach((network, index) => {
-                    if (index < 3) { // Show max 3 networks
-                        const networkDiv = $('<div class="rug-network-item"></div>');
-
-                        networkDiv.html(`
-                            <p><strong>Network ID:</strong> ${network.id || 'Unknown'}</p>
-                            <p><strong>Network Type:</strong> ${network.type || 'Unknown'}</p>
-                            <p><strong>Number of Accounts:</strong> ${network.size || 0}</p>
-                            <p><strong>Active Accounts:</strong> ${network.activeAccounts || 0}</p>
-                            <p><strong>Amount of Held Tokens:</strong> ${network.tokenAmount ? formatNumber(network.tokenAmount) : '0'}</p>
-                        `);
-
-                        $container.append(networkDiv);
-                    }
+                riskDiv.css({
+                    'background': '#fef2f2',
+                    'border': '2px solid #fecaca',
+                    'border-radius': '12px',
+                    'padding': '16px',
+                    'margin-bottom': '12px',
+                    'transition': 'all 0.3s ease'
                 });
 
-                if (insiderNetworks.length > 3) {
-                    $container.append(`
-                        <div style="color: #6b7280; font-size: 13px; padding: 8px; text-align: center; font-style: italic; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb;">
-                            ... and ${insiderNetworks.length - 3} more networks
+                riskDiv.html(`
+                    <div style="display: flex; align-items: flex-start; gap: 12px;">
+                        <span style="font-size: 18px; margin-top: 2px; color: #dc2626;">🚨</span>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 700; font-size: 15px; margin-bottom: 8px; color: #dc2626;">
+                                ${risk.name || 'Unknown Risk'}
+                            </div>
+                            <div style="font-size: 14px; line-height: 1.4; color: #7f1d1d; margin-bottom: 8px;">
+                                ${risk.description || 'No description available'}
+                            </div>
+                            ${risk.level ? `<div style="font-size: 13px; font-weight: 600;">
+                                <span style="color: #6b7280;">Level: </span>
+                                <span style="color: #dc2626; font-weight: 700;">${risk.level}</span>
+                            </div>` : ''}
                         </div>
-                    `);
-                }
-            }
-        }
-
-        function updateLockersSection(rugCheckData) {
-            const $container = $('#lockersContainer');
-
-            // Check if there are lockers
-            const lockers = rugCheckData.lockers || {};
-            const lockerKeys = Object.keys(lockers);
-
-            if (lockerKeys.length === 0) {
-                // No lockers found
-                $container.html(`
-                    <div class="no-lockers-indicator">
-                        <span class="icon">🚨</span>
-                        <span>No Lockers</span>
                     </div>
                 `);
-            } else {
-                // Lockers found
-                $container.empty();
 
-                lockerKeys.forEach((key, index) => {
-                    if (index < 2) { // Show max 2 lockers
-                        const locker = lockers[key];
-                        const lockerDiv = $('<div class="rug-locker-item"></div>');
-
-                        const unlockDate = locker.unlockDate ?
-                            (locker.unlockDate === 0 ? 'Never' : new Date(locker.unlockDate * 1000).toLocaleDateString()) :
-                            'Unknown';
-
-                        lockerDiv.html(`
-                            <p><strong>Owner:</strong> ${locker.owner || 'Unknown'}</p>
-                            <p><strong>Program ID:</strong> ${locker.programID || 'Unknown'}</p>
-                            <p><strong>Account of Locked Tokens:</strong> ${locker.tokenAccount || 'Unknown'}</p>
-                            <p><strong>Lock Type:</strong> ${locker.type || 'Unknown'}</p>
-                            <p><strong>Unlocking Date:</strong> ${unlockDate}</p>
-                            <p><strong>Locked Tokens in USDC:</strong> $${locker.usdcLocked ? formatNumber(locker.usdcLocked) : '0'}</p>
-                            ${locker.uri ? `<p><strong>More Info:</strong> <a href="${locker.uri}" target="_blank" style="color: #2563eb;">Link</a></p>` : ''}
-                        `);
-
-                        $container.append(lockerDiv);
+                // Add hover effect
+                riskDiv.hover(
+                    function() {
+                        $(this).css('transform', 'translateY(-2px)').css('box-shadow', '0 4px 12px rgba(220, 38, 38, 0.2)');
+                    },
+                    function() {
+                        $(this).css('transform', 'translateY(0)').css('box-shadow', 'none');
                     }
-                });
+                );
 
-                if (lockerKeys.length > 2) {
-                    $container.append(`
-                        <div style="color: #6b7280; font-size: 13px; padding: 8px; text-align: center; font-style: italic; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb;">
-                            ... and ${lockerKeys.length - 2} more lockers
-                        </div>
-                    `);
-                }
-            }
+                $container.append(riskDiv);
+            });
         }
 
         function updateSecurityLiquiditySection(rugCheckData) {
@@ -646,19 +650,67 @@
                 $('#' + iconId).text(config.activeIcon);
                 $('#' + explanationId).text(config.activeExplanation);
             } else {
-                $('#' + statusId).text('Unknown').css('color', '#6b7280');
+                $('#' + statusId).text('Unavailable').css('color', '#6b7280');
                 $('#' + iconId).text('❓');
                 $('#' + explanationId).text('Unable to determine ' + type.replace(/([A-Z])/g, ' $1').toLowerCase() + ' status.');
             }
         }
 
-        function updateRiskIndicatorsSection(rugCheckData) {
+        // ENHANCED: Risk Indicators with Security & Liquidity issues
+        function updateEnhancedRiskIndicatorsSection(rugCheckData) {
             const $container = $('#keyRiskIndicators');
             $container.empty();
 
-            const risks = rugCheckData.risks || [];
+            const existingRisks = rugCheckData.risks || [];
+            const securityRisks = [];
 
-            if (risks.length === 0) {
+            // Add Security & Liquidity risks to the indicators
+            // 1. Mint Authority risk
+            if (rugCheckData.mintAuthority && rugCheckData.mintAuthority !== null && rugCheckData.mintAuthority !== 'null') {
+                securityRisks.push({
+                    name: 'Mint Authority Active',
+                    description: 'The mint authority is still active, allowing the creator to mint unlimited new tokens which could dilute your holdings.',
+                    level: 'high',
+                    category: 'security'
+                });
+            }
+
+            // 2. Freeze Authority risk
+            if (rugCheckData.freezeAuthority && rugCheckData.freezeAuthority !== null && rugCheckData.freezeAuthority !== 'null') {
+                securityRisks.push({
+                    name: 'Freeze Authority Active',
+                    description: 'The freeze authority is still active, allowing the creator to freeze token accounts and prevent trading.',
+                    level: 'high',
+                    category: 'security'
+                });
+            }
+
+            // 3. Liquidity risk
+            if (rugCheckData.markets && rugCheckData.markets.length > 0) {
+                const market = rugCheckData.markets[0];
+                const liquidityPct = market.lp?.lpLockedPct || 0;
+
+                if (liquidityPct < 50) {
+                    securityRisks.push({
+                        name: 'Low Liquidity Lock',
+                        description: `Only ${liquidityPct.toFixed(2)}% of liquidity is locked. Most liquidity can be removed at any time, creating high rug pull risk.`,
+                        level: 'high',
+                        category: 'liquidity'
+                    });
+                } else if (liquidityPct < 80) {
+                    securityRisks.push({
+                        name: 'Partial Liquidity Lock',
+                        description: `${liquidityPct.toFixed(2)}% of liquidity is locked. Some liquidity can still be removed, posing moderate risk.`,
+                        level: 'medium',
+                        category: 'liquidity'
+                    });
+                }
+            }
+
+            // Combine all risks: existing + security
+            const allRisks = [...existingRisks, ...securityRisks];
+
+            if (allRisks.length === 0) {
                 $container.append(`
                     <div class="no-risk-indicator">
                         <span class="icon">✅</span>
@@ -668,7 +720,7 @@
                 return;
             }
 
-            risks.forEach(risk => {
+            allRisks.forEach(risk => {
                 const riskDiv = $('<div class="risk-indicator-item"></div>');
 
                 // Determine level display and styling
@@ -711,12 +763,16 @@
                     'transition': 'all 0.3s ease'
                 });
 
+                // Add category indicator for security risks
+                const categoryIndicator = risk.category === 'security' ? '<span style="background: #3b82f6; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 8px;">SECURITY</span>' :
+                    risk.category === 'liquidity' ? '<span style="background: #8b5cf6; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 8px;">LIQUIDITY</span>' : '';
+
                 riskDiv.html(`
                     <div style="display: flex; align-items: flex-start; gap: 12px;">
                         <span style="font-size: 18px; margin-top: 2px;">${levelIcon}</span>
                         <div style="flex: 1;">
                             <div style="font-weight: 700; font-size: 15px; margin-bottom: 8px; color: #1f2937;">
-                                ${risk.name || 'Unknown Risk'}
+                                ${risk.name || 'Unknown Risk'}${categoryIndicator}
                             </div>
                             <div style="font-size: 14px; line-height: 1.4; color: #374151; margin-bottom: 8px;">
                                 ${risk.description || 'No description available'}
@@ -743,6 +799,108 @@
             });
         }
 
+        function updateInsiderNetworksSection(rugCheckData) {
+            const $container = $('#insiderNetworksContainer');
+            const $statusSpan = $('#insidersDetectedStatus');
+
+            // Check if there are insider networks
+            const insiderNetworks = rugCheckData.insiderNetworks || [];
+            const graphInsidersDetected = rugCheckData.graphInsidersDetected;
+
+            if (!insiderNetworks.length && (!graphInsidersDetected || graphInsidersDetected === 0)) {
+                // No insider networks found
+                $statusSpan.text('No Insider Networks').css('color', '#10b981'); // Green
+
+                $container.html(`
+                    <div class="no-risk-indicator">
+                        <span class="icon">✅</span>
+                        <span>No insider networks detected</span>
+                    </div>
+                `);
+            } else {
+                // Insider networks found
+                $statusSpan.text('Yes').css('color', '#dc2626'); // Red
+
+                $container.empty();
+
+                insiderNetworks.forEach((network, index) => {
+                    if (index < 3) { // Show max 3 networks
+                        const networkDiv = $('<div class="rug-network-item"></div>');
+
+                        networkDiv.html(`
+                            <p><strong>Network ID:</strong> ${network.id || 'Unavailable'}</p>
+                            <p><strong>Network Type:</strong> ${network.type || 'Unavailable'}</p>
+                            <p><strong>Number of Accounts:</strong> ${network.size || 0}</p>
+                            <p><strong>Active Accounts:</strong> ${network.activeAccounts || 0}</p>
+                            <p><strong>Amount of Held Tokens:</strong> ${network.tokenAmount ? formatNumber(network.tokenAmount) : '0'}</p>
+                        `);
+
+                        $container.append(networkDiv);
+                    }
+                });
+
+                if (insiderNetworks.length > 3) {
+                    $container.append(`
+                        <div style="color: #6b7280; font-size: 13px; padding: 8px; text-align: center; font-style: italic; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb;">
+                            ... and ${insiderNetworks.length - 3} more networks
+                        </div>
+                    `);
+                }
+            }
+        }
+
+        function updateLockersSection(rugCheckData) {
+            const $container = $('#lockersContainer');
+
+            // Check if there are lockers
+            const lockers = rugCheckData.lockers || {};
+            const lockerKeys = Object.keys(lockers);
+
+            if (lockerKeys.length === 0) {
+                // No lockers found
+                $container.html(`
+                    <div class="no-lockers-indicator">
+                        <span class="icon">🚨</span>
+                        <span>No Lockers</span>
+                    </div>
+                `);
+            } else {
+                // Lockers found
+                $container.empty();
+
+                lockerKeys.forEach((key, index) => {
+                    if (index < 2) { // Show max 2 lockers
+                        const locker = lockers[key];
+                        const lockerDiv = $('<div class="rug-locker-item"></div>');
+
+                        const unlockDate = locker.unlockDate ?
+                            (locker.unlockDate === 0 ? 'Never' : new Date(locker.unlockDate * 1000).toLocaleDateString()) :
+                            'Unavailable';
+
+                        lockerDiv.html(`
+                            <p><strong>Owner:</strong> ${locker.owner || 'Unavailable'}</p>
+                            <p><strong>Program ID:</strong> ${locker.programID || 'Unavailable'}</p>
+                            <p><strong>Account of Locked Tokens:</strong> ${locker.tokenAccount || 'Unavailable'}</p>
+                            <p><strong>Lock Type:</strong> ${locker.type || 'Unavailable'}</p>
+                            <p><strong>Unlocking Date:</strong> ${unlockDate}</p>
+                            <p><strong>Locked Tokens in USDC:</strong> $${locker.usdcLocked ? formatNumber(locker.usdcLocked) : '0'}</p>
+                            ${locker.uri ? `<p><strong>More Info:</strong> <a href="${locker.uri}" target="_blank" style="color: #2563eb;">Link</a></p>` : ''}
+                        `);
+
+                        $container.append(lockerDiv);
+                    }
+                });
+
+                if (lockerKeys.length > 2) {
+                    $container.append(`
+                        <div style="color: #6b7280; font-size: 13px; padding: 8px; text-align: center; font-style: italic; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb;">
+                            ... and ${lockerKeys.length - 2} more lockers
+                        </div>
+                    `);
+                }
+            }
+        }
+
         function updateCreatorHistorySection(creatorTokens) {
             const $container = $('#creatorTokensContainer');
             $container.empty();
@@ -761,8 +919,8 @@
                 if (index < 3) { // Show max 3 tokens
                     const tokenDiv = $('<div class="creator-token-item"></div>');
 
-                    const createdDate = token.createdAt ? new Date(token.createdAt).toLocaleDateString() : 'Unknown';
-                    const marketCap = token.marketCap ? formatNumber(token.marketCap) : 'Unknown';
+                    const createdDate = token.createdAt ? new Date(token.createdAt).toLocaleDateString() : 'Unavailable';
+                    const marketCap = token.marketCap ? formatNumber(token.marketCap) : 'Unavailable';
 
                     tokenDiv.css({
                         'margin-bottom': '12px',
@@ -782,7 +940,7 @@
                             <strong>Created:</strong> ${createdDate} | <strong>Market Cap:</strong> $${marketCap}
                         </div>
                         <div style="font-size: 11px; color: #9ca3af; word-break: break-all; background: #f9fafb; padding: 6px 8px; border-radius: 6px;">
-                            ${token.mint || 'Unknown Address'}
+                            ${token.mint || 'Unavailable Address'}
                         </div>
                     `);
 
@@ -846,7 +1004,7 @@
                     $element.css('color', '#6b7280'); // Gray for neutral
                 }
             } else {
-                $element.text('-').css('color', '#6b7280');
+                $element.text('Unavailable').css('color', '#6b7280');
             }
         }
 
@@ -905,8 +1063,8 @@
             if (data.transactions) {
                 const ta = data.transactions;
                 $('#totalTransactions').text(ta.total_transactions || '0');
-                $('#firstActivity').text(ta.first_transaction || 'Unknown');
-                $('#lastActivity').text(ta.last_transaction || 'Unknown');
+                $('#firstActivity').text(ta.first_transaction || 'Unavailable');
+                $('#lastActivity').text(ta.last_transaction || 'Unavailable');
 
                 // Populate recent transactions list
                 const $txList = $('#recentTransactionsList').empty();
@@ -914,10 +1072,10 @@
                     ta.recent_transactions.forEach(tx => {
                         const $item = $('<div class="recent-transaction-item"></div>');
                         $item.html(`
-                            <div class="tx-type">Type: ${tx.type || 'Unknown'}</div>
+                            <div class="tx-type">Type: ${tx.type || 'Unavailable'}</div>
                             <div class="tx-signature">Signature: ${tx.signature || 'N/A'}</div>
                             <div class="tx-amount">${tx.description || 'Transaction'}</div>
-                            <div class="tx-time">${tx.date || 'Unknown'}</div>
+                            <div class="tx-time">${tx.date || 'Unavailable'}</div>
                         `);
                         $txList.append($item);
                     });
@@ -953,22 +1111,22 @@
                 updateTokenDistributionStandalone(data.distribution_analysis, data.rugcheck_data, data.moralis_data);
             }
 
-            // 8. WEBSITE & SOCIAL ACCOUNTS CARD
+            // 8. ENHANCED WEBSITE & SOCIAL ACCOUNTS CARD WITH CLICKABLE LINKS
             if (data.social) {
                 const ws = data.social;
 
                 // Web info
                 if (ws.webInfo) {
                     const web = ws.webInfo;
-                    $('#webInfoAddress').text(web.website || 'Not found');
-                    $('#webInfoRegDate').text(web.registrationDate || 'Unknown');
-                    $('#webInfoRegCountry').text(web.registrationCountry || 'Unknown');
+                    $('#webInfoAddress').html(createClickableLink(web.website || 'Unavailable', web.website, 'website'));
+                    $('#webInfoRegDate').text(web.registrationDate || 'Unavailable');
+                    $('#webInfoRegCountry').text(web.registrationCountry || 'Unavailable');
                 }
 
-                // Twitter info with enhanced fields
+                // Twitter info with enhanced fields and clickable link
                 if (ws.twitterInfo) {
                     const twitter = ws.twitterInfo;
-                    $('#twitterHandle').text(twitter.handle || 'Not found');
+                    $('#twitterHandle').html(createClickableLink(twitter.handle || 'Unavailable', twitter.raw_url, 'twitter'));
                     $('#twitterVerified')
                         .text(twitter.verified ? 'Yes' : 'No')
                         .css('color', twitter.verified ? '#10b981' : '#ef4444');
@@ -982,25 +1140,25 @@
                     $('#twitterCreationDate').text(twitter.creationDate || 'Unavailable');
                 }
 
-                // Other social platforms
+                // Other social platforms with clickable links
                 if (ws.telegramInfo) {
-                    $('#telegramChannel').text(ws.telegramInfo.channel || 'Not found');
+                    $('#telegramChannel').html(createClickableLink(ws.telegramInfo.channel || 'Unavailable', ws.telegramInfo.raw_url, 'telegram'));
                 }
 
                 if (ws.discordInfo) {
-                    $('#discordServer').text(ws.discordInfo.invite || 'Not found');
-                    $('#discordName').text(ws.discordInfo.serverName || 'Unknown');
+                    $('#discordServer').html(createClickableLink(ws.discordInfo.invite || 'Unavailable', ws.discordInfo.raw_url, 'discord'));
+                    $('#discordName').text(ws.discordInfo.serverName || 'Unavailable');
                 } else {
-                    $('#discordServer').text('Not found');
-                    $('#discordName').text('Unknown');
+                    $('#discordServer').text('Unavailable');
+                    $('#discordName').text('Unavailable');
                 }
 
                 if (ws.githubInfo) {
-                    $('#githubRepo').text(ws.githubInfo.repository || 'Not found');
-                    $('#githubOrg').text(ws.githubInfo.organization || 'Unknown');
+                    $('#githubRepo').html(createClickableLink(ws.githubInfo.repository || 'Unavailable', ws.githubInfo.raw_url, 'github'));
+                    $('#githubOrg').text(ws.githubInfo.organization || 'Unavailable');
                 } else {
-                    $('#githubRepo').text('Not found');
-                    $('#githubOrg').text('Unknown');
+                    $('#githubRepo').text('Unavailable');
+                    $('#githubOrg').text('Unavailable');
                 }
 
                 $('#websiteSocialCard').show();

@@ -5,6 +5,7 @@
  * Structure and classes from hannisolsvelte.html.
  *
  * UPDATED: Token Distribution section removed and moved to standalone results-token-distribution.php
+ * UPDATED: Changed "Risk Level" to "Risks" and added dedicated Risks subsection
  *
  * @package SolanaWP
  * @since SolanaWP 1.0.0
@@ -25,22 +26,22 @@ if ( ! defined( 'ABSPATH' ) ) {
         <!-- Main Risk Metrics (Top Row) -->
         <div class="rug-metrics-grid">
             <div class="rug-metric-card">
+                <div class="rug-metric-label"><?php esc_html_e( 'Rug-Pull Risk Score', 'solanawp' ); ?></div>
                 <div class="rug-metric-value text-yellow" id="rugOverallScore">-</div>
-                <div class="rug-metric-label"><?php esc_html_e( 'Overall Score', 'solanawp' ); ?></div>
                 <div class="rug-metric-sublabel">(0-100)</div>
             </div>
             <div class="rug-metric-card">
-                <div class="rug-metric-value text-green" id="rugRiskLevel">-</div>
-                <div class="rug-metric-label"><?php esc_html_e( 'Risk Level', 'solanawp' ); ?></div>
+                <div class="rug-metric-label"><?php esc_html_e( 'Detected Risks', 'solanawp' ); ?></div> <?php // UPDATED: Changed from "Risk Level" to "Risks" ?>
+                <div class="rug-metric-value text-green" id="rugRisksLevel">-</div>
             </div>
             <div class="rug-metric-card">
-                <div class="rug-metric-value text-red" id="ruggedStatus">-</div>
                 <div class="rug-metric-label"><?php esc_html_e( 'Rugged Status', 'solanawp' ); ?></div>
+                <div class="rug-metric-value text-red" id="ruggedStatus">-</div>
                 <div class="rug-metric-sublabel" id="ruggedDate"></div>
             </div>
             <div class="rug-metric-card">
-                <div class="rug-metric-value text-purple" id="mutableStatus">-</div>
                 <div class="rug-metric-label"><?php esc_html_e( 'Mutable', 'solanawp' ); ?></div>
+                <div class="rug-metric-value text-purple" id="mutableStatus">-</div>
             </div>
         </div>
 
@@ -70,7 +71,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                 <div class="security-liquidity-section section-card">
                     <div class="section-header">
                         <span style="font-size: 1.5rem;">🔒</span>
-                        <h3 class="section-title"><?php esc_html_e( 'Security & Liquidity Analysis', 'solanawp' ); ?></h3>
+                        <h3 class="section-title"><?php esc_html_e( 'Liquidity Analysis', 'solanawp' ); ?></h3>
                     </div>
 
                     <!-- Security Metrics -->
@@ -103,14 +104,34 @@ if ( ! defined( 'ABSPATH' ) ) {
                             <div class="metric-description" id="liquidityExplanation"><?php esc_html_e( 'Analyzing liquidity lock status...', 'solanawp' ); ?></div>
                         </div>
                     </div>
+                    <!-- Lockers & Vesting Section -->
+                    <div class="lockers-section section-card">
+                        <div class="section-header">
+                            <span style="font-size: 1.5rem;">🔐</span>
+                            <h3 class="section-title"><?php esc_html_e( 'Lockers & Vesting', 'solanawp' ); ?></h3>
+                        </div>
+                        <div class="lockers-container" id="lockersContainer">
+                            <div class="loading-placeholder"><?php esc_html_e( 'Loading locker information...', 'solanawp' ); ?></div>
+                        </div>
+                    </div>
                 </div>
 
             </div>
 
-            <!-- RIGHT COLUMN: Risk Indicators + Creator History + Insider Networks + Lockers -->
+            <!-- RIGHT COLUMN: Risks + Risk Indicators + Creator History + Insider Networks + Lockers -->
             <div class="right-column">
 
-                <!-- Risk Indicators Section -->
+                <!-- NEW: Dedicated Risks Section from RugCheck API -->
+<!--                <div class="risks-section section-card">-->
+<!--                    <div class="section-header">-->
+<!--                        <span style="font-size: 1.5rem;">🚨</span>-->
+<!--                        <h3 class="section-title">--><?php //esc_html_e( 'Risks from RugCheck Analysis', 'solanawp' ); ?><!--</h3>-->
+<!--                    </div>-->
+<!--                    <div class="risks-container" id="rugCheckRisksContainer">-->
+<!--                        <div class="loading-placeholder">--><?php //esc_html_e( 'Analyzing risks...', 'solanawp' ); ?><!--</div>-->
+<!--                    </div>-->
+<!--                </div>-->
+
                 <div class="risk-indicators-section section-card">
                     <div class="section-header">
                         <span style="font-size: 1.5rem;">⚠️</span>
@@ -120,7 +141,20 @@ if ( ! defined( 'ABSPATH' ) ) {
                         <div class="loading-placeholder"><?php esc_html_e( 'Analyzing risk factors...', 'solanawp' ); ?></div>
                     </div>
                 </div>
-
+                <!-- Insider Networks Section -->
+                <div class="insider-networks-section section-card">
+                    <div class="section-header">
+                        <span style="font-size: 1.5rem;">🕸️</span>
+                        <h3 class="section-title"><?php esc_html_e( 'Insider Networks Analysis', 'solanawp' ); ?></h3>
+                    </div>
+                    <div class="insider-status">
+                        <strong><?php esc_html_e( '  Insiders Detected:', 'solanawp' ); ?></strong>
+                        <span id="insidersDetectedStatus"><?php esc_html_e( 'Analyzing...', 'solanawp' ); ?></span>
+                    </div>
+                    <div class="insider-networks-container" id="insiderNetworksContainer">
+                        <div class="loading-placeholder"><?php esc_html_e( 'Analyzing insider networks...', 'solanawp' ); ?></div>
+                    </div>
+                </div>
                 <!-- Creator History Section -->
                 <div class="creator-history-section section-card">
                     <div class="section-header">
@@ -132,31 +166,9 @@ if ( ! defined( 'ABSPATH' ) ) {
                     </div>
                 </div>
 
-                <!-- Insider Networks Section -->
-                <div class="insider-networks-section section-card">
-                    <div class="section-header">
-                        <span style="font-size: 1.5rem;">🕸️</span>
-                        <h3 class="section-title"><?php esc_html_e( 'Insider Networks Analysis', 'solanawp' ); ?></h3>
-                    </div>
-                    <div class="insider-status">
-                        <strong><?php esc_html_e( 'Insiders Detected:', 'solanawp' ); ?></strong>
-                        <span id="insidersDetectedStatus"><?php esc_html_e( 'Analyzing...', 'solanawp' ); ?></span>
-                    </div>
-                    <div class="insider-networks-container" id="insiderNetworksContainer">
-                        <div class="loading-placeholder"><?php esc_html_e( 'Analyzing insider networks...', 'solanawp' ); ?></div>
-                    </div>
-                </div>
 
-                <!-- Lockers & Vesting Section -->
-                <div class="lockers-section section-card">
-                    <div class="section-header">
-                        <span style="font-size: 1.5rem;">🔐</span>
-                        <h3 class="section-title"><?php esc_html_e( 'Lockers & Vesting', 'solanawp' ); ?></h3>
-                    </div>
-                    <div class="lockers-container" id="lockersContainer">
-                        <div class="loading-placeholder"><?php esc_html_e( 'Loading locker information...', 'solanawp' ); ?></div>
-                    </div>
-                </div>
+
+
 
             </div>
 

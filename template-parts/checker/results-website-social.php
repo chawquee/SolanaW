@@ -5,6 +5,8 @@
  * Structure and classes from hannisolsvelte.html.
  * File location: template-parts/checker/results-website-social.php
  *
+ * UPDATED: Made social links clickable and changed "Not found" to "Unavailable"
+ *
  * @package SolanaWP
  * @since SolanaWP 1.0.0
  */
@@ -29,26 +31,26 @@ if ( ! defined( 'ABSPATH' ) ) {
             <div class="web-info-grid"> <?php // Grid for web information items ?>
                 <div class="web-info-item">
                     <div class="web-info-label"><?php esc_html_e( 'Website Address', 'solanawp' ); ?></div>
-                    <div class="web-info-value" id="webInfoAddress">-</div> <?php // Placeholder for JS ?>
+                    <div class="web-info-value" id="webInfoAddress">Unavailable</div> <?php // UPDATED: Changed default text and will be made clickable via JS ?>
                 </div>
                 <div class="web-info-item">
                     <div class="web-info-label"><?php esc_html_e( 'Registration Date', 'solanawp' ); ?></div>
-                    <div class="web-info-value text-blue" id="webInfoRegDate">-</div> <?php // Placeholder for JS ?>
+                    <div class="web-info-value text-blue" id="webInfoRegDate">Unavailable</div> <?php // UPDATED: Changed default text ?>
                 </div>
                 <div class="web-info-item">
                     <div class="web-info-label"><?php esc_html_e( 'Registration Country', 'solanawp' ); ?></div>
-                    <div class="web-info-value text-blue" id="webInfoRegCountry">-</div> <?php // Placeholder for JS ?>
+                    <div class="web-info-value text-blue" id="webInfoRegCountry">Unavailable</div> <?php // UPDATED: Changed default text ?>
                 </div>
             </div>
         </div>
 
-        <?php // Telegram Information Section - UPDATED: Removed Members ?>
+        <?php // Telegram Information Section ?>
         <div class="website-social-section">
             <h4><?php esc_html_e( 'Telegram Information', 'solanawp' ); ?></h4>
             <div class="telegram-info-grid"> <?php // Grid for telegram information ?>
                 <div class="telegram-info-item">
                     <div class="telegram-info-label"><?php esc_html_e( 'Channel/Group', 'solanawp' ); ?></div>
-                    <div class="telegram-info-value" id="telegramChannel">-</div> <?php // Placeholder for JS ?>
+                    <div class="telegram-info-value" id="telegramChannel">Unavailable</div> <?php // UPDATED: Changed default text and will be made clickable via JS ?>
                 </div>
             </div>
         </div>
@@ -59,65 +61,65 @@ if ( ! defined( 'ABSPATH' ) ) {
             <div class="twitter-info-grid"> <?php // Grid for twitter information ?>
                 <div class="twitter-info-item">
                     <div class="twitter-info-label"><?php esc_html_e( 'Account Handle', 'solanawp' ); ?></div>
-                    <div class="twitter-info-value" id="twitterHandle">-</div> <?php // Placeholder for JS ?>
+                    <div class="twitter-info-value" id="twitterHandle">Unavailable</div> <?php // UPDATED: Changed default text and will be made clickable via JS ?>
                 </div>
                 <div class="twitter-info-item">
                     <div class="twitter-info-label"><?php esc_html_e( 'Verified', 'solanawp' ); ?></div>
-                    <div class="twitter-info-value" id="twitterVerified">-</div> <?php // Placeholder for JS, color will be set by JS ?>
+                    <div class="twitter-info-value" id="twitterVerified">Unavailable</div> <?php // UPDATED: Changed default text ?>
                 </div>
                 <div class="twitter-info-item">
                     <div class="twitter-info-label"><?php esc_html_e( 'Verification Type', 'solanawp' ); ?></div>
-                    <div class="twitter-info-value" id="twitterVerificationType">-</div> <?php // Placeholder for JS ?>
+                    <div class="twitter-info-value" id="twitterVerificationType">Unavailable</div> <?php // Placeholder for JS ?>
                 </div>
                 <div class="twitter-info-item">
                     <div class="twitter-info-label"><?php esc_html_e( 'Verified Followers', 'solanawp' ); ?></div>
-                    <div class="twitter-info-value" id="twitterVerifiedFollowers">-</div> <?php // Placeholder for JS ?>
+                    <div class="twitter-info-value" id="twitterVerifiedFollowers">Unavailable</div> <?php // Placeholder for JS ?>
                 </div>
                 <div class="twitter-info-item">
                     <div class="twitter-info-label"><?php esc_html_e( 'Subscription Type', 'solanawp' ); ?></div>
-                    <div class="twitter-info-value" id="twitterSubscriptionType">-</div> <?php // Placeholder for JS ?>
+                    <div class="twitter-info-value" id="twitterSubscriptionType">Unavailable</div> <?php // Placeholder for JS ?>
                 </div>
                 <div class="twitter-info-item">
                     <div class="twitter-info-label"><?php esc_html_e( 'Followers', 'solanawp' ); ?></div>
-                    <div class="twitter-info-value" id="twitterFollowers">-</div> <?php // Placeholder for JS ?>
+                    <div class="twitter-info-value" id="twitterFollowers">Unavailable</div> <?php // Placeholder for JS ?>
                 </div>
                 <div class="twitter-info-item">
                     <div class="twitter-info-label"><?php esc_html_e( 'Identity Verification', 'solanawp' ); ?></div>
-                    <div class="twitter-info-value" id="twitterIdentityVerification">-</div> <?php // Placeholder for JS ?>
+                    <div class="twitter-info-value" id="twitterIdentityVerification">Unavailable</div> <?php // Placeholder for JS ?>
                 </div>
                 <div class="twitter-info-item">
                     <div class="twitter-info-label"><?php esc_html_e( 'Account Creation Date', 'solanawp' ); ?></div>
-                    <div class="twitter-info-value" id="twitterCreationDate">-</div> <?php // Placeholder for JS ?>
+                    <div class="twitter-info-value" id="twitterCreationDate">Unavailable</div> <?php // Placeholder for JS ?>
                 </div>
             </div>
         </div>
 
-        <?php // NEW: Discord Information Section ?>
+        <?php // Discord Information Section ?>
         <div class="website-social-section">
             <h4><?php esc_html_e( 'Discord Information', 'solanawp' ); ?></h4>
             <div class="discord-info-grid"> <?php // Grid for discord information ?>
                 <div class="discord-info-item">
                     <div class="discord-info-label"><?php esc_html_e( 'Server Invite', 'solanawp' ); ?></div>
-                    <div class="discord-info-value" id="discordServer">-</div> <?php // Placeholder for JS ?>
+                    <div class="discord-info-value" id="discordServer">Unavailable</div> <?php // UPDATED: Changed default text and will be made clickable via JS ?>
                 </div>
                 <div class="discord-info-item">
                     <div class="discord-info-label"><?php esc_html_e( 'Server Name', 'solanawp' ); ?></div>
-                    <div class="discord-info-value" id="discordName">-</div> <?php // Placeholder for JS ?>
+                    <div class="discord-info-value" id="discordName">Unavailable</div> <?php // UPDATED: Changed default text ?>
                 </div>
             </div>
         </div>
 
-        <?php // NEW: GitHub Information Section ?>
+        <?php // GitHub Information Section ?>
         <div class="website-social-section">
             <h4><?php esc_html_e( 'GitHub Information', 'solanawp' ); ?></h4>
             <div class="github-info-grid"> <?php // Grid for github information ?>
                 <div class="github-info-item">
                     <div class="github-info-label"><?php esc_html_e( 'Repository', 'solanawp' ); ?></div>
-                    <div class="github-info-value" id="githubRepo">-</div> <?php // Placeholder for JS ?>
+                    <div class="github-info-value" id="githubRepo">Unavailable</div> <?php // UPDATED: Changed default text and will be made clickable via JS ?>
                 </div>
                 <div class="github-info-item">
                     <div class="github-info-label"><?php esc_html_e( 'Organization', 'solanawp' ); ?></div>
-                    <div class="github-info-value" id="githubOrg">-</div> <?php // Placeholder for JS ?>
+                    <div class="github-info-value" id="githubOrg">Unavailable</div> <?php // UPDATED: Changed default text ?>
                 </div>
             </div>
         </div>
