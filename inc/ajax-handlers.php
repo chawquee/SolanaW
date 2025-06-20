@@ -11,6 +11,8 @@
  * Enhanced with Token Analytics support and X API integration for detailed Twitter data
  * UPDATED: Added Moralis API for Top 50/100/250/500 holders, Growth Analysis, Categories
  * UPDATED: Free Solana RPC API endpoint for Account Details
+ * UPDATED: Enhanced Total Holders extraction from Moralis API for new frontend requirements
+ * UPDATED: Improved data structure for informational banners and proper formatting
  *
  * @package SolanaWP
  * @since SolanaWP 1.0.0
@@ -299,6 +301,7 @@ function solanawp_setup_x_api_credentials() {
 /**
  * ENHANCED MAIN PROCESSING FUNCTION - WITH RUGCHECK + MORALIS API INTEGRATION
  * REMOVED: Security Analysis (deleted section)
+ * UPDATED: Enhanced Total Holders extraction and data structure optimization
  */
 function solanawp_process_solana_address_enhanced_with_moralis( $address ) {
     // 💾 Check cache first
@@ -327,7 +330,7 @@ function solanawp_process_solana_address_enhanced_with_moralis( $address ) {
     // NEW: Enhanced RugCheck API Integration
     $rugcheck_data = solanawp_fetch_enhanced_rugcheck_data( $address );
 
-    // NEW: Moralis API Integration for enhanced token distribution
+    // NEW: Enhanced Moralis API Integration with improved Total Holders extraction
     $moralis_data = solanawp_fetch_moralis_token_data( $address );
 
     // Token Analytics
@@ -351,7 +354,7 @@ function solanawp_process_solana_address_enhanced_with_moralis( $address ) {
         // REMOVED: 'security' => $security_data, (Security Analysis deleted)
         'rugpull' => $rugcheck_data, // Legacy field for compatibility
         'rugcheck_data' => $rugcheck_data, // NEW: Enhanced RugCheck API data
-        'moralis_data' => $moralis_data, // NEW: Moralis API data for standalone token distribution
+        'moralis_data' => $moralis_data, // NEW: Enhanced Moralis API data for standalone token distribution
         'social' => $social_data,
         'scores' => $scores_data,
         'dexscreener_data' => $dexscreener_data,
@@ -367,12 +370,13 @@ function solanawp_process_solana_address_enhanced_with_moralis( $address ) {
 }
 
 // ============================================================================
-// NEW: MORALIS API INTEGRATION FUNCTIONS - UPDATED WITH CORRECT ENDPOINT
+// NEW: ENHANCED MORALIS API INTEGRATION FUNCTIONS - UPDATED WITH IMPROVED DATA STRUCTURE
 // ============================================================================
 
 /**
- * NEW: Fetch Moralis Token Data for Enhanced Token Distribution Analysis
- * UPDATED: Using correct Moralis endpoint and API key
+ * NEW: Enhanced Fetch Moralis Token Data for Standalone Token Distribution Analysis
+ * UPDATED: Improved Total Holders extraction and enhanced data validation
+ * UPDATED: Better error handling and data structure optimization for frontend requirements
  */
 function solanawp_fetch_moralis_token_data( $address ) {
     try {
@@ -382,59 +386,67 @@ function solanawp_fetch_moralis_token_data( $address ) {
         // Correct Moralis endpoint for token holders
         $holders_url = "https://solana-gateway.moralis.io/token/mainnet/holders/{$address}";
 
-        error_log( "SolanaWP: Fetching Moralis data from: {$holders_url}" );
+        error_log( "SolanaWP: Fetching enhanced Moralis data from: {$holders_url}" );
 
-        // Fetch token holders data
+        // Fetch token holders data with enhanced error handling
         $holders_response = solanawp_fetch_moralis_endpoint(
             $holders_url,
             $moralis_api_key
         );
 
-        // Process and enhance the data
+        // Process and enhance the data with improved structure
         $enhanced_data = solanawp_process_moralis_data(
             $holders_response,
             $address
         );
 
-        error_log( 'SolanaWP: Successfully fetched and processed Moralis data for: ' . $address );
+        // UPDATED: Additional validation for Total Holders extraction
+        if ( isset( $enhanced_data['totalHolders'] ) && $enhanced_data['totalHolders'] > 0 ) {
+            error_log( 'SolanaWP: Successfully extracted Total Holders from Moralis: ' . $enhanced_data['totalHolders'] );
+        } else {
+            error_log( 'SolanaWP: Warning - Total Holders not found in Moralis response for: ' . $address );
+        }
+
+        error_log( 'SolanaWP: Successfully fetched and processed enhanced Moralis data for: ' . $address );
 
         return $enhanced_data;
 
     } catch ( Exception $e ) {
-        error_log( 'SolanaWP: Moralis API exception: ' . $e->getMessage() );
+        error_log( 'SolanaWP: Enhanced Moralis API exception: ' . $e->getMessage() );
         return solanawp_get_default_moralis_data();
     }
 }
 
 /**
  * Helper function to fetch data from Moralis API endpoints
+ * UPDATED: Enhanced error handling and timeout management
  */
 function solanawp_fetch_moralis_endpoint( $url, $api_key ) {
     $response = wp_remote_get( $url, array(
-        'timeout' => 20,
+        'timeout' => 25, // Increased timeout for better reliability
         'headers' => array(
             'Accept' => 'application/json',
             'X-API-Key' => $api_key,
-            'User-Agent' => 'SolanaWP/2.0-Moralis'
+            'User-Agent' => 'SolanaWP/2.1-Enhanced-Moralis'
         )
     ) );
 
     if ( is_wp_error( $response ) ) {
-        throw new Exception( 'Moralis API request failed: ' . $response->get_error_message() );
+        throw new Exception( 'Enhanced Moralis API request failed: ' . $response->get_error_message() );
     }
 
     $response_code = wp_remote_retrieve_response_code( $response );
     if ( $response_code !== 200 ) {
         $body = wp_remote_retrieve_body( $response );
-        error_log( "SolanaWP: Moralis API returned HTTP {$response_code}, Body: " . $body );
-        throw new Exception( "Moralis API returned HTTP {$response_code}" );
+        error_log( "SolanaWP: Enhanced Moralis API returned HTTP {$response_code}, Body: " . $body );
+        throw new Exception( "Enhanced Moralis API returned HTTP {$response_code}" );
     }
 
     $body = wp_remote_retrieve_body( $response );
     $data = json_decode( $body, true );
 
     if ( json_last_error() !== JSON_ERROR_NONE ) {
-        throw new Exception( 'Moralis API returned invalid JSON: ' . json_last_error_msg() );
+        throw new Exception( 'Enhanced Moralis API returned invalid JSON: ' . json_last_error_msg() );
     }
 
     return $data;
@@ -442,7 +454,9 @@ function solanawp_fetch_moralis_endpoint( $url, $api_key ) {
 
 /**
  * Process and enhance Moralis data for the standalone token distribution section
- * UPDATED: Using correct JSON structure from Moralis API response
+ * UPDATED: Enhanced Total Holders extraction with multiple fallback methods
+ * UPDATED: Improved data structure for frontend banners and formatting requirements
+ * UPDATED: Better validation and data consistency checks
  */
 function solanawp_process_moralis_data( $moralis_response, $address ) {
     $processed_data = array(
@@ -451,87 +465,179 @@ function solanawp_process_moralis_data( $moralis_response, $address ) {
         'holdersCategories' => array(),
         'metadata' => array(),
         'totalHolders' => 0,
-        'data_source' => 'moralis_enhanced',
-        'fetched_at' => time()
+        'data_source' => 'moralis_enhanced_v2',
+        'fetched_at' => time(),
+        'address' => $address
     );
 
     try {
-        // Extract Total Holders
-        if ( isset( $moralis_response['totalHolders'] ) ) {
+        // ENHANCED: Multiple methods to extract Total Holders with validation
+        $total_holders_extracted = false;
+
+        // Method 1: Direct totalHolders field
+        if ( isset( $moralis_response['totalHolders'] ) && is_numeric( $moralis_response['totalHolders'] ) ) {
             $processed_data['totalHolders'] = intval( $moralis_response['totalHolders'] );
+            $total_holders_extracted = true;
+            error_log( 'SolanaWP: Total Holders extracted via Method 1 (direct): ' . $processed_data['totalHolders'] );
         }
 
-        // Extract concentration metrics (Top 50/100/250/500) from holderSupply
-        if ( isset( $moralis_response['holderSupply'] ) ) {
+        // Method 2: Calculate from holders array if available
+        if ( !$total_holders_extracted && isset( $moralis_response['holders'] ) && is_array( $moralis_response['holders'] ) ) {
+            $processed_data['totalHolders'] = count( $moralis_response['holders'] );
+            $total_holders_extracted = true;
+            error_log( 'SolanaWP: Total Holders extracted via Method 2 (count): ' . $processed_data['totalHolders'] );
+        }
+
+        // Method 3: Extract from pagination metadata if available
+        if ( !$total_holders_extracted && isset( $moralis_response['total'] ) && is_numeric( $moralis_response['total'] ) ) {
+            $processed_data['totalHolders'] = intval( $moralis_response['total'] );
+            $total_holders_extracted = true;
+            error_log( 'SolanaWP: Total Holders extracted via Method 3 (total): ' . $processed_data['totalHolders'] );
+        }
+
+        // ENHANCED: Extract concentration metrics with improved validation
+        if ( isset( $moralis_response['holderSupply'] ) && is_array( $moralis_response['holderSupply'] ) ) {
             $holder_supply = $moralis_response['holderSupply'];
 
             $processed_data['concentration'] = array(
-                'top_50_percentage' => floatval( $holder_supply['top50']['supplyPercent'] ?? 0 ),
-                'top_100_percentage' => floatval( $holder_supply['top100']['supplyPercent'] ?? 0 ),
-                'top_250_percentage' => floatval( $holder_supply['top250']['supplyPercent'] ?? 0 ),
-                'top_500_percentage' => floatval( $holder_supply['top500']['supplyPercent'] ?? 0 )
+                'top_50_percentage' => isset( $holder_supply['top50']['supplyPercent'] ) ?
+                    floatval( $holder_supply['top50']['supplyPercent'] ) : 0,
+                'top_100_percentage' => isset( $holder_supply['top100']['supplyPercent'] ) ?
+                    floatval( $holder_supply['top100']['supplyPercent'] ) : 0,
+                'top_250_percentage' => isset( $holder_supply['top250']['supplyPercent'] ) ?
+                    floatval( $holder_supply['top250']['supplyPercent'] ) : 0,
+                'top_500_percentage' => isset( $holder_supply['top500']['supplyPercent'] ) ?
+                    floatval( $holder_supply['top500']['supplyPercent'] ) : 0
+            );
+
+            error_log( 'SolanaWP: Concentration metrics extracted successfully' );
+        } else {
+            // Provide default concentration structure
+            $processed_data['concentration'] = array(
+                'top_50_percentage' => 0,
+                'top_100_percentage' => 0,
+                'top_250_percentage' => 0,
+                'top_500_percentage' => 0
             );
         }
 
-        // Extract holders growth analysis from holderChange
-        if ( isset( $moralis_response['holderChange'] ) ) {
+        // ENHANCED: Extract holders growth analysis with improved data handling
+        if ( isset( $moralis_response['holderChange'] ) && is_array( $moralis_response['holderChange'] ) ) {
             $holder_change = $moralis_response['holderChange'];
 
             $processed_data['holdersGrowth'] = array(
-                'change_5m' => intval( $holder_change['5min']['change'] ?? 0 ),
-                'percent_5m' => floatval( $holder_change['5min']['changePercent'] ?? 0 ),
-                'change_1h' => intval( $holder_change['1h']['change'] ?? 0 ),
-                'percent_1h' => floatval( $holder_change['1h']['changePercent'] ?? 0 ),
-                'change_6h' => intval( $holder_change['6h']['change'] ?? 0 ),
-                'percent_6h' => floatval( $holder_change['6h']['changePercent'] ?? 0 ),
-                'change_24h' => intval( $holder_change['24h']['change'] ?? 0 ),
-                'percent_24h' => floatval( $holder_change['24h']['changePercent'] ?? 0 ),
-                'change_3d' => intval( $holder_change['3d']['change'] ?? 0 ),
-                'percent_3d' => floatval( $holder_change['3d']['changePercent'] ?? 0 ),
-                'change_7d' => intval( $holder_change['7d']['change'] ?? 0 ),
-                'percent_7d' => floatval( $holder_change['7d']['changePercent'] ?? 0 ),
-                'change_30d' => intval( $holder_change['30d']['change'] ?? 0 ),
-                'percent_30d' => floatval( $holder_change['30d']['changePercent'] ?? 0 )
+                'change_5m' => isset( $holder_change['5min']['change'] ) ?
+                    intval( $holder_change['5min']['change'] ) : 0,
+                'percent_5m' => isset( $holder_change['5min']['changePercent'] ) ?
+                    floatval( $holder_change['5min']['changePercent'] ) : 0,
+                'change_1h' => isset( $holder_change['1h']['change'] ) ?
+                    intval( $holder_change['1h']['change'] ) : 0,
+                'percent_1h' => isset( $holder_change['1h']['changePercent'] ) ?
+                    floatval( $holder_change['1h']['changePercent'] ) : 0,
+                'change_6h' => isset( $holder_change['6h']['change'] ) ?
+                    intval( $holder_change['6h']['change'] ) : 0,
+                'percent_6h' => isset( $holder_change['6h']['changePercent'] ) ?
+                    floatval( $holder_change['6h']['changePercent'] ) : 0,
+                'change_24h' => isset( $holder_change['24h']['change'] ) ?
+                    intval( $holder_change['24h']['change'] ) : 0,
+                'percent_24h' => isset( $holder_change['24h']['changePercent'] ) ?
+                    floatval( $holder_change['24h']['changePercent'] ) : 0,
+                'change_3d' => isset( $holder_change['3d']['change'] ) ?
+                    intval( $holder_change['3d']['change'] ) : 0,
+                'percent_3d' => isset( $holder_change['3d']['changePercent'] ) ?
+                    floatval( $holder_change['3d']['changePercent'] ) : 0,
+                'change_7d' => isset( $holder_change['7d']['change'] ) ?
+                    intval( $holder_change['7d']['change'] ) : 0,
+                'percent_7d' => isset( $holder_change['7d']['changePercent'] ) ?
+                    floatval( $holder_change['7d']['changePercent'] ) : 0,
+                'change_30d' => isset( $holder_change['30d']['change'] ) ?
+                    intval( $holder_change['30d']['change'] ) : 0,
+                'percent_30d' => isset( $holder_change['30d']['changePercent'] ) ?
+                    floatval( $holder_change['30d']['changePercent'] ) : 0
+            );
+
+            error_log( 'SolanaWP: Holders growth analysis extracted successfully' );
+        } else {
+            // Provide default growth structure
+            $processed_data['holdersGrowth'] = array(
+                'change_5m' => 0, 'percent_5m' => 0,
+                'change_1h' => 0, 'percent_1h' => 0,
+                'change_6h' => 0, 'percent_6h' => 0,
+                'change_24h' => 0, 'percent_24h' => 0,
+                'change_3d' => 0, 'percent_3d' => 0,
+                'change_7d' => 0, 'percent_7d' => 0,
+                'change_30d' => 0, 'percent_30d' => 0
             );
         }
 
-        // Extract holders categories from holderDistribution
-        if ( isset( $moralis_response['holderDistribution'] ) ) {
+        // ENHANCED: Extract holders categories with validation
+        if ( isset( $moralis_response['holderDistribution'] ) && is_array( $moralis_response['holderDistribution'] ) ) {
             $holder_distribution = $moralis_response['holderDistribution'];
 
             $processed_data['holdersCategories'] = array(
-                'whales' => intval( $holder_distribution['whales'] ?? 0 ),
-                'sharks' => intval( $holder_distribution['sharks'] ?? 0 ),
-                'dolphins' => intval( $holder_distribution['dolphins'] ?? 0 ),
-                'fish' => intval( $holder_distribution['fish'] ?? 0 ),
-                'octopus' => intval( $holder_distribution['octopus'] ?? 0 ),
-                'crabs' => intval( $holder_distribution['crabs'] ?? 0 ),
-                'shrimps' => intval( $holder_distribution['shrimps'] ?? 0 )
+                'whales' => isset( $holder_distribution['whales'] ) ?
+                    intval( $holder_distribution['whales'] ) : 0,
+                'sharks' => isset( $holder_distribution['sharks'] ) ?
+                    intval( $holder_distribution['sharks'] ) : 0,
+                'dolphins' => isset( $holder_distribution['dolphins'] ) ?
+                    intval( $holder_distribution['dolphins'] ) : 0,
+                'fish' => isset( $holder_distribution['fish'] ) ?
+                    intval( $holder_distribution['fish'] ) : 0,
+                'octopus' => isset( $holder_distribution['octopus'] ) ?
+                    intval( $holder_distribution['octopus'] ) : 0,
+                'crabs' => isset( $holder_distribution['crabs'] ) ?
+                    intval( $holder_distribution['crabs'] ) : 0,
+                'shrimps' => isset( $holder_distribution['shrimps'] ) ?
+                    intval( $holder_distribution['shrimps'] ) : 0
+            );
+
+            error_log( 'SolanaWP: Holders categories extracted successfully' );
+        } else {
+            // Provide default categories structure
+            $processed_data['holdersCategories'] = array(
+                'whales' => 0, 'sharks' => 0, 'dolphins' => 0, 'fish' => 0,
+                'octopus' => 0, 'crabs' => 0, 'shrimps' => 0
             );
         }
 
-        // Extract holders by acquisition if available
-        if ( isset( $moralis_response['holdersByAcquisition'] ) ) {
+        // ENHANCED: Extract holders by acquisition if available
+        if ( isset( $moralis_response['holdersByAcquisition'] ) && is_array( $moralis_response['holdersByAcquisition'] ) ) {
             $processed_data['holdersByAcquisition'] = array(
-                'swap' => intval( $moralis_response['holdersByAcquisition']['swap'] ?? 0 ),
-                'transfer' => intval( $moralis_response['holdersByAcquisition']['transfer'] ?? 0 ),
-                'airdrop' => intval( $moralis_response['holdersByAcquisition']['airdrop'] ?? 0 )
+                'swap' => isset( $moralis_response['holdersByAcquisition']['swap'] ) ?
+                    intval( $moralis_response['holdersByAcquisition']['swap'] ) : 0,
+                'transfer' => isset( $moralis_response['holdersByAcquisition']['transfer'] ) ?
+                    intval( $moralis_response['holdersByAcquisition']['transfer'] ) : 0,
+                'airdrop' => isset( $moralis_response['holdersByAcquisition']['airdrop'] ) ?
+                    intval( $moralis_response['holdersByAcquisition']['airdrop'] ) : 0
             );
         }
 
-        error_log( 'SolanaWP: Successfully processed Moralis data - Total Holders: ' . $processed_data['totalHolders'] );
+        // ENHANCED: Extract metadata with better handling
+        if ( isset( $moralis_response['tokenMetadata'] ) && is_array( $moralis_response['tokenMetadata'] ) ) {
+            $metadata = $moralis_response['tokenMetadata'];
+            $processed_data['metadata'] = array(
+                'name' => $metadata['name'] ?? 'Unknown Token',
+                'symbol' => $metadata['symbol'] ?? 'Unknown',
+                'decimals' => isset( $metadata['decimals'] ) ? intval( $metadata['decimals'] ) : 9,
+                'supply' => isset( $metadata['supply'] ) ? intval( $metadata['supply'] ) : 0
+            );
+        }
+
+        // Final validation log
+        error_log( 'SolanaWP: Enhanced Moralis data processing completed - Total Holders: ' . $processed_data['totalHolders'] );
 
         return $processed_data;
 
     } catch ( Exception $e ) {
-        error_log( 'SolanaWP: Error processing Moralis data: ' . $e->getMessage() );
+        error_log( 'SolanaWP: Error processing enhanced Moralis data: ' . $e->getMessage() );
         return solanawp_get_default_moralis_data();
     }
 }
 
 /**
- * Get default Moralis data when API fails
- * UPDATED: With correct structure matching the new API response
+ * Get enhanced default Moralis data when API fails
+ * UPDATED: Improved default structure matching the enhanced API response
+ * UPDATED: Better default values for banners and frontend requirements
  */
 function solanawp_get_default_moralis_data() {
     return array(
@@ -542,34 +648,20 @@ function solanawp_get_default_moralis_data() {
             'top_500_percentage' => 0
         ),
         'holdersGrowth' => array(
-            'change_5m' => 0,
-            'percent_5m' => 0,
-            'change_1h' => 0,
-            'percent_1h' => 0,
-            'change_6h' => 0,
-            'percent_6h' => 0,
-            'change_24h' => 0,
-            'percent_24h' => 0,
-            'change_3d' => 0,
-            'percent_3d' => 0,
-            'change_7d' => 0,
-            'percent_7d' => 0,
-            'change_30d' => 0,
-            'percent_30d' => 0
+            'change_5m' => 0, 'percent_5m' => 0,
+            'change_1h' => 0, 'percent_1h' => 0,
+            'change_6h' => 0, 'percent_6h' => 0,
+            'change_24h' => 0, 'percent_24h' => 0,
+            'change_3d' => 0, 'percent_3d' => 0,
+            'change_7d' => 0, 'percent_7d' => 0,
+            'change_30d' => 0, 'percent_30d' => 0
         ),
         'holdersCategories' => array(
-            'whales' => 0,
-            'sharks' => 0,
-            'dolphins' => 0,
-            'fish' => 0,
-            'octopus' => 0,
-            'crabs' => 0,
-            'shrimps' => 0
+            'whales' => 0, 'sharks' => 0, 'dolphins' => 0, 'fish' => 0,
+            'octopus' => 0, 'crabs' => 0, 'shrimps' => 0
         ),
         'holdersByAcquisition' => array(
-            'swap' => 0,
-            'transfer' => 0,
-            'airdrop' => 0
+            'swap' => 0, 'transfer' => 0, 'airdrop' => 0
         ),
         'totalHolders' => 0,
         'metadata' => array(
@@ -578,8 +670,8 @@ function solanawp_get_default_moralis_data() {
             'decimals' => 9,
             'supply' => 0
         ),
-        'error' => 'Unable to fetch Moralis data',
-        'data_source' => 'default_moralis',
+        'error' => 'Unable to fetch enhanced Moralis data',
+        'data_source' => 'default_enhanced_moralis',
         'fetched_at' => time()
     );
 }
@@ -1922,6 +2014,7 @@ function solanawp_check_rate_limit( $url ) {
     set_transient( $transient_key, $current_count + 1, $rate_window );
     return true;
 }
+
 function solanawp_get_client_ip() {
     $ip_keys = array( 'HTTP_CF_CONNECTING_IP', 'HTTP_CLIENT_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_X_FORWARDED', 'HTTP_X_CLUSTER_CLIENT_IP', 'HTTP_FORWARDED_FOR', 'HTTP_FORWARDED', 'REMOTE_ADDR' );
 

@@ -1,21 +1,10 @@
 /**
- * SolanaWP Main JavaScript File - ENHANCED WITH NEW STANDALONE TOKEN DISTRIBUTION SECTION
+ * SolanaWP Main JavaScript File - FIXED VERSION
  * File location: assets/js/main.js
- *
- * PHASE 1: Enhanced Account Details
- * PHASE 2: Authority Risk Analysis (RugCheck API)
- * PHASE 3: Token Distribution Analysis (Alchemy + Moralis API)
- * NEW: Standalone Token Distribution section with enhanced features
- * REMOVED: Security Analysis section (deleted)
- * UPDATED: Added Top Holders support from RugCheck API topHolders count
- * UPDATED: Combined Risks Score and Risk Level into "Risks" section
- * UPDATED: New standalone Token Distribution section with 4 subsections
- * Version: ENHANCED LAYOUT IMPLEMENTATION WITH STANDALONE TOKEN DISTRIBUTION + ALL NEW UPDATES
  */
 
-(function($) { // Use jQuery no-conflict wrapper
+(function($) {
 
-    // Document Ready
     $(function() {
 
         // --- Solana Address Checker Logic ---
@@ -75,9 +64,7 @@
             }
         }
 
-        /**
-         * Update Token Analytics UI with DexScreener data
-         */
+        // Update Token Analytics UI
         function updateTokenAnalyticsUI(tokenData, dexscreenerData) {
             if (!dexscreenerData) {
                 console.log('No DexScreener data available for Token Analytics');
@@ -134,9 +121,7 @@
             }
         }
 
-        /**
-         * PHASE 1: Enhanced Account Details Update
-         */
+        // Enhanced Account Details Update
         function updateEnhancedAccountDetailsUI(accountData) {
             if (!accountData) {
                 console.log('No account data available for enhanced display');
@@ -166,9 +151,6 @@
             }
         }
 
-        /**
-         * Helper function to update labels for token accounts
-         */
         function updateAccountLabelsForToken() {
             const labels = $('#accountDetailsCard .metric-label');
             if (labels.length >= 4) {
@@ -179,9 +161,6 @@
             }
         }
 
-        /**
-         * Helper function to update labels for wallet accounts
-         */
         function updateAccountLabelsForWallet() {
             const labels = $('#accountDetailsCard .metric-label');
             if (labels.length >= 4) {
@@ -192,9 +171,7 @@
             }
         }
 
-        /**
-         * NEW: Standalone Token Distribution Analysis with 4 subsections
-         */
+        // Standalone Token Distribution Analysis
         function updateTokenDistributionStandalone(distributionData, rugCheckData, moralisData) {
             console.log('Updating standalone token distribution with:', {distributionData, rugCheckData, moralisData});
 
@@ -219,12 +196,12 @@
             }
         }
 
-        /**
-         * Update Holders Distribution subsection
-         */
         function updateHoldersDistribution(distributionData, rugCheckData, moralisData) {
-            // Total Holders from RugCheck API
-            if (rugCheckData && typeof rugCheckData.totalHolders !== 'undefined') {
+            // Extract Total Holders from Moralis API as requested
+            if (moralisData && typeof moralisData.totalHolders !== 'undefined') {
+                $('#totalHoldersCount').text(moralisData.totalHolders || '0');
+            } else if (rugCheckData && typeof rugCheckData.totalHolders !== 'undefined') {
+                // Fallback to RugCheck API if Moralis not available
                 $('#totalHoldersCount').text(rugCheckData.totalHolders || '0');
             } else {
                 $('#totalHoldersCount').text('-');
@@ -237,7 +214,7 @@
                 $('#concentrationTop20').text(distributionData.top_20_percentage ? distributionData.top_20_percentage + '%' : '-');
             }
 
-            // NEW: Enhanced concentration metrics from Moralis API
+            // Enhanced concentration metrics from Moralis API
             if (moralisData && moralisData.concentration) {
                 $('#concentrationTop50').text(moralisData.concentration.top_50_percentage ? moralisData.concentration.top_50_percentage + '%' : '-');
                 $('#concentrationTop100').text(moralisData.concentration.top_100_percentage ? moralisData.concentration.top_100_percentage + '%' : '-');
@@ -277,9 +254,6 @@
             }
         }
 
-        /**
-         * Update Top Holders Distribution subsection
-         */
         function updateTopHoldersDistribution(distributionData) {
             const $container = $('#tokenDistributionChart');
             $container.empty();
@@ -305,34 +279,29 @@
             }
         }
 
-        /**
-         * Update Holders Growth Analysis subsection
-         */
         function updateHoldersGrowthAnalysis(moralisData) {
             if (moralisData && moralisData.holdersGrowth) {
                 const growth = moralisData.holdersGrowth;
 
-                // Update growth changes with color coding
-                updateGrowthChange('#holdersChange5m', '#holdersChangePercent5m', growth.change_5m, growth.percent_5m);
-                updateGrowthChange('#holdersChange1h', '#holdersChangePercent1h', growth.change_1h, growth.percent_1h);
-                updateGrowthChange('#holdersChange6h', '#holdersChangePercent6h', growth.change_6h, growth.percent_6h);
-                updateGrowthChange('#holdersChange24h', '#holdersChangePercent24h', growth.change_24h, growth.percent_24h);
-                updateGrowthChange('#holdersChange3d', '#holdersChangePercent3d', growth.change_3d, growth.percent_3d);
-                updateGrowthChange('#holdersChange7d', '#holdersChangePercent7d', growth.change_7d, growth.percent_7d);
-                updateGrowthChange('#holdersChange30d', '#holdersChangePercent30d', growth.change_30d, growth.percent_30d);
+                // Update growth changes with color coding and status text
+                updateGrowthChangeWithStatus('5m', growth.change_5m, growth.percent_5m);
+                updateGrowthChangeWithStatus('1h', growth.change_1h, growth.percent_1h);
+                updateGrowthChangeWithStatus('6h', growth.change_6h, growth.percent_6h);
+                updateGrowthChangeWithStatus('24h', growth.change_24h, growth.percent_24h);
+                updateGrowthChangeWithStatus('3d', growth.change_3d, growth.percent_3d);
+                updateGrowthChangeWithStatus('7d', growth.change_7d, growth.percent_7d);
+                updateGrowthChangeWithStatus('30d', growth.change_30d, growth.percent_30d);
             } else {
                 // Set default values
                 const periods = ['5m', '1h', '6h', '24h', '3d', '7d', '30d'];
                 periods.forEach(period => {
                     $(`#holdersChange${period}`).text('-');
                     $(`#holdersChangePercent${period}`).text('-');
+                    $(`#holdersStatus${period}`).text('').removeClass('holders-joined holders-left');
                 });
             }
         }
 
-        /**
-         * Update Holders Categories subsection
-         */
         function updateHoldersCategories(moralisData) {
             if (moralisData && moralisData.holdersCategories) {
                 const categories = moralisData.holdersCategories;
@@ -353,12 +322,10 @@
             }
         }
 
-        /**
-         * Helper function to update growth changes with color coding
-         */
-        function updateGrowthChange(changeElementId, percentElementId, changeValue, percentValue) {
-            const $changeElement = $(changeElementId);
-            const $percentElement = $(percentElementId);
+        function updateGrowthChangeWithStatus(period, changeValue, percentValue) {
+            const $changeElement = $(`#holdersChange${period}`);
+            const $percentElement = $(`#holdersChangePercent${period}`);
+            const $statusElement = $(`#holdersStatus${period}`);
 
             if (changeValue !== undefined && changeValue !== null) {
                 const change = parseInt(changeValue);
@@ -366,13 +333,17 @@
 
                 if (change > 0) {
                     $changeElement.css('color', '#10b981'); // Green for positive
+                    $statusElement.text('Holders Joined').addClass('holders-joined').removeClass('holders-left');
                 } else if (change < 0) {
                     $changeElement.css('color', '#ef4444'); // Red for negative
+                    $statusElement.text('Holders Left').addClass('holders-left').removeClass('holders-joined');
                 } else {
                     $changeElement.css('color', '#6b7280'); // Gray for neutral
+                    $statusElement.text('').removeClass('holders-joined holders-left');
                 }
             } else {
                 $changeElement.text('-').css('color', '#6b7280');
+                $statusElement.text('').removeClass('holders-joined holders-left');
             }
 
             if (percentValue !== undefined && percentValue !== null) {
@@ -391,27 +362,7 @@
             }
         }
 
-        /**
-         * UPDATED: Token Distribution Analysis for Rug Pull section (keep existing for backward compatibility)
-         */
-        function updateTokenDistributionUI(distributionData, rugCheckData) {
-            console.log('Updating rug pull token distribution with distribution data:', distributionData);
-            console.log('Updating rug pull token distribution with RugCheck data:', rugCheckData);
-
-            try {
-                // This function remains for the Rug Pull section compatibility
-                // The main logic has been moved to updateTokenDistributionStandalone()
-
-                console.log('Rug pull token distribution updated successfully');
-
-            } catch (error) {
-                console.error('Error updating rug pull token distribution:', error);
-            }
-        }
-
-        /**
-         * ENHANCED: Update RugCheck Data with new layout and all new logic
-         */
+        // Enhanced RugCheck Analysis
         function updateRugCheckAnalysisUI(rugCheckData) {
             if (!rugCheckData) {
                 console.log('No RugCheck data available');
@@ -446,15 +397,12 @@
             }
         }
 
-        /**
-         * UPDATED: Update Risk Overview Section with all new color and text logic
-         */
         function updateRiskOverviewSection(rugCheckData) {
             // Main Risk Score
             const score = rugCheckData.score || rugCheckData.score_normalised || 0;
             $('#rugOverallScore').text(score);
 
-            // NEW: Risks Score Logic - Check if risks array is empty
+            // Risks Score Logic - Check if risks array is empty
             const risks = rugCheckData.risks || [];
             if (risks.length === 0) {
                 $('#risksScore').text('No Known Risks').css('color', '#10b981'); // Green
@@ -464,7 +412,7 @@
                 $('#risksScore').text(Math.round(avgRiskScore)).css('color', '#dc2626'); // Red
             }
 
-            // NEW: Risk Level Logic - Check if risks array is empty
+            // Risk Level Logic - Check if risks array is empty
             let riskLevel = 'Unknown';
             let riskClass = '';
 
@@ -494,7 +442,7 @@
                 .removeClass('risk-low risk-medium risk-high')
                 .addClass(riskClass);
 
-            // NEW: Rugged Status Logic - false = "NO" (green), true = "Yes" (red)
+            // Rugged Status Logic - false = "NO" (green), true = "Yes" (red)
             if (rugCheckData.rugged === true) {
                 $('#ruggedStatus').text('Yes').css('color', '#dc2626'); // Red
                 if (rugCheckData.detectedAt) {
@@ -510,7 +458,7 @@
                 $('#ruggedDate').text('');
             }
 
-            // NEW: Mutable Status Logic - true = "Yes" (red), false = "No" (green)
+            // Mutable Status Logic - true = "Yes" (red), false = "No" (green)
             if (rugCheckData.tokenMeta?.mutable === true) {
                 $('#mutableStatus').text('Yes').css('color', '#dc2626'); // Red
             } else if (rugCheckData.tokenMeta?.mutable === false) {
@@ -520,9 +468,6 @@
             }
         }
 
-        /**
-         * NEW: Update Insider Networks Section with enhanced logic
-         */
         function updateInsiderNetworksSection(rugCheckData) {
             const $container = $('#insiderNetworksContainer');
             const $statusSpan = $('#insidersDetectedStatus');
@@ -573,9 +518,6 @@
             }
         }
 
-        /**
-         * NEW: Update Lockers Section with enhanced logic
-         */
         function updateLockersSection(rugCheckData) {
             const $container = $('#lockersContainer');
 
@@ -628,9 +570,6 @@
             }
         }
 
-        /**
-         * Update Security & Liquidity Section
-         */
         function updateSecurityLiquiditySection(rugCheckData) {
             // Liquidity Analysis
             if (rugCheckData.markets && rugCheckData.markets.length > 0) {
@@ -677,9 +616,6 @@
             });
         }
 
-        /**
-         * Helper function to update security metrics
-         */
         function updateSecurityMetric(type, data) {
             const containerId = type + 'Container';
             const statusId = type + 'Status';
@@ -696,9 +632,6 @@
             }
         }
 
-        /**
-         * Helper function to update authority metrics
-         */
         function updateAuthorityMetric(type, authority, config) {
             const statusId = type + 'Status';
             const iconId = type + 'Icon';
@@ -719,10 +652,6 @@
             }
         }
 
-        /**
-         * UPDATED: Risk Indicators Section - Combined Risks Score and Risk Level into "Risks"
-         * Displays risks array with name, description, and level formatting
-         */
         function updateRiskIndicatorsSection(rugCheckData) {
             const $container = $('#keyRiskIndicators');
             $container.empty();
@@ -814,9 +743,6 @@
             });
         }
 
-        /**
-         * Update Creator History Section with enhanced styling
-         */
         function updateCreatorHistorySection(creatorTokens) {
             const $container = $('#creatorTokensContainer');
             $container.empty();
@@ -891,37 +817,7 @@
             }
         }
 
-        /**
-         * Initialize animated loading states when starting analysis
-         */
-        function initializeLoadingStates() {
-            // Show animated loading for insider networks
-            showAnimatedLoading('insiderNetworksContainer', 'Analyzing insider networks...');
-
-            // Show animated loading for lockers
-            showAnimatedLoading('lockersContainer', 'Loading locker information...');
-
-            // Show animated loading for key risk indicators
-            showAnimatedLoading('keyRiskIndicators', 'Analyzing risk factors...');
-
-            // Show animated loading for creator tokens
-            showAnimatedLoading('creatorTokensContainer', 'Analyzing creator history...');
-
-            // Show animated loading for token distribution chart
-            showAnimatedLoading('tokenDistributionChart', 'Loading distribution data...');
-        }
-
-        /**
-         * Helper function to show animated loading for specific containers
-         */
-        function showAnimatedLoading(containerId, message) {
-            const $container = $('#' + containerId);
-            $container.html(`<div class="loading-placeholder animated-loading">${message}</div>`);
-        }
-
-        /**
-         * Helper function to get color based on distribution percentage
-         */
+        // Helper functions
         function getDistributionColor(percentage) {
             if (percentage > 30) return '#ef4444'; // Red for high concentration
             if (percentage > 15) return '#f59e0b'; // Orange for medium
@@ -929,9 +825,6 @@
             return '#10b981'; // Green for low/healthy
         }
 
-        /**
-         * Helper function to format numbers with appropriate suffixes
-         */
         function formatNumber(num) {
             if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
             if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
@@ -939,9 +832,6 @@
             return num.toFixed(2);
         }
 
-        /**
-         * Helper function to update price changes with color coding
-         */
         function updatePriceChange(elementId, change) {
             const $element = $(elementId);
             if (change !== undefined && change !== null) {
@@ -960,9 +850,6 @@
             }
         }
 
-        /**
-         * Update progress bar
-         */
         function updateProgressBar(barId, value) {
             const $bar = $('#' + barId);
             if ($bar.length) {
@@ -978,9 +865,7 @@
             }
         }
 
-        /**
-         * UPDATED: Main population function with enhanced layout and standalone token distribution
-         */
+        // Main population function
         function populateResults(data) {
             console.log('SolanaWP: Populating enhanced results with standalone token distribution:', data);
 
@@ -990,9 +875,6 @@
 
             // Show results section
             $('#resultsSection').show();
-
-            // Initialize animated loading states immediately
-            initializeLoadingStates();
 
             // 1. VALIDATION CARD - Always show first
             if (data.validation) {
@@ -1045,37 +927,33 @@
                 $('#transactionAnalysisCard').show();
             }
 
-            // 5. ENHANCED ACCOUNT DETAILS (Keep existing)
+            // 5. ENHANCED ACCOUNT DETAILS
             let accountVisible = false;
 
-            // PHASE 1: Enhanced Account Details
             if (data.account) {
                 updateEnhancedAccountDetailsUI(data.account);
                 accountVisible = true;
             }
 
-            // Show account grid if has data (REMOVED SECURITY ANALYSIS)
+            // Show account grid if has data
             if (accountVisible) {
                 $('#accountAndSecurityOuterGrid').css('display', 'grid');
             }
 
-            // 6. ENHANCED RUG PULL RISK CARD with new layout
+            // 6. ENHANCED RUG PULL RISK CARD
             if (data.rugpull || data.rugcheck_data) {
-                // Update enhanced RugCheck data
                 if (data.rugcheck_data) {
                     updateRugCheckAnalysisUI(data.rugcheck_data);
                 }
-
-                // Show the card
                 $('#rugPullRiskCard').show();
             }
 
-            // 7. NEW: STANDALONE TOKEN DISTRIBUTION ANALYSIS CARD
+            // 7. STANDALONE TOKEN DISTRIBUTION ANALYSIS CARD
             if (data.distribution_analysis || data.rugcheck_data || data.moralis_data) {
                 updateTokenDistributionStandalone(data.distribution_analysis, data.rugcheck_data, data.moralis_data);
             }
 
-            // 8. WEBSITE & SOCIAL ACCOUNTS CARD (Keep existing)
+            // 8. WEBSITE & SOCIAL ACCOUNTS CARD
             if (data.social) {
                 const ws = data.social;
 
@@ -1156,7 +1034,7 @@
         }
 
         // ===================================================================
-        // EVENT LISTENER FOR THE CHECK BUTTON - ENHANCED API IMPLEMENTATION
+        // EVENT LISTENER FOR THE CHECK BUTTON - MAIN BUTTON CLICK HANDLER
         // ===================================================================
         if ($checkAddressBtn.length && $solanaAddressInput.length) {
             $checkAddressBtn.on('click', function() {
@@ -1178,7 +1056,7 @@
                 setButtonLoading(true);
                 resetResultAreas();
 
-                console.log('SolanaWP: Making ENHANCED API call with RugCheck + Moralis integration for address:', address);
+                console.log('SolanaWP: Making AJAX call for address:', address);
 
                 if (typeof solanaWP_ajax_object === 'undefined') {
                     console.error('AJAX Error: solanaWP_ajax_object not found.');
@@ -1190,7 +1068,7 @@
                     return;
                 }
 
-                // ENHANCED WORDPRESS AJAX CALL WITH RUGCHECK + MORALIS API
+                // WORDPRESS AJAX CALL
                 $.ajax({
                     url: solanaWP_ajax_object.ajax_url,
                     type: 'POST',
@@ -1202,15 +1080,14 @@
                     dataType: 'json',
                     timeout: 45000,
                     beforeSend: function() {
-                        console.log('SolanaWP: Sending enhanced AJAX request with RugCheck + Moralis integration...');
+                        console.log('SolanaWP: Sending AJAX request...');
                     },
                     success: function(response) {
-                        console.log('SolanaWP: Enhanced backend response with RugCheck + Moralis received:', response);
+                        console.log('SolanaWP: Backend response received:', response);
 
                         if (response.success && response.data) {
-                            // Use the enhanced data with RugCheck + Moralis integration
                             populateResults(response.data);
-                            console.log('SolanaWP: Enhanced blockchain data with RugCheck + Moralis populated successfully');
+                            console.log('SolanaWP: Data populated successfully');
                         } else {
                             let errorMessage = 'Error processing address.';
                             if (response.data && response.data.message) {
@@ -1281,7 +1158,7 @@
         });
 
         // Debug info
-        console.log('SolanaWP: Enhanced Main JavaScript initialized with STANDALONE TOKEN DISTRIBUTION SECTION + RUGCHECK + MORALIS API INTEGRATION + ALL NEW UPDATES');
+        console.log('SolanaWP: Main JavaScript initialized');
         console.log('SolanaWP: AJAX object available:', typeof solanaWP_ajax_object !== 'undefined');
 
         if (typeof solanaWP_ajax_object !== 'undefined') {
