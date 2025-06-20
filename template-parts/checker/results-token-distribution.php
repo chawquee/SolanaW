@@ -4,6 +4,7 @@
  * Called by template-address-checker.php or front-page.php.
  * NEW: Standalone section extracted from Rug Pull Risk Analysis with enhanced features.
  * UPDATED: Following new update requirements with icons, banners, and improved formatting
+ * UPDATED: Dynamic Time Period Sub-sections Based on Activity Duration
  *
  * @package SolanaWP
  * @since SolanaWP 1.0.0
@@ -97,55 +98,29 @@ if ( ! defined( 'ABSPATH' ) ) {
             </div>
         </div>
 
-        <!-- Holders Growth Analysis Section -->
+        <!-- Holders Growth Analysis Section - UPDATED: Dynamic Time Periods -->
         <div class="token-distribution-section">
             <h3 class="section-title">
                 <span class="section-icon">📊</span>
                 <?php esc_html_e( 'Holders Growth Analysis', 'solanawp' ); ?>
             </h3>
-            <div class="holders-growth-grid">
-                <div class="growth-metric-card">
-                    <div class="growth-period"><?php esc_html_e( '5m', 'solanawp' ); ?></div>
-                    <div class="growth-change" id="holdersChange5m">-</div>
-                    <div class="growth-percentage" id="holdersChangePercent5m">-</div>
-                    <div class="holders-status-text" id="holdersStatus5m"></div>
+
+            <!-- UPDATED: Dynamic holders growth grid - will be populated by JavaScript -->
+            <div class="holders-growth-grid dynamic-periods-container" id="dynamicHoldersGrowthGrid">
+                <!-- Dynamic time period cards will be inserted here by JavaScript based on activity duration -->
+                <div class="loading-placeholder">
+                    <?php esc_html_e( 'Calculating dynamic time periods...', 'solanawp' ); ?>
                 </div>
-                <div class="growth-metric-card">
-                    <div class="growth-period"><?php esc_html_e( '1h', 'solanawp' ); ?></div>
-                    <div class="growth-change" id="holdersChange1h">-</div>
-                    <div class="growth-percentage" id="holdersChangePercent1h">-</div>
-                    <div class="holders-status-text" id="holdersStatus1h"></div>
-                </div>
-                <div class="growth-metric-card">
-                    <div class="growth-period"><?php esc_html_e( '6h', 'solanawp' ); ?></div>
-                    <div class="growth-change" id="holdersChange6h">-</div>
-                    <div class="growth-percentage" id="holdersChangePercent6h">-</div>
-                    <div class="holders-status-text" id="holdersStatus6h"></div>
-                </div>
-                <div class="growth-metric-card">
-                    <div class="growth-period"><?php esc_html_e( '24h', 'solanawp' ); ?></div>
-                    <div class="growth-change" id="holdersChange24h">-</div>
-                    <div class="growth-percentage" id="holdersChangePercent24h">-</div>
-                    <div class="holders-status-text" id="holdersStatus24h"></div>
-                </div>
-                <div class="growth-metric-card">
-                    <div class="growth-period"><?php esc_html_e( '3 days', 'solanawp' ); ?></div>
-                    <div class="growth-change" id="holdersChange3d">-</div>
-                    <div class="growth-percentage" id="holdersChangePercent3d">-</div>
-                    <div class="holders-status-text" id="holdersStatus3d"></div>
-                </div>
-                <div class="growth-metric-card">
-                    <div class="growth-period"><?php esc_html_e( '7 days', 'solanawp' ); ?></div>
-                    <div class="growth-change" id="holdersChange7d">-</div>
-                    <div class="growth-percentage" id="holdersChangePercent7d">-</div>
-                    <div class="holders-status-text" id="holdersStatus7d"></div>
-                </div>
-                <div class="growth-metric-card">
-                    <div class="growth-period"><?php esc_html_e( '30 days', 'solanawp' ); ?></div>
-                    <div class="growth-change" id="holdersChange30d">-</div>
-                    <div class="growth-percentage" id="holdersChangePercent30d">-</div>
-                    <div class="holders-status-text" id="holdersStatus30d"></div>
-                </div>
+            </div>
+
+            <!-- Debug info container (can be hidden in production) -->
+            <div class="dynamic-periods-debug" id="dynamicPeriodsDebug" style="display: none;">
+                <small>
+                    <strong>Debug Info:</strong>
+                    <span id="debugActivityDuration">-</span> |
+                    <span id="debugPeriodsCount">-</span> periods |
+                    <span id="debugCalculationMethod">-</span>
+                </small>
             </div>
 
             <!-- Growth Analysis Info Banner -->
@@ -154,7 +129,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                 <div class="banner-content">
                     <div class="banner-title"><?php esc_html_e( 'Understanding Holder Changes Over Time', 'solanawp' ); ?></div>
                     <div class="banner-text">
-                        <?php esc_html_e( 'Tracking how the number of token holders changes over different time periods helps you understand investor sentiment. Growing holders (green) often indicates increasing confidence and adoption. Declining holders (red) might suggest selling pressure or loss of interest. Short-term changes (5m-6h) show immediate market reactions, while longer periods (7-30 days) reveal investment trends.', 'solanawp' ); ?>
+                        <?php esc_html_e( 'Tracking how the number of token holders changes over different time periods helps you understand investor sentiment. Growing holders (green) often indicates increasing confidence and adoption. Declining holders (red) might suggest selling pressure or loss of interest. Short-term changes (5m-6h) show immediate market reactions, while longer periods (7-30 days) reveal investment trends. Time periods shown are dynamically adjusted based on token activity duration.', 'solanawp' ); ?>
                     </div>
                 </div>
             </div>

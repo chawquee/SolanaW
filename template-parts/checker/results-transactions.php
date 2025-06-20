@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
         <svg class="icon text-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"> <?php // Class and SVG from hannisolsvelte.html ?>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
         </svg>
-        <h2 class="card-title"><?php esc_html_e( 'Transaction Analysis', 'solanawp' ); ?></h2> <?php // Text from hannisolsvelte.html ?>
+        <h2 class="card-title"><?php esc_html_e( 'Transactions Analysis', 'solanawp' ); ?></h2> <?php // Text from hannisolsvelte.html ?>
     </div>
     <div class="card-content"> <?php // Class from hannisolsvelte.html ?>
         <div class="metrics-grid"> <?php // Class from hannisolsvelte.html ?>

@@ -13,6 +13,7 @@
  * UPDATED: Free Solana RPC API endpoint for Account Details
  * UPDATED: Enhanced Total Holders extraction from Moralis API for new frontend requirements
  * UPDATED: Improved data structure for informational banners and proper formatting
+ * UPDATED: Dynamic Time Period Sub-sections Based on Activity Duration
  *
  * @package SolanaWP
  * @since SolanaWP 1.0.0
@@ -302,6 +303,14 @@ function solanawp_setup_x_api_credentials() {
  * ENHANCED MAIN PROCESSING FUNCTION - WITH RUGCHECK + MORALIS API INTEGRATION
  * REMOVED: Security Analysis (deleted section)
  * UPDATED: Enhanced Total Holders extraction and data structure optimization
+ * UPDATED: Dynamic Time Period Sub-sections Based on Activity Duration
+ */
+/**
+ * ENHANCED MAIN PROCESSING FUNCTION - WITH RUGCHECK + MORALIS API INTEGRATION
+ * REMOVED: Security Analysis (deleted section)
+ * UPDATED: Enhanced Total Holders extraction and data structure optimization
+ * UPDATED: Dynamic Time Period Sub-sections Based on Activity Duration
+ * UPDATED: Integration of dynamic time periods with Moralis holders growth filtering
  */
 function solanawp_process_solana_address_enhanced_with_moralis( $address ) {
     // 💾 Check cache first
@@ -330,8 +339,11 @@ function solanawp_process_solana_address_enhanced_with_moralis( $address ) {
     // NEW: Enhanced RugCheck API Integration
     $rugcheck_data = solanawp_fetch_enhanced_rugcheck_data( $address );
 
-    // NEW: Enhanced Moralis API Integration with improved Total Holders extraction
-    $moralis_data = solanawp_fetch_moralis_token_data( $address );
+    // NEW: Dynamic Time Periods calculation based on activity duration
+    $dynamic_time_periods = solanawp_calculate_dynamic_time_periods( $transaction_data );
+
+    // NEW: Enhanced Moralis API Integration with dynamic period filtering
+    $moralis_data = solanawp_fetch_moralis_token_data_with_dynamic_periods( $address, $dynamic_time_periods );
 
     // Token Analytics
     $token_analytics = solanawp_extract_token_analytics( $dexscreener_data );
@@ -354,12 +366,13 @@ function solanawp_process_solana_address_enhanced_with_moralis( $address ) {
         // REMOVED: 'security' => $security_data, (Security Analysis deleted)
         'rugpull' => $rugcheck_data, // Legacy field for compatibility
         'rugcheck_data' => $rugcheck_data, // NEW: Enhanced RugCheck API data
-        'moralis_data' => $moralis_data, // NEW: Enhanced Moralis API data for standalone token distribution
+        'moralis_data' => $moralis_data, // NEW: Enhanced Moralis API data for standalone token distribution with dynamic filtering
         'social' => $social_data,
         'scores' => $scores_data,
         'dexscreener_data' => $dexscreener_data,
         'token_analytics' => $token_analytics,
         'distribution_analysis' => $distribution_data, // PHASE 3: Token distribution data
+        'dynamic_time_periods' => $dynamic_time_periods, // NEW: Dynamic time periods for holders growth
         'timestamp' => current_time( 'timestamp' )
     );
 
@@ -367,6 +380,131 @@ function solanawp_process_solana_address_enhanced_with_moralis( $address ) {
     solanawp_set_cache( $cache_key, $result );
 
     return $result;
+}
+// ============================================================================
+// NEW: DYNAMIC TIME PERIODS CALCULATION FUNCTION
+// ============================================================================
+
+/**
+ * Calculate Dynamic Time Periods Based on Activity Duration
+ *
+ * @param array $transaction_data Transaction data containing first and last activity
+ * @return array Dynamic time periods configuration
+ */
+/**
+ * Calculate Dynamic Time Periods Based on Activity Duration
+ *
+ * @param array $transaction_data Transaction data containing first and last activity
+ * @return array Dynamic time periods configuration
+ */
+function solanawp_calculate_dynamic_time_periods( $transaction_data ) {
+    try {
+        // Extract first and last activity dates
+        $first_activity = $transaction_data['first_transaction'] ?? 'Unknown';
+        $last_activity = $transaction_data['last_transaction'] ?? 'Unknown';
+
+        // Default periods if dates are not available
+        $default_periods = array(
+            'periods' => array('5m', '1h', '6h', '24h', '3 days', '7 days', '30 days'),
+            'period_keys' => array('5m', '1h', '6h', '24h', '3d', '7d', '30d'),
+            'dt_hours' => 0,
+            'first_activity' => $first_activity,
+            'last_activity' => $last_activity,
+            'calculation_method' => 'default_all_periods'
+        );
+
+        if ( $first_activity === 'Unknown' || $last_activity === 'Unknown' ||
+            $first_activity === $last_activity ) {
+            error_log( 'SolanaWP: Using default time periods - insufficient date data' );
+            return $default_periods;
+        }
+
+        // Convert dates to timestamps
+        $first_timestamp = strtotime( $first_activity );
+        $last_timestamp = strtotime( $last_activity );
+
+        if ( $first_timestamp === false || $last_timestamp === false ) {
+            error_log( 'SolanaWP: Invalid date format, using default periods' );
+            return $default_periods;
+        }
+
+        // Calculate Dt in hours
+        $dt_seconds = $last_timestamp - $first_timestamp;
+        $dt_hours = $dt_seconds / 3600; // Convert to hours
+
+        error_log( "SolanaWP: Activity duration calculated - Dt: {$dt_hours} hours" );
+
+        // Dynamic Sub-section Display Logic with period keys mapping
+        $periods = array();
+        $period_keys = array();
+
+        if ( $dt_hours > (5/60) && $dt_hours <= 1 ) {
+            // 5 minutes < Dt ≤ 1 hour
+            $periods = array('5m', '1h');
+            $period_keys = array('5m', '1h');
+            $calculation_method = 'range_5m_to_1h';
+        } elseif ( $dt_hours >= 1 && $dt_hours <= 6 ) {
+            // 1 hour ≤ Dt ≤ 6 hours
+            $periods = array('5m', '1h', '6h');
+            $period_keys = array('5m', '1h', '6h');
+            $calculation_method = 'range_1h_to_6h';
+        } elseif ( $dt_hours > 6 && $dt_hours <= 24 ) {
+            // 6 hours < Dt ≤ 24 hours
+            $periods = array('5m', '1h', '6h', '24h');
+            $period_keys = array('5m', '1h', '6h', '24h');
+            $calculation_method = 'range_6h_to_24h';
+        } elseif ( $dt_hours > 24 && $dt_hours <= 72 ) {
+            // 24 hours < Dt ≤ 72 hours (3 days)
+            $periods = array('5m', '1h', '6h', '24h', '3 days');
+            $period_keys = array('5m', '1h', '6h', '24h', '3d');
+            $calculation_method = 'range_24h_to_72h';
+        } elseif ( $dt_hours > 72 && $dt_hours <= 168 ) {
+            // 72 hours < Dt ≤ 168 hours (7 days)
+            $periods = array('5m', '1h', '6h', '24h', '3 days', '7 days');
+            $period_keys = array('5m', '1h', '6h', '24h', '3d', '7d');
+            $calculation_method = 'range_72h_to_168h';
+        } elseif ( $dt_hours > 168 && $dt_hours <= 720 ) {
+            // 168 hours < Dt ≤ 720 hours (30 days)
+            $periods = array('5m', '1h', '6h', '24h', '3 days', '7 days', '30 days');
+            $period_keys = array('5m', '1h', '6h', '24h', '3d', '7d', '30d');
+            $calculation_method = 'range_168h_to_720h';
+        } else {
+            // Outside defined ranges, show all periods
+            $periods = array('5m', '1h', '6h', '24h', '3 days', '7 days', '30 days');
+            $period_keys = array('5m', '1h', '6h', '24h', '3d', '7d', '30d');
+            $calculation_method = 'outside_ranges_all_periods';
+        }
+
+        $result = array(
+            'periods' => $periods,
+            'period_keys' => $period_keys,
+            'dt_hours' => round( $dt_hours, 2 ),
+            'dt_days' => round( $dt_hours / 24, 2 ),
+            'first_activity' => $first_activity,
+            'last_activity' => $last_activity,
+            'first_timestamp' => $first_timestamp,
+            'last_timestamp' => $last_timestamp,
+            'calculation_method' => $calculation_method,
+            'periods_count' => count( $periods )
+        );
+
+        error_log( "SolanaWP: Dynamic periods calculated - Method: {$calculation_method}, Periods: " . implode( ', ', $periods ) );
+
+        return $result;
+
+    } catch ( Exception $e ) {
+        error_log( 'SolanaWP: Error calculating dynamic time periods: ' . $e->getMessage() );
+
+        return array(
+            'periods' => array('5m', '1h', '6h', '24h', '3 days', '7 days', '30 days'),
+            'period_keys' => array('5m', '1h', '6h', '24h', '3d', '7d', '30d'),
+            'dt_hours' => 0,
+            'first_activity' => $first_activity ?? 'Unknown',
+            'last_activity' => $last_activity ?? 'Unknown',
+            'calculation_method' => 'error_fallback',
+            'error' => $e->getMessage()
+        );
+    }
 }
 
 // ============================================================================
@@ -458,7 +596,14 @@ function solanawp_fetch_moralis_endpoint( $url, $api_key ) {
  * UPDATED: Improved data structure for frontend banners and formatting requirements
  * UPDATED: Better validation and data consistency checks
  */
-function solanawp_process_moralis_data( $moralis_response, $address ) {
+/**
+ * Process and enhance Moralis data for the standalone token distribution section
+ * UPDATED: Enhanced Total Holders extraction with multiple fallback methods
+ * UPDATED: Improved data structure for frontend banners and formatting requirements
+ * UPDATED: Better validation and data consistency checks
+ * UPDATED: Dynamic filtering of holders growth data based on allowed time periods
+ */
+function solanawp_process_moralis_data( $moralis_response, $address, $allowed_period_keys = null ) {
     $processed_data = array(
         'concentration' => array(),
         'holdersGrowth' => array(),
@@ -521,11 +666,12 @@ function solanawp_process_moralis_data( $moralis_response, $address ) {
             );
         }
 
-        // ENHANCED: Extract holders growth analysis with improved data handling
+        // ENHANCED: Extract holders growth analysis with improved data handling and dynamic filtering
         if ( isset( $moralis_response['holderChange'] ) && is_array( $moralis_response['holderChange'] ) ) {
             $holder_change = $moralis_response['holderChange'];
 
-            $processed_data['holdersGrowth'] = array(
+            // Complete holders growth data structure
+            $all_holders_growth = array(
                 'change_5m' => isset( $holder_change['5min']['change'] ) ?
                     intval( $holder_change['5min']['change'] ) : 0,
                 'percent_5m' => isset( $holder_change['5min']['changePercent'] ) ?
@@ -556,7 +702,43 @@ function solanawp_process_moralis_data( $moralis_response, $address ) {
                     floatval( $holder_change['30d']['changePercent'] ) : 0
             );
 
-            error_log( 'SolanaWP: Holders growth analysis extracted successfully' );
+            // NEW: Dynamic filtering based on allowed time periods
+            if ( $allowed_period_keys && is_array( $allowed_period_keys ) ) {
+                $filtered_holders_growth = array();
+
+                // Map display periods to data keys
+                $period_mapping = array(
+                    '5m' => array('change_5m', 'percent_5m'),
+                    '1h' => array('change_1h', 'percent_1h'),
+                    '6h' => array('change_6h', 'percent_6h'),
+                    '24h' => array('change_24h', 'percent_24h'),
+                    '3d' => array('change_3d', 'percent_3d'),
+                    '7d' => array('change_7d', 'percent_7d'),
+                    '30d' => array('change_30d', 'percent_30d')
+                );
+
+                // Only include data for allowed periods
+                foreach ( $allowed_period_keys as $period_key ) {
+                    if ( isset( $period_mapping[$period_key] ) ) {
+                        $change_key = $period_mapping[$period_key][0];
+                        $percent_key = $period_mapping[$period_key][1];
+
+                        if ( isset( $all_holders_growth[$change_key] ) ) {
+                            $filtered_holders_growth[$change_key] = $all_holders_growth[$change_key];
+                        }
+                        if ( isset( $all_holders_growth[$percent_key] ) ) {
+                            $filtered_holders_growth[$percent_key] = $all_holders_growth[$percent_key];
+                        }
+                    }
+                }
+
+                $processed_data['holdersGrowth'] = $filtered_holders_growth;
+                error_log( 'SolanaWP: Holders growth analysis filtered for periods: ' . implode( ', ', $allowed_period_keys ) );
+            } else {
+                // Use all periods if no filtering specified
+                $processed_data['holdersGrowth'] = $all_holders_growth;
+                error_log( 'SolanaWP: Holders growth analysis extracted successfully (all periods)' );
+            }
         } else {
             // Provide default growth structure
             $processed_data['holdersGrowth'] = array(
@@ -633,7 +815,6 @@ function solanawp_process_moralis_data( $moralis_response, $address ) {
         return solanawp_get_default_moralis_data();
     }
 }
-
 /**
  * Get enhanced default Moralis data when API fails
  * UPDATED: Improved default structure matching the enhanced API response
@@ -2069,5 +2250,54 @@ function solanawp_set_cache( $key, $data, $expiration = 300 ) {
 
     return set_transient( 'solanawp_' . md5( $key ), $data, $expiration );
 }
+/**
+ * NEW: Enhanced Fetch Moralis Token Data with Dynamic Period Filtering
+ * UPDATED: Integrates dynamic time periods calculation with Moralis data processing
+ */
+function solanawp_fetch_moralis_token_data_with_dynamic_periods( $address, $dynamic_time_periods ) {
+    try {
+        // Use the provided API key and correct endpoint
+        $moralis_api_key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6ImE5NzdiOGVjLTA5OTctNGI2My1hZmNlLTY5YWNkZjNhMGFjZSIsIm9yZ0lkIjoiNDU0ODYzIiwidXNlcklkIjoiNDY3OTk0IiwidHlwZUlkIjoiNmU5YTg4ZjQtYTc3Zi00ODc2LWI0OGYtM2E1M2IxOTI3NmRhIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NTAzNjY3NTIsImV4cCI6NDkwNjEyNjc1Mn0.pE-UnXUgg8NHWfogpwP7SpjNGESX9oVvLnHFuKHQVYQ';
 
+        // Correct Moralis endpoint for token holders
+        $holders_url = "https://solana-gateway.moralis.io/token/mainnet/holders/{$address}";
+
+        error_log( "SolanaWP: Fetching enhanced Moralis data with dynamic periods from: {$holders_url}" );
+
+        // Fetch token holders data with enhanced error handling
+        $holders_response = solanawp_fetch_moralis_endpoint(
+            $holders_url,
+            $moralis_api_key
+        );
+
+        // Extract allowed period keys from dynamic time periods
+        $allowed_period_keys = isset( $dynamic_time_periods['period_keys'] ) ? $dynamic_time_periods['period_keys'] : null;
+
+        // Process and enhance the data with improved structure and dynamic filtering
+        $enhanced_data = solanawp_process_moralis_data(
+            $holders_response,
+            $address,
+            $allowed_period_keys
+        );
+
+        // Add dynamic time periods metadata to the response
+        $enhanced_data['dynamic_periods_applied'] = $allowed_period_keys;
+        $enhanced_data['dt_hours'] = $dynamic_time_periods['dt_hours'] ?? 0;
+
+        // UPDATED: Additional validation for Total Holders extraction
+        if ( isset( $enhanced_data['totalHolders'] ) && $enhanced_data['totalHolders'] > 0 ) {
+            error_log( 'SolanaWP: Successfully extracted Total Holders from Moralis: ' . $enhanced_data['totalHolders'] );
+        } else {
+            error_log( 'SolanaWP: Warning - Total Holders not found in Moralis response for: ' . $address );
+        }
+
+        error_log( 'SolanaWP: Successfully fetched and processed enhanced Moralis data with dynamic filtering for: ' . $address );
+
+        return $enhanced_data;
+
+    } catch ( Exception $e ) {
+        error_log( 'SolanaWP: Enhanced Moralis API with dynamic periods exception: ' . $e->getMessage() );
+        return solanawp_get_default_moralis_data();
+    }
+}
 ?>

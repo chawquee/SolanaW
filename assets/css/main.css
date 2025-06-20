@@ -1812,14 +1812,61 @@ a:hover,
     opacity: 0.8;
 }
 
-/* Holders Growth Analysis Grid */
+/* =============================================================================
+   UPDATED: DYNAMIC TIME PERIODS - ENHANCED HOLDERS GROWTH ANALYSIS GRID
+   ============================================================================= */
+
+/* Main Holders Growth Grid - UPDATED for Dynamic Periods */
 .holders-growth-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
     gap: 16px;
     padding: 24px;
+    justify-content: center; /* Center the grid items */
+    align-items: stretch; /* Ensure all cards have same height */
 }
 
+/* NEW: Dynamic Periods Container - Special handling for dynamic content */
+.dynamic-periods-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 16px;
+    padding: 24px;
+    justify-content: center; /* Ensure dynamic periods are centered */
+    align-items: stretch;
+    transition: all 0.3s ease; /* Smooth transition when periods change */
+}
+
+/* Enhanced support for varying numbers of periods (2-7 cards) */
+.dynamic-periods-container[data-periods="2"] {
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+    max-width: 400px;
+    margin: 0 auto; /* Center the container when only 2 periods */
+}
+
+.dynamic-periods-container[data-periods="3"] {
+    grid-template-columns: repeat(3, minmax(130px, 1fr));
+    max-width: 500px;
+    margin: 0 auto; /* Center the container when only 3 periods */
+}
+
+.dynamic-periods-container[data-periods="4"] {
+    grid-template-columns: repeat(4, minmax(120px, 1fr));
+}
+
+.dynamic-periods-container[data-periods="5"] {
+    grid-template-columns: repeat(5, minmax(110px, 1fr));
+}
+
+.dynamic-periods-container[data-periods="6"] {
+    grid-template-columns: repeat(6, minmax(100px, 1fr));
+}
+
+.dynamic-periods-container[data-periods="7"] {
+    grid-template-columns: repeat(7, minmax(90px, 1fr));
+}
+
+/* Growth Metric Cards - ENHANCED for Dynamic Behavior */
 .growth-metric-card {
     background: white;
     border: 2px solid #e5e7eb;
@@ -1828,6 +1875,11 @@ a:hover,
     text-align: center;
     transition: all 0.3s ease;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    min-height: 140px; /* Ensure consistent height */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    animation: fadeInScale 0.4s ease-out; /* Animation when cards appear */
 }
 
 .growth-metric-card:hover {
@@ -1835,6 +1887,18 @@ a:hover,
     border-color: #3b82f6;
     transform: translateY(-2px);
     box-shadow: 0 4px 16px rgba(59, 130, 246, 0.15);
+}
+
+/* NEW: Animation for dynamically appearing cards */
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.8) translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
 }
 
 .growth-period {
@@ -1873,6 +1937,45 @@ a:hover,
 .holders-left {
     color: #ef4444; /* Red for negative */
 }
+
+/* NEW: Debug Information Container - Can be shown/hidden */
+.dynamic-periods-debug {
+    padding: 8px 24px;
+    background: #f3f4f6;
+    border-radius: 8px;
+    margin: 0 24px 16px 24px;
+    border: 1px solid #d1d5db;
+    font-family: 'Courier New', monospace;
+    color: #6b7280;
+    transition: all 0.3s ease;
+}
+
+.dynamic-periods-debug:hover {
+    background: #e5e7eb;
+}
+
+/* Enhanced Loading States for Dynamic Periods */
+.dynamic-periods-container .loading-placeholder {
+    grid-column: 1 / -1; /* Span across all columns */
+    padding: 40px 20px;
+    background: #f8fafc;
+    border: 2px dashed #d1d5db;
+    border-radius: 12px;
+    color: #6b7280;
+    font-style: italic;
+    font-weight: 500;
+    text-align: center;
+    animation: loadingPulse 2s infinite;
+}
+
+@keyframes loadingPulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+}
+
+/* =============================================================================
+   END: DYNAMIC TIME PERIODS ENHANCEMENTS
+   ============================================================================= */
 
 /* Holders Categories Grid */
 .holders-categories-grid {
@@ -2371,9 +2474,18 @@ a:hover,
         gap: 12px;
     }
 
-    .holders-growth-grid {
+    /* UPDATED: Dynamic time periods responsive adjustments */
+    .holders-growth-grid,
+    .dynamic-periods-container {
         grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
         gap: 12px;
+    }
+
+    /* Override specific period layouts on tablets */
+    .dynamic-periods-container[data-periods="2"],
+    .dynamic-periods-container[data-periods="3"] {
+        max-width: none;
+        margin: 0;
     }
 
     .holders-categories-grid {
@@ -2488,9 +2600,46 @@ a:hover,
         font-size: 1.5rem;
     }
 
-    .holders-growth-grid {
+    /* UPDATED: Mobile responsive for dynamic time periods */
+    .holders-growth-grid,
+    .dynamic-periods-container {
         grid-template-columns: repeat(2, 1fr);
         gap: 12px;
+        padding: 16px; /* Reduced padding on mobile */
+    }
+
+    /* Mobile-specific adjustments for growth cards */
+    .growth-metric-card {
+        padding: 16px; /* Reduced padding */
+        min-height: 120px; /* Slightly smaller height */
+    }
+
+    .growth-period {
+        font-size: 13px; /* Slightly smaller text */
+    }
+
+    .growth-change {
+        font-size: 20px; /* Smaller change value */
+    }
+
+    .growth-percentage {
+        font-size: 11px; /* Smaller percentage text */
+    }
+
+    .holders-status-text {
+        font-size: 10px; /* Smaller status text */
+    }
+
+    /* Override all specific period layouts on mobile */
+    .dynamic-periods-container[data-periods="2"],
+    .dynamic-periods-container[data-periods="3"],
+    .dynamic-periods-container[data-periods="4"],
+    .dynamic-periods-container[data-periods="5"],
+    .dynamic-periods-container[data-periods="6"],
+    .dynamic-periods-container[data-periods="7"] {
+        grid-template-columns: repeat(2, 1fr);
+        max-width: none;
+        margin: 0;
     }
 
     .holders-categories-grid {
@@ -2498,12 +2647,49 @@ a:hover,
         gap: 12px;
     }
 
+    /* Mobile adjustments for debug info */
+    .dynamic-periods-debug {
+        padding: 6px 16px;
+        margin: 0 16px 12px 16px;
+        font-size: 12px;
+    }
+
 }
+
 @media (max-width: 480px) {
     .main-container {
         padding: 8px 10px; /* Minimal mobile spacing */
     }
+
+    /* UPDATED: Extra small mobile devices - single column for time periods */
+    .holders-growth-grid,
+    .dynamic-periods-container,
+    .dynamic-periods-container[data-periods="2"],
+    .dynamic-periods-container[data-periods="3"],
+    .dynamic-periods-container[data-periods="4"],
+    .dynamic-periods-container[data-periods="5"],
+    .dynamic-periods-container[data-periods="6"],
+    .dynamic-periods-container[data-periods="7"] {
+        grid-template-columns: 1fr;
+        gap: 8px;
+        padding: 12px;
+    }
+
+    .growth-metric-card {
+        padding: 12px;
+        min-height: 100px;
+    }
+
+    .growth-change {
+        font-size: 18px;
+    }
+
+    .holders-categories-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
 }
+
 /* =============================================================================
    FIX: Insider Networks Layout Adjustments
    ============================================================================= */
@@ -2533,6 +2719,7 @@ a:hover,
 .insider-networks-container .no-risk-indicator {
     margin-top: 0;
 }
+
 /* =============================================================================
    FIX: Lockers & Vesting Layout Adjustments
    ============================================================================= */

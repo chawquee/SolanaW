@@ -7,6 +7,8 @@
  * - Changed "Not Found"/"Unknown" to "Unavailable"
  * - Added dedicated "Risks" subsection from RugCheck API
  * - Enhanced Risk Indicators with Security & Liquidity issues
+ * - Added dynamic time periods for Holders Growth Analysis
+ * - FIXED: Token Distribution section visibility and dynamic periods
  */
 
 (function($) {
@@ -245,9 +247,9 @@
             }
         }
 
-        // Standalone Token Distribution Analysis
-        function updateTokenDistributionStandalone(distributionData, rugCheckData, moralisData) {
-            console.log('Updating standalone token distribution with:', {distributionData, rugCheckData, moralisData});
+        // FIXED: Standalone Token Distribution Analysis
+        function updateTokenDistributionStandalone(distributionData, rugCheckData, moralisData, dynamicTimePeriodsData) {
+            console.log('Updating standalone token distribution with:', {distributionData, rugCheckData, moralisData, dynamicTimePeriodsData});
 
             try {
                 // 1. Holders Distribution Section
@@ -256,8 +258,8 @@
                 // 2. Top Holders Distribution Section
                 updateTopHoldersDistribution(distributionData);
 
-                // 3. Holders Growth Analysis Section
-                updateHoldersGrowthAnalysis(moralisData);
+                // 3. FIXED: Holders Growth Analysis Section with Dynamic Time Periods
+                updateHoldersGrowthAnalysis(moralisData, dynamicTimePeriodsData);
 
                 // 4. Holders Categories Section
                 updateHoldersCategories(moralisData);
@@ -353,27 +355,105 @@
             }
         }
 
-        function updateHoldersGrowthAnalysis(moralisData) {
+        // FIXED: Holders Growth Analysis with proper dynamic time periods handling
+        function updateHoldersGrowthAnalysis(moralisData, dynamicTimePeriodsData) {
+            console.log('updateHoldersGrowthAnalysis called with:', {moralisData, dynamicTimePeriodsData});
+
+            const $container = $('.holders-growth-grid, #dynamicHoldersGrowthGrid');
+
+            if ($container.length === 0) {
+                console.error('ERROR: Holders growth container not found! Expected .holders-growth-grid or #dynamicHoldersGrowthGrid');
+                return;
+            }
+
+            // Clear existing content
+            $container.empty();
+
+            // FIXED: Extract time periods from the dynamic time periods object
+            let timePeriodsToShow;
+            if (dynamicTimePeriodsData && dynamicTimePeriodsData.periods && Array.isArray(dynamicTimePeriodsData.periods)) {
+                timePeriodsToShow = dynamicTimePeriodsData.periods;
+                console.log('Using dynamic time periods:', timePeriodsToShow);
+
+                // Update debug info if present
+                $('#debugActivityDuration').text(`Dt: ${dynamicTimePeriodsData.dt_hours || 0}h`);
+                $('#debugPeriodsCount').text(`${timePeriodsToShow.length} periods`);
+                $('#debugCalculationMethod').text(dynamicTimePeriodsData.calculation_method || 'unknown');
+
+                // Set data attribute for CSS styling
+                $container.attr('data-periods', timePeriodsToShow.length);
+            } else {
+                // Fallback to default periods
+                timePeriodsToShow = ['5m', '1h', '6h', '24h', '3 days', '7 days', '30 days'];
+                console.log('Using default time periods (dynamic periods not available):', timePeriodsToShow);
+
+                $('#debugActivityDuration').text('No activity data');
+                $('#debugPeriodsCount').text('7 periods (default)');
+                $('#debugCalculationMethod').text('default_all_periods');
+
+                $container.attr('data-periods', 7);
+            }
+
+            console.log('Final time periods to show:', timePeriodsToShow);
+
+            // Generate dynamic growth metric cards based on calculated time periods
+            timePeriodsToShow.forEach(period => {
+                const $card = $('<div class="growth-metric-card"></div>');
+
+                // FIXED: Convert period format for data access (handle "3 days" format)
+                let dataKey = period;
+                if (period === '3 days') dataKey = '3d';
+                if (period === '7 days') dataKey = '7d';
+                if (period === '30 days') dataKey = '30d';
+
+                $card.html(`
+                    <div class="growth-period">${period}</div>
+                    <div class="growth-change" id="holdersChange${dataKey}">-</div>
+                    <div class="growth-percentage" id="holdersChangePercent${dataKey}">-</div>
+                    <div class="holders-status-text" id="holdersStatus${dataKey}"></div>
+                `);
+
+                $container.append($card);
+            });
+
+            // Now update the data for each period
             if (moralisData && moralisData.holdersGrowth) {
                 const growth = moralisData.holdersGrowth;
+                console.log('Updating with Moralis growth data:', growth);
 
-                // Update growth changes with color coding and status text
-                updateGrowthChangeWithStatus('5m', growth.change_5m, growth.percent_5m);
-                updateGrowthChangeWithStatus('1h', growth.change_1h, growth.percent_1h);
-                updateGrowthChangeWithStatus('6h', growth.change_6h, growth.percent_6h);
-                updateGrowthChangeWithStatus('24h', growth.change_24h, growth.percent_24h);
-                updateGrowthChangeWithStatus('3d', growth.change_3d, growth.percent_3d);
-                updateGrowthChangeWithStatus('7d', growth.change_7d, growth.percent_7d);
-                updateGrowthChangeWithStatus('30d', growth.change_30d, growth.percent_30d);
+                timePeriodsToShow.forEach(period => {
+                    let dataKey = period;
+                    if (period === '3 days') dataKey = '3d';
+                    if (period === '7 days') dataKey = '7d';
+                    if (period === '30 days') dataKey = '30d';
+
+                    // Update growth changes with color coding and status text
+                    updateGrowthChangeWithStatus(dataKey, growth[`change_${dataKey}`], growth[`percent_${dataKey}`]);
+                });
             } else {
-                // Set default values
-                const periods = ['5m', '1h', '6h', '24h', '3d', '7d', '30d'];
-                periods.forEach(period => {
-                    $(`#holdersChange${period}`).text('Unavailable');
-                    $(`#holdersChangePercent${period}`).text('Unavailable');
-                    $(`#holdersStatus${period}`).text('').removeClass('holders-joined holders-left');
+                console.log('No Moralis growth data available, setting default values');
+
+                // Set default values for all shown periods
+                timePeriodsToShow.forEach(period => {
+                    let dataKey = period;
+                    if (period === '3 days') dataKey = '3d';
+                    if (period === '7 days') dataKey = '7d';
+                    if (period === '30 days') dataKey = '30d';
+
+                    $(`#holdersChange${dataKey}`).text('Unavailable');
+                    $(`#holdersChangePercent${dataKey}`).text('Unavailable');
+                    $(`#holdersStatus${dataKey}`).text('').removeClass('holders-joined holders-left');
                 });
             }
+
+            // Apply center alignment to the container
+            $container.css({
+                'display': 'grid',
+                'justify-content': 'center',
+                'align-items': 'center'
+            });
+
+            console.log('Holders Growth Analysis updated successfully with periods:', timePeriodsToShow);
         }
 
         function updateHoldersCategories(moralisData) {
@@ -1023,7 +1103,7 @@
             }
         }
 
-        // Main population function
+        // FIXED: Main population function with proper debug logging
         function populateResults(data) {
             console.log('SolanaWP: Populating enhanced results with standalone token distribution:', data);
 
@@ -1106,9 +1186,24 @@
                 $('#rugPullRiskCard').show();
             }
 
-            // 7. STANDALONE TOKEN DISTRIBUTION ANALYSIS CARD
+            // 7. FIXED: STANDALONE TOKEN DISTRIBUTION ANALYSIS CARD WITH DYNAMIC TIME PERIODS
+            console.log('🔍 DEBUG: Checking Token Distribution data:', {
+                distribution_analysis: !!data.distribution_analysis,
+                rugcheck_data: !!data.rugcheck_data,
+                moralis_data: !!data.moralis_data,
+                dynamic_time_periods: data.dynamic_time_periods
+            });
+
             if (data.distribution_analysis || data.rugcheck_data || data.moralis_data) {
-                updateTokenDistributionStandalone(data.distribution_analysis, data.rugcheck_data, data.moralis_data);
+                console.log('✅ Token Distribution: Updating with data...');
+                updateTokenDistributionStandalone(
+                    data.distribution_analysis,
+                    data.rugcheck_data,
+                    data.moralis_data,
+                    data.dynamic_time_periods  // This should be the object with 'periods' property
+                );
+            } else {
+                console.log('❌ Token Distribution: No data available to update');
             }
 
             // 8. ENHANCED WEBSITE & SOCIAL ACCOUNTS CARD WITH CLICKABLE LINKS
