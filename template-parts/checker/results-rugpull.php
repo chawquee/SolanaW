@@ -104,15 +104,16 @@ if ( ! defined( 'ABSPATH' ) ) {
                             <div class="metric-description" id="liquidityExplanation"><?php esc_html_e( 'Analyzing liquidity lock status...', 'solanawp' ); ?></div>
                         </div>
                     </div>
-                    <!-- Lockers & Vesting Section -->
-                    <div class="lockers-section section-card">
-                        <div class="section-header">
-                            <span style="font-size: 1.5rem;">🔐</span>
-                            <h3 class="section-title"><?php esc_html_e( 'Lockers & Vesting', 'solanawp' ); ?></h3>
-                        </div>
-                        <div class="lockers-container" id="lockersContainer">
-                            <div class="loading-placeholder"><?php esc_html_e( 'Loading locker information...', 'solanawp' ); ?></div>
-                        </div>
+
+                    </div>
+                <!-- Lockers & Vesting Section -->
+                <div class="lockers-section section-card">
+                    <div class="section-header">
+                        <span style="font-size: 1.5rem;">🔐</span>
+                        <h3 class="section-title"><?php esc_html_e( 'Lockers & Vesting', 'solanawp' ); ?></h3>
+                    </div>
+                    <div class="lockers-container" id="lockersContainer">
+                        <div class="loading-placeholder"><?php esc_html_e( 'Loading locker information...', 'solanawp' ); ?></div>
                     </div>
                 </div>
 

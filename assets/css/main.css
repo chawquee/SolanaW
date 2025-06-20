@@ -2533,3 +2533,22 @@ a:hover,
 .insider-networks-container .no-risk-indicator {
     margin-top: 0;
 }
+/* =============================================================================
+   FIX: Lockers & Vesting Layout Adjustments
+   ============================================================================= */
+
+/*
+ * 1. This adds padding to the lockers results container. The "No Lockers"
+ * banner (or a list of lockers) will now be neatly inset from the card's edges.
+*/
+.lockers-container {
+    padding: 16px 24px 24px 24px; /* Top, Right, Bottom, Left */
+}
+
+/*
+ * 2. This ensures the "No Lockers" banner doesn't have extra top margin
+ * when it appears inside the newly padded container.
+*/
+.lockers-container .no-lockers-indicator {
+    margin-top: 0;
+}
